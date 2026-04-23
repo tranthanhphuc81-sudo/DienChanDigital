@@ -191,6 +191,10 @@
         <input type="text" id="protocol-search" placeholder="Tìm phác đồ (ví dụ: đau đầu, gan, mất ngủ, bướu...)" 
                class="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-red-500 outline-none shadow-sm"
                oninput="searchProtocols()">
+        <div class="flex flex-wrap items-center gap-3 mt-3">
+            <button onclick="suggestProtocolsFromSymptoms()" class="bg-amber-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-amber-700 transition font-semibold">🔎 Gợi ý phác đồ theo triệu chứng</button>
+            <span id="protocol-suggestion-msg" class="text-sm text-slate-500"></span>
+        </div>
 
         <!-- Nút & form thêm phác đồ mới -->
         <div class="flex justify-between items-center">
@@ -434,7 +438,13 @@
                 <input type="text" id="p-name" placeholder="Tên bệnh nhân" class="p-3 border rounded-lg">
                 <input type="text" id="p-disease" placeholder="Bệnh trạng / Triệu chứng" class="p-3 border rounded-lg">
                 <input type="text" id="p-protocol" placeholder="Phác đồ (ví dụ: 103, 106, 300, 0)" class="p-3 border rounded-lg md:col-span-2">
-                <button onclick="savePatient()" class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 md:col-span-2 font-bold">LƯU HỒ SƠ</button>
+                <button onclick="suggestProtocolsFromSymptoms()" class="bg-amber-600 text-white p-3 rounded-lg hover:bg-amber-700 font-bold">🔎 Gợi ý phác đồ</button>
+                <button onclick="savePatient()" class="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 font-bold">LƯU HỒ SƠ</button>
+            </div>
+            <div id="patient-protocol-suggestions" class="hidden bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
+                <p id="patient-suggestion-title" class="text-sm font-semibold text-slate-700 mb-3">Gợi ý phác đồ và bộ huyệt</p>
+                <div id="patient-protocol-suggestion-list" class="space-y-3"></div>
+                <div id="patient-set-suggestion-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4"></div>
             </div>
         </div>
 
@@ -2406,19 +2416,66 @@ window.addEventListener('scroll', () => {
         }
     ];
 
+    function normalizeSearchTokens(text) {
+        return (text || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9\u00C0-\u017F\s]/g, ' ')
+            .split(/\s+/)
+            .filter(Boolean);
+    }
+
+    function getProtocolMatchScore(protocol, tokens) {
+        const hay = `${protocol.name} ${protocol.note}`.toLowerCase();
+        return tokens.reduce((score, token) => {
+            if (hay.includes(token)) return score + 10;
+            if (protocol.points.some(pt => pt === token)) return score + 5;
+            return score;
+        }, 0);
+    }
+
+    function getProtocolMatchesForText(text) {
+        const tokens = normalizeSearchTokens(text);
+        if (!tokens.length) return [];
+        return getAllProtocols()
+            .map(p => ({ protocol: p, score: getProtocolMatchScore(p, tokens) }))
+            .filter(item => item.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .map(item => item.protocol);
+    }
+
+    function getSetMatchesForText(text) {
+        const tokens = normalizeSearchTokens(text);
+        if (!tokens.length) return [];
+        return setImages
+            .map(set => ({
+                set,
+                score: tokens.reduce((score, token) => {
+                    const hay = `${set.title} ${set.description || ''} ${set.note || ''}`.toLowerCase();
+                    return hay.includes(token) ? score + 10 : score;
+                }, 0)
+            }))
+            .filter(item => item.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .map(item => item.set);
+    }
+
+    function updateProtocolSuggestionMessage(message, isError = false) {
+        const msgEl = document.getElementById('protocol-suggestion-msg');
+        if (!msgEl) return;
+        msgEl.textContent = message;
+        msgEl.className = isError ? 'text-sm text-red-600' : 'text-sm text-slate-500';
+    }
+
     function searchProtocols() {
-        const val = document.getElementById('protocol-search').value.toLowerCase().trim();
-        const all = getAllProtocols();
+        const val = document.getElementById('protocol-search').value.trim();
         if (!val) {
-            renderProtocols(all);
+            renderProtocols(getAllProtocols());
+            updateProtocolSuggestionMessage('');
             return;
         }
-        const filtered = all.filter(p =>
-            p.name.toLowerCase().includes(val) ||
-            p.note.toLowerCase().includes(val) ||
-            p.points.some(pt => pt === val)
-        );
-        renderProtocols(filtered);
+        const filtered = getProtocolMatchesForText(val);
+        renderProtocols(filtered.length ? filtered : []);
+        updateProtocolSuggestionMessage(filtered.length ? `Đã tìm thấy ${filtered.length} phác đồ phù hợp.` : 'Không tìm thấy phác đồ phù hợp.');
     }
 
     function getAllProtocols() {
@@ -2507,6 +2564,74 @@ window.addEventListener('scroll', () => {
         const isHidden = detail.classList.contains('hidden');
         detail.classList.toggle('hidden', !isHidden);
         arrow.style.transform = isHidden ? 'rotate(180deg)' : '';
+    }
+
+    function renderSuggestedSets(sets) {
+        const container = document.getElementById('patient-set-suggestion-list');
+        if (!container) return;
+        if (!sets || !sets.length) {
+            container.innerHTML = '<p class="text-sm text-slate-500">Không tìm thấy bộ huyệt liên quan.</p>';
+            return;
+        }
+        container.innerHTML = sets.map(set => `
+            <div class="border border-slate-200 rounded-xl p-4 bg-white">
+                <div class="font-semibold text-slate-800 mb-1">${set.title}</div>
+                <p class="text-sm text-slate-500">${set.description || set.note || ''}</p>
+            </div>
+        `).join('');
+    }
+
+    function renderPatientProtocolSuggestions(protocols, sets, source) {
+        const suggestionsBox = document.getElementById('patient-protocol-suggestions');
+        const protocolList = document.getElementById('patient-protocol-suggestion-list');
+        const title = document.getElementById('patient-suggestion-title');
+        if (!suggestionsBox || !protocolList || !title) return;
+        title.textContent = source || 'Gợi ý phác đồ và bộ huyệt';
+        if (!protocols.length && !sets.length) {
+            suggestionsBox.classList.add('hidden');
+            return;
+        }
+        suggestionsBox.classList.remove('hidden');
+        protocolList.innerHTML = protocols.length ? protocols.map(p => `
+            <div class="border border-slate-200 rounded-xl p-4 bg-white">
+                <div class="flex items-center justify-between gap-3 mb-2">
+                    <div>
+                        <div class="font-semibold text-slate-800">${p.name}</div>
+                        <div class="text-xs text-slate-500 mt-1">${p.points.join(', ')}</div>
+                    </div>
+                    <button onclick="applySuggestedProtocol('${encodeURIComponent(p.name)}')" class="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600">Chọn</button>
+                </div>
+                <p class="text-sm text-slate-500">${p.note}</p>
+            </div>
+        `).join('') : '<p class="text-sm text-slate-500">Không tìm thấy phác đồ phù hợp.</p>';
+        renderSuggestedSets(sets);
+    }
+
+    function applySuggestedProtocol(encodedName) {
+        const name = decodeURIComponent(encodedName);
+        const protocol = getAllProtocols().find(p => p.name === name);
+        if (!protocol) return;
+        const input = document.getElementById('p-protocol');
+        if (input) input.value = `${protocol.name} — ${protocol.points.join(', ')}`;
+        updateProtocolSuggestionMessage(`Đã áp dụng phác đồ: ${protocol.name}`);
+    }
+
+    function suggestProtocolsFromSymptoms() {
+        const disease = document.getElementById('p-disease')?.value.trim();
+        const query = disease || document.getElementById('protocol-search')?.value.trim();
+        if (!query) {
+            updateProtocolSuggestionMessage('Vui lòng nhập triệu chứng hoặc bệnh trạng để gợi ý phác đồ.', true);
+            return;
+        }
+        const protocols = getProtocolMatchesForText(query);
+        const sets = getSetMatchesForText(query);
+        renderPatientProtocolSuggestions(protocols, sets, `Gợi ý từ: "${query}"`);
+        if (protocols.length) {
+            updateProtocolSuggestionMessage(`Đã tìm thấy ${protocols.length} phác đồ phù hợp.`);
+        } else {
+            updateProtocolSuggestionMessage('Không tìm thấy phác đồ phù hợp.', true);
+        }
+        renderProtocols(protocols.length ? protocols : getAllProtocols());
     }
 
     function getSetImageList() {
@@ -3230,6 +3355,7 @@ window.addEventListener('scroll', () => {
         checkFolderStatus();
         renderHuyet(getAllHuyet());
         loadPatients();
+        buildProtoJumpNav();
         renderProtocols(getAllProtocols());
         renderSets();
     })();
