@@ -413,11 +413,11 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
                     <label class="text-xs text-slate-500 mb-1 block">Tên người dùng</label>
-                    <input type="text" id="dc-user-name" placeholder="Username" class="w-full p-3 border rounded-lg">
+                    <input type="text" id="dc-user-name" placeholder="Username" autocomplete="off" class="w-full p-3 border rounded-lg">
                 </div>
                 <div>
                     <label class="text-xs text-slate-500 mb-1 block">Mật khẩu</label>
-                    <input type="password" id="dc-user-password" placeholder="Mật khẩu" class="w-full p-3 border rounded-lg">
+                    <input type="password" id="dc-user-password" placeholder="Mật khẩu" autocomplete="new-password" class="w-full p-3 border rounded-lg">
                 </div>
                 <div class="grid gap-3">
                     <button onclick="initEncryptedUser()" class="w-full bg-slate-800 text-white p-3 rounded-lg hover:bg-slate-900 font-semibold">MỞ KHÓA</button>
