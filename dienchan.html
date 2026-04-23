@@ -195,6 +195,11 @@
             <button onclick="suggestProtocolsFromSymptoms()" class="bg-amber-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-amber-700 transition font-semibold">🔎 Gợi ý phác đồ theo triệu chứng</button>
             <span id="protocol-suggestion-msg" class="text-sm text-slate-500"></span>
         </div>
+        <div id="protocol-protocol-suggestions" class="hidden bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
+            <p id="protocol-suggestion-title" class="text-sm font-semibold text-slate-700 mb-3">Gợi ý phác đồ và bộ huyệt</p>
+            <div id="protocol-protocol-suggestion-list" class="space-y-3"></div>
+            <div id="protocol-set-suggestion-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4"></div>
+        </div>
 
         <!-- Nút & form thêm phác đồ mới -->
         <div class="flex justify-between items-center">
@@ -2593,8 +2598,8 @@ window.addEventListener('scroll', () => {
         arrow.style.transform = isHidden ? 'rotate(180deg)' : '';
     }
 
-    function renderSuggestedSets(sets) {
-        const container = document.getElementById('patient-set-suggestion-list');
+    function renderSuggestedSets(sets, containerId = 'patient-set-suggestion-list') {
+        const container = document.getElementById(containerId);
         if (!container) return;
         if (!sets || !sets.length) {
             container.innerHTML = '<p class="text-sm text-slate-500">Không tìm thấy bộ huyệt liên quan.</p>';
@@ -2608,10 +2613,42 @@ window.addEventListener('scroll', () => {
         `).join('');
     }
 
-    function renderPatientProtocolSuggestions(protocols, sets, source) {
-        const suggestionsBox = document.getElementById('patient-protocol-suggestions');
-        const protocolList = document.getElementById('patient-protocol-suggestion-list');
-        const title = document.getElementById('patient-suggestion-title');
+    const selectedSuggestedProtocols = new Set();
+
+    function parseProtocolInputNames() {
+        const input = document.getElementById('p-protocol');
+        if (!input) return [];
+        return input.value
+            .split(/[,;\|]+/)
+            .map(v => v.trim())
+            .filter(Boolean);
+    }
+
+    function setProtocolInputNames(names) {
+        const input = document.getElementById('p-protocol');
+        if (!input) return;
+        input.value = names.join(' | ');
+    }
+
+    function toggleSuggestedProtocol(encodedName) {
+        const name = decodeURIComponent(encodedName);
+        const current = new Set(parseProtocolInputNames());
+        if (current.has(name)) {
+            current.delete(name);
+            selectedSuggestedProtocols.delete(name);
+        } else {
+            current.add(name);
+            selectedSuggestedProtocols.add(name);
+        }
+        setProtocolInputNames([...current]);
+        renderProtocolSuggestions('patient', getProtocolMatchesForText(document.getElementById('p-disease')?.value.trim() || ''), getSetMatchesForText(document.getElementById('p-disease')?.value.trim() || ''), document.getElementById('p-disease')?.value.trim() ? `Gợi ý từ: "${document.getElementById('p-disease')?.value.trim()}"` : undefined);
+        renderProtocolSuggestions('protocol', getProtocolMatchesForText(document.getElementById('protocol-search')?.value.trim() || ''), getSetMatchesForText(document.getElementById('protocol-search')?.value.trim() || ''), document.getElementById('protocol-search')?.value.trim() ? `Gợi ý từ: "${document.getElementById('protocol-search')?.value.trim()}"` : undefined);
+    }
+
+    function renderProtocolSuggestions(containerPrefix, protocols, sets, source) {
+        const suggestionsBox = document.getElementById(`${containerPrefix}-protocol-suggestions`);
+        const protocolList = document.getElementById(`${containerPrefix}-protocol-suggestion-list`);
+        const title = document.getElementById(`${containerPrefix}-suggestion-title`);
         if (!suggestionsBox || !protocolList || !title) return;
         title.textContent = source || 'Gợi ý phác đồ và bộ huyệt';
         if (!protocols.length && !sets.length) {
@@ -2619,19 +2656,27 @@ window.addEventListener('scroll', () => {
             return;
         }
         suggestionsBox.classList.remove('hidden');
-        protocolList.innerHTML = protocols.length ? protocols.map(p => `
+        protocolList.innerHTML = protocols.length ? protocols.map(p => {
+            const isSelected = selectedSuggestedProtocols.has(p.name);
+            return `
             <div class="border border-slate-200 rounded-xl p-4 bg-white">
                 <div class="flex items-center justify-between gap-3 mb-2">
                     <div>
                         <div class="font-semibold text-slate-800">${p.name}</div>
                         <div class="text-xs text-slate-500 mt-1">${p.points.join(', ')}</div>
                     </div>
-                    <button onclick="applySuggestedProtocol('${encodeURIComponent(p.name)}')" class="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600">Chọn</button>
+                    <button onclick="event.stopPropagation(); toggleSuggestedProtocol('${encodeURIComponent(p.name)}')" class="text-xs ${isSelected ? 'bg-slate-300 text-slate-700 hover:bg-slate-400' : 'bg-blue-500 text-white hover:bg-blue-600'} px-3 py-1.5 rounded-lg transition">${isSelected ? 'Bỏ' : 'Thêm'}</button>
                 </div>
                 <p class="text-sm text-slate-500">${p.note}</p>
             </div>
-        `).join('') : '<p class="text-sm text-slate-500">Không tìm thấy phác đồ phù hợp.</p>';
-        renderSuggestedSets(sets);
+        `;
+        }).join('') : '<p class="text-sm text-slate-500">Không tìm thấy phác đồ phù hợp.</p>';
+        renderSuggestedSets(sets, `${containerPrefix}-set-suggestion-list`);
+    }
+
+    function renderPatientProtocolSuggestions(protocols, sets, source) {
+        renderProtocolSuggestions('patient', protocols, sets, source);
+        renderProtocolSuggestions('protocol', protocols, sets, source);
     }
 
     function applySuggestedProtocol(encodedName) {
