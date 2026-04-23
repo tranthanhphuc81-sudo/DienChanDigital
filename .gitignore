@@ -1,0 +1,26 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Ignore local development and temporary files
+analysis_200_299.txt
+analysis_positions.txt
+tmp_compare_ids.py
+tmp_compare_ids_out.py
+DESIGN.md
+
+# Ignore local Cloudinary import cache / image storage
+data/*
+!data/.gitkeep
+
+# Keep the tool source code files
+!dienchan.html
+!crypto.js
+!storage.js
+!cloudinary.js
