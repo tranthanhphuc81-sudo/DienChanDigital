@@ -2513,12 +2513,13 @@ window.addEventListener('scroll', () => {
         const existingBases = new Map(setImages.map(s => [s.file ? s.file.replace(/\.[^.]+$/, '').toLowerCase() : '', s]));
         const generated = [];
         const resolvedSets = setImages.map(set => {
-            const base = set.file ? set.file.replace(/\.[^.]+$/, '').toLowerCase() : '';
-            if (base && folderSetImageCache.has(base)) {
-                return { ...set, src: folderSetImageCache.get(base) };
+            const baseOriginal = set.file ? set.file.replace(/\.[^.]+$/, '') : '';
+            const baseKey = baseOriginal.toLowerCase();
+            if (baseKey && folderSetImageCache.has(baseKey)) {
+                return { ...set, src: folderSetImageCache.get(baseKey) };
             }
-            if (base && typeof DCcloudinary !== 'undefined') {
-                const cloudSrc = DCcloudinary.getImageUrlForKey(base);
+            if (baseOriginal && typeof DCcloudinary !== 'undefined') {
+                const cloudSrc = DCcloudinary.getImageUrlForKey(baseOriginal);
                 if (cloudSrc) {
                     return { ...set, src: cloudSrc };
                 }
