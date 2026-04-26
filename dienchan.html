@@ -3557,15 +3557,14 @@ window.addEventListener('scroll', () => {
             || folderImageCache.get(id)
             || imgs[id]
             || relativeDataFolderImages.get(id)
-            || (relativeDataFolderDetected ? `data/${id}.jpg` : '');
+            || '';
     }
 
     function hasLocalHuyetImage(h) {
         const imgs = JSON.parse(localStorage.getItem('dc_images') || '{}');
         return folderImageCache.has(h.id)
             || Boolean(imgs[h.id])
-            || relativeDataFolderImages.has(h.id)
-            || (relativeDataFolderDetected && `data/${h.id}.jpg`);
+            || relativeDataFolderImages.has(h.id);
     }
 
     function renderHuyet(data, emptyMessage) {
