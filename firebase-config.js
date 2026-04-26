@@ -107,6 +107,33 @@
         return snap.exists ? { id: snap.id, ...snap.data() } : null;
     }
 
+    async function createAcupointsFromCloudinaryIds(ids) {
+        const uniqueIds = Array.from(new Set((Array.isArray(ids) ? ids : String(ids).split(/[\s,;]+/)).map(id => String(id).trim()).filter(Boolean)));
+        const result = { created: 0, skipped: 0, errors: [] };
+        for (const id of uniqueIds) {
+            try {
+                const existing = await getDocument('acupoints', id);
+                if (existing) {
+                    result.skipped += 1;
+                    continue;
+                }
+                await saveAcupoint({
+                    id,
+                    name: id,
+                    location: '',
+                    functions: '',
+                    manual: '',
+                    imageIds: [id],
+                    tags: ['cloudinary-fallback']
+                });
+                result.created += 1;
+            } catch (err) {
+                result.errors.push({ id, message: err.message || String(err) });
+            }
+        }
+        return result;
+    }
+
     async function listDocuments(collection, queryOptions = {}) {
         const { db: firestore } = await ensureFirestore();
         let q = firestore.collection(collection);
@@ -380,6 +407,7 @@
         saveMedicalRecord,
         getLegacyLocalData,
         migrateLegacyDataToFirebase,
+        createAcupointsFromCloudinaryIds,
         listDocuments,
         getDocument,
         deleteDocument,

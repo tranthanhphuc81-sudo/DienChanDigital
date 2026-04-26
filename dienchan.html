@@ -484,6 +484,20 @@
             </div>
             <p id="dc-user-status" class="text-sm mt-3 text-slate-500">Chưa mở khóa. Dữ liệu hồ sơ sẽ được mã hóa khi user mở khóa thành công.</p>
             <p id="dc-unlock-state" class="text-sm mt-1 text-slate-500">Trạng thái khóa: chưa xác định</p>
+            <div class="bg-white border border-slate-200 rounded-xl p-4 mt-4">
+                <h4 class="text-sm font-semibold text-slate-700 mb-3">Đăng nhập Firebase</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <input type="email" id="firebase-email" placeholder="Email Firebase" class="w-full p-3 border rounded-lg">
+                    <input type="password" id="firebase-password" placeholder="Mật khẩu Firebase" class="w-full p-3 border rounded-lg">
+                    <div class="grid gap-2">
+                        <button type="button" onclick="firebaseSignInHandler()" class="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 font-semibold">Đăng nhập</button>
+                        <button type="button" onclick="firebaseSignUpHandler()" class="w-full bg-emerald-600 text-white p-3 rounded-lg hover:bg-emerald-700 font-semibold">Đăng ký</button>
+                        <button type="button" onclick="firebaseSignOutHandler()" class="w-full bg-slate-300 text-slate-700 p-3 rounded-lg hover:bg-slate-400 font-semibold">Đăng xuất</button>
+                        <button type="button" onclick="DCFirebase.migrateLegacyDataToFirebase().then(res => alert('Chuyển xong: ' + JSON.stringify(res)).catch(err => alert('Lỗi: ' + err.message)))" class="w-full bg-amber-500 text-white p-3 rounded-lg hover:bg-amber-600 font-semibold">Chuyển dữ liệu cũ</button>
+                    </div>
+                </div>
+                <p id="firebase-auth-status" class="text-sm text-slate-500 mt-3">Chưa kết nối Firebase.</p>
+            </div>
             <p id="dc-debug-status" class="text-xs mt-1 text-slate-400">Debug: waiting...</p>
         </div>
 
@@ -607,6 +621,11 @@
 
 <!-- Nút cuộn lên đầu -->
 <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Lên đầu trang">↑</button>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="./firebase-config.js"></script>
 
 <script>
 window.addEventListener('scroll', () => {
@@ -2598,8 +2617,19 @@ window.addEventListener('scroll', () => {
             .map(k => k.toLowerCase().trim())
             .filter(Boolean);
         const custom = JSON.parse(localStorage.getItem('dc_custom_protocols') || '[]');
-        custom.push({ name, icon, color, points, note, keywords, _custom: true });
+        const protocolData = { name, icon, color, points, note, keywords, _custom: true };
+        custom.push(protocolData);
         localStorage.setItem('dc_custom_protocols', JSON.stringify(custom));
+        if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+            DCFirebase.saveTreatmentPlan({
+                title: name,
+                description: note,
+                acupointIds: points,
+                keywords,
+                imageIds: [],
+                createdBy: DCFirebase.getFirebaseUser().uid
+            }).catch(err => console.warn('Lưu phác đồ lên Firebase thất bại:', err));
+        }
         ['new-proto-name','new-proto-icon','new-proto-color','new-proto-points','new-proto-keywords','new-proto-note'].forEach(id => document.getElementById(id).value = '');
         toggleAddProtoForm();
         renderProtocols(getAllProtocols());
@@ -3338,6 +3368,17 @@ window.addEventListener('scroll', () => {
                 saveCustomSet(setData);
                 statusEl.textContent = `Đã lưu bộ huyệt mới và upload ảnh Cloudinary: ${title}`;
             }
+            if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                DCFirebase.saveAcupointGroup({
+                    title,
+                    description,
+                    note,
+                    acupointIds: [],
+                    imageIds: [publicId],
+                    tags: ['custom'],
+                    createdBy: DCFirebase.getFirebaseUser().uid
+                }).catch(err => console.warn('Lưu bộ huyệt lên Firebase thất bại:', err));
+            }
             toggleAddSetForm();
             resetSetForm();
             renderSets();
@@ -3583,8 +3624,20 @@ window.addEventListener('scroll', () => {
             return;
         }
         const custom = JSON.parse(localStorage.getItem('dc_custom_huyet') || '[]');
-        custom.push({ id, pos, effect, manual: manual || 'Thực hiện theo hướng dẫn chung.', _custom: true });
+        const huyetData = { id, pos, effect, manual: manual || 'Thực hiện theo hướng dẫn chung.', _custom: true };
+        custom.push(huyetData);
         localStorage.setItem('dc_custom_huyet', JSON.stringify(custom));
+        if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+            DCFirebase.saveAcupoint({
+                id,
+                name: `Huyệt ${id}`,
+                pos,
+                effect,
+                manual,
+                tags: ['custom'],
+                createdBy: DCFirebase.getFirebaseUser().uid
+            }).catch(err => console.warn('Lưu huyệt lên Firebase thất bại:', err));
+        }
 
         // Reset form
         ['new-id','new-pos','new-effect','new-manual'].forEach(f => document.getElementById(f).value = '');
@@ -3850,12 +3903,32 @@ window.addEventListener('scroll', () => {
             date: new Date().toLocaleString('vi-VN')
         };
 
-        if (await ensureEncryptedStorageReady()) {
-            await DCEncryptedStorage.saveRecord(record);
-        } else {
-            const records = JSON.parse(localStorage.getItem('dc_records') || "[]");
-            records.unshift(record);
-            localStorage.setItem('dc_records', JSON.stringify(records));
+        let firebaseSaved = false;
+        if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+            try {
+                await DCFirebase.saveMedicalRecord({
+                    id: record.id,
+                    patientName: record.name,
+                    disease: record.disease,
+                    protocol: record.protocol,
+                    note: record.note,
+                    attachments: [],
+                    createdBy: DCFirebase.getFirebaseUser().uid
+                });
+                firebaseSaved = true;
+            } catch (err) {
+                console.warn('Lưu hồ sơ lên Firebase thất bại:', err);
+            }
+        }
+
+        if (!firebaseSaved) {
+            if (await ensureEncryptedStorageReady()) {
+                await DCEncryptedStorage.saveRecord(record);
+            } else {
+                const records = JSON.parse(localStorage.getItem('dc_records') || "[]");
+                records.unshift(record);
+                localStorage.setItem('dc_records', JSON.stringify(records));
+            }
         }
 
         document.getElementById('p-name').value = '';
@@ -3875,22 +3948,39 @@ window.addEventListener('scroll', () => {
         const container = document.getElementById('patient-records');
         const statusEl = document.getElementById('patient-storage-status');
         let records = [];
-        const encryptedReady = await ensureEncryptedStorageReady();
-        if (encryptedReady) {
+        let firebaseReady = false;
+        if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
             try {
-                records = await DCEncryptedStorage.loadRecords();
+                records = await DCFirebase.listMedicalRecordsForCurrentUser();
+                firebaseReady = true;
             } catch (err) {
-                console.warn('Không tải được hồ sơ mã hóa:', err);
+                console.warn('Không tải được hồ sơ Firebase:', err);
+            }
+        }
+        if (!records.length) {
+            const encryptedReady = await ensureEncryptedStorageReady();
+            if (encryptedReady) {
+                try {
+                    records = await DCEncryptedStorage.loadRecords();
+                } catch (err) {
+                    console.warn('Không tải được hồ sơ mã hóa:', err);
+                }
             }
         }
         if (!records.length) {
             records = JSON.parse(localStorage.getItem('dc_records') || "[]");
         }
         if (statusEl) {
-            statusEl.textContent = encryptedReady
-                ? 'Hồ sơ đang được giải mã từ kho lưu trữ mã hóa.'
-                : 'Hồ sơ đang được lưu trực tiếp vào localStorage (chưa mở khóa hoặc chưa có user).';
-            statusEl.className = encryptedReady ? 'text-sm text-emerald-700 mb-4' : 'text-sm text-orange-600 mb-4';
+            if (firebaseReady) {
+                statusEl.textContent = 'Hồ sơ đang được tải từ Firestore Firebase.';
+                statusEl.className = 'text-sm text-emerald-700 mb-4';
+            } else {
+                const encryptedReady = await ensureEncryptedStorageReady();
+                statusEl.textContent = encryptedReady
+                    ? 'Hồ sơ đang được giải mã từ kho lưu trữ mã hóa.'
+                    : 'Hồ sơ đang được lưu trực tiếp vào localStorage (chưa mở khóa hoặc chưa có user).';
+                statusEl.className = encryptedReady ? 'text-sm text-emerald-700 mb-4' : 'text-sm text-orange-600 mb-4';
+            }
         }
         updateBackupUI();
         updateBackupUI();
@@ -3944,7 +4034,16 @@ window.addEventListener('scroll', () => {
         if (!name) { document.getElementById('edit-name').focus(); return; }
 
         let records = [];
-        if (await ensureEncryptedStorageReady()) {
+        let firebaseReady = false;
+        if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+            try {
+                records = await DCFirebase.listMedicalRecordsForCurrentUser();
+                firebaseReady = true;
+            } catch (err) {
+                console.warn('Không tải được hồ sơ Firebase:', err);
+            }
+        }
+        if (!records.length && await ensureEncryptedStorageReady()) {
             records = await DCEncryptedStorage.loadRecords();
         }
         if (!records.length) {
@@ -3953,7 +4052,20 @@ window.addEventListener('scroll', () => {
 
         records[index] = { ...records[index], name, disease, protocol, note };
 
-        if (await ensureEncryptedStorageReady()) {
+        if (firebaseReady) {
+            try {
+                await DCFirebase.saveMedicalRecord({
+                    id: records[index].id,
+                    patientName: records[index].name,
+                    disease: records[index].disease,
+                    protocol: records[index].protocol,
+                    note: records[index].note,
+                    createdBy: DCFirebase.getFirebaseUser().uid
+                });
+            } catch (err) {
+                console.warn('Cập nhật hồ sơ Firebase thất bại:', err);
+            }
+        } else if (await ensureEncryptedStorageReady()) {
             await DCEncryptedStorage.saveRecord(records[index]);
         } else {
             localStorage.setItem('dc_records', JSON.stringify(records));
@@ -3973,14 +4085,27 @@ window.addEventListener('scroll', () => {
 
     async function deleteRecord(index) {
         let records = [];
-        if (await ensureEncryptedStorageReady()) {
+        if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+            try {
+                records = await DCFirebase.listMedicalRecordsForCurrentUser();
+            } catch (err) {
+                console.warn('Không tải được hồ sơ Firebase:', err);
+            }
+        }
+        if (!records.length && await ensureEncryptedStorageReady()) {
             records = await DCEncryptedStorage.loadRecords();
         }
         if (!records.length) {
             records = JSON.parse(localStorage.getItem('dc_records') || "[]");
         }
         const removed = records.splice(index, 1);
-        if (await ensureEncryptedStorageReady() && removed[0] && removed[0].id) {
+        if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser() && removed[0] && removed[0].id) {
+            try {
+                await DCFirebase.deleteDocument('medicalRecords', removed[0].id);
+            } catch (err) {
+                console.warn('Xóa hồ sơ Firebase thất bại:', err);
+            }
+        } else if (await ensureEncryptedStorageReady() && removed[0] && removed[0].id) {
             await DCEncryptedStorage.deleteRecord(removed[0].id);
         } else {
             localStorage.setItem('dc_records', JSON.stringify(records));
