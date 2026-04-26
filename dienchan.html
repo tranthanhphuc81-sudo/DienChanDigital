@@ -2562,6 +2562,11 @@ window.addEventListener('scroll', () => {
         updateProtocolSuggestionMessage(filtered.length ? `Đã tìm thấy ${filtered.length} phác đồ phù hợp.` : 'Không tìm thấy phác đồ phù hợp.');
     }
 
+    const databaseById = new Map(database.map(h => [String(h.id), h]));
+    function getHuyetById(id) {
+        return databaseById.get(String(id));
+    }
+
     function getAllProtocols() {
         const custom = JSON.parse(localStorage.getItem('dc_custom_protocols') || '[]');
         return [...protocols, ...custom];
@@ -2609,24 +2614,33 @@ window.addEventListener('scroll', () => {
         renderProtocols(getAllProtocols());
     }
 
-    function renderProtocols(data) {
-        const all = getAllProtocols();
-        data = data || all;
-        const countEl = document.getElementById('protocol-count');
-        if (countEl) countEl.textContent = `Hiển thị ${data.length} / ${all.length} phác đồ`;
+    const PROTOCOL_RENDER_BATCH = 20;
+    let protocolRenderState = {
+        protocols: [],
+        renderedIndex: 0
+    };
+    let protocolRenderObserver = null;
+    let protocolRenderInitialized = false;
+
+    function appendProtocolBatch() {
         const container = document.getElementById('protocol-list');
-        if (data.length === 0) {
-            container.innerHTML = '<p class="text-center text-slate-400 py-8">Không tìm thấy phác đồ phù hợp.</p>';
-            return;
-        }
-        container.innerHTML = data.map((p, i) => `
+        if (!container) return;
+        const data = protocolRenderState.protocols;
+        if (!data || !data.length) return;
+
+        const start = protocolRenderState.renderedIndex;
+        const end = Math.min(start + PROTOCOL_RENDER_BATCH, data.length);
+        const batch = data.slice(start, end);
+        const html = batch.map((p, idx) => {
+            const i = start + idx;
+            return `
             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                 <button onclick="toggleProtocol(${i})" class="w-full flex items-center gap-3 p-4 bg-slate-50 hover:bg-slate-100 transition text-left">
                     <span class="text-2xl">${p.icon}</span>
                     <div class="flex-1">
-                        <h4 class="font-bold text-slate-800">${p.name}${p._custom ? ' <span class=\\"text-xs font-normal bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full\\">Tùy chỉnh</span>' : ''}</h4>
+                        <h4 class="font-bold text-slate-800">${p.name}${p._custom ? ' <span class=\"text-xs font-normal bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full\">Tùy chỉnh</span>' : ''}</h4>
                         <p class="text-xs text-slate-500 mt-1">${p.points.map(pt => {
-                            const h = database.find(d => d.id === pt);
+                            const h = getHuyetById(pt);
                             return h ? `#${pt} ${h.pos}` : `#${pt}`;
                         }).join(', ')}</p>
                         ${p.keywords && p.keywords.length ? `<div class="text-xs text-slate-500 mt-2">${p.keywords.join(', ')}</div>` : ''}
@@ -2640,7 +2654,91 @@ window.addEventListener('scroll', () => {
                     <p class="text-sm text-slate-600 mb-3"><strong>📝 Cách thực hiện:</strong> ${p.note}</p>
                     <div class="flex flex-wrap gap-2">
                         ${p.points.map(pt => {
-                            const h = database.find(d => d.id === pt);
+                            const h = getHuyetById(pt);
+                            return h ? `<div class="bg-slate-50 border rounded-lg p-2 text-xs flex-1 min-w-[140px]"><span class="font-bold text-red-500">#${h.id}</span> <span class="text-slate-500">${h.pos}</span></div>` : '';
+                        }).join('')}
+                    </div>
+                    <button onclick="lookupProtocolByPoints('${p.points.join(',')}')" class="mt-3 text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition">🔍 Tra chi tiết tất cả huyệt</button>
+                    ${p._custom ? `<button onclick="deleteCustomProtocol(this.dataset.name)" data-name="${p.name.replace(/"/g,'&quot;')}" class="mt-3 ml-2 text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-200 transition">🗑️ Xóa phác đồ này</button>` : ''}
+                </div>
+            </div>
+        `;
+        }).join('');
+        container.insertAdjacentHTML('beforeend', html);
+        protocolRenderState.renderedIndex = end;
+
+        let sentinel = document.getElementById('protocol-load-more-sentinel');
+        if (protocolRenderState.renderedIndex < data.length) {
+            if (!sentinel) {
+                container.insertAdjacentHTML('beforeend', '<div id="protocol-load-more-sentinel" class="h-10"></div>');
+                sentinel = document.getElementById('protocol-load-more-sentinel');
+            }
+            setupProtocolObserver();
+        } else {
+            if (sentinel) sentinel.remove();
+            disconnectProtocolObserver();
+        }
+    }
+
+    function setupProtocolObserver() {
+        if (protocolRenderObserver) return;
+        const sentinel = document.getElementById('protocol-load-more-sentinel');
+        if (!sentinel) return;
+        protocolRenderObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    appendProtocolBatch();
+                }
+            });
+        }, { root: null, rootMargin: '200px', threshold: 0.1 });
+        protocolRenderObserver.observe(sentinel);
+    }
+
+    function disconnectProtocolObserver() {
+        if (!protocolRenderObserver) return;
+        protocolRenderObserver.disconnect();
+        protocolRenderObserver = null;
+    }
+
+    function renderProtocols(data) {
+        const all = getAllProtocols();
+        data = data || all;
+        const countEl = document.getElementById('protocol-count');
+        if (countEl) countEl.textContent = `Hiển thị ${data.length} / ${all.length} phác đồ`;
+        const container = document.getElementById('protocol-list');
+        if (!container) return;
+        container.innerHTML = '';
+        disconnectProtocolObserver();
+        if (data.length === 0) {
+            container.innerHTML = '<p class="text-center text-slate-400 py-8">Không tìm thấy phác đồ phù hợp.</p>';
+            return;
+        }
+        protocolRenderState.protocols = data;
+        protocolRenderState.renderedIndex = 0;
+        appendProtocolBatch();
+        return;
+        container.innerHTML = data.map((p, i) => `
+            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <button onclick="toggleProtocol(${i})" class="w-full flex items-center gap-3 p-4 bg-slate-50 hover:bg-slate-100 transition text-left">
+                    <span class="text-2xl">${p.icon}</span>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-slate-800">${p.name}${p._custom ? ' <span class=\\"text-xs font-normal bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full\\">Tùy chỉnh</span>' : ''}</h4>
+                        <p class="text-xs text-slate-500 mt-1">${p.points.map(pt => {
+                            const h = getHuyetById(pt);
+                            return h ? `#${pt} ${h.pos}` : `#${pt}`;
+                        }).join(', ')}</p>
+                        ${p.keywords && p.keywords.length ? `<div class="text-xs text-slate-500 mt-2">${p.keywords.join(', ')}</div>` : ''}
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            ${p.points.map(pt => `<span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">#${pt}</span>`).join('')}
+                        </div>
+                    </div>
+                    <span id="proto-arrow-${i}" class="text-slate-400 text-lg transition-transform">▼</span>
+                </button>
+                <div id="proto-detail-${i}" class="hidden px-5 py-4 bg-white border-t">
+                    <p class="text-sm text-slate-600 mb-3"><strong>📝 Cách thực hiện:</strong> ${p.note}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${p.points.map(pt => {
+                            const h = getHuyetById(pt);
                             return h ? `<div class="bg-slate-50 border rounded-lg p-2 text-xs flex-1 min-w-[140px]"><span class="font-bold text-red-500">#${h.id}</span> <span class="text-slate-500">${h.pos}</span></div>` : '';
                         }).join('')}
                     </div>
@@ -2743,7 +2841,7 @@ window.addEventListener('scroll', () => {
 
     function formatProtocolPointNames(points) {
         return points.map(pt => {
-            const h = database.find(d => d.id === pt);
+            const h = getHuyetById(pt);
             return h ? `#${pt} ${h.pos}` : `#${pt}`;
         }).join(', ');
     }
@@ -3312,6 +3410,12 @@ window.addEventListener('scroll', () => {
             const container = document.getElementById('set-list-container');
             if (container && container.children.length === 0) {
                 renderSets();
+            }
+        }
+        if (tabName === 'protocols') {
+            if (!protocolRenderInitialized) {
+                renderProtocols(getAllProtocols());
+                protocolRenderInitialized = true;
             }
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4063,7 +4167,6 @@ window.addEventListener('scroll', () => {
         await loadPatients();
         await updateBackupUI();
         buildProtoJumpNav();
-        renderProtocols(getAllProtocols());
         renderSets();
     })();
 
