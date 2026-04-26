@@ -3425,9 +3425,16 @@ window.addEventListener('scroll', () => {
             }
         }
         if (tabName === 'protocols') {
+            buildProtoJumpNav();
             if (!protocolRenderInitialized) {
-                renderProtocols(getAllProtocols());
-                protocolRenderInitialized = true;
+                const container = document.getElementById('protocol-list');
+                if (container) {
+                    container.innerHTML = '<p class="text-center text-slate-500 py-8">Đang tải phác đồ...</p>';
+                }
+                setTimeout(() => {
+                    renderProtocols(getAllProtocols());
+                    protocolRenderInitialized = true;
+                }, 10);
             }
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4173,6 +4180,7 @@ window.addEventListener('scroll', () => {
 
     // Init
     (async () => {
+        buildProtoJumpNav();
         loadProtoJumpNavCache();
         await refreshFolderImageCache();
         await checkRelativeDataFolder();
@@ -4181,7 +4189,6 @@ window.addEventListener('scroll', () => {
         searchHuyet();
         await loadPatients();
         await updateBackupUI();
-        buildProtoJumpNav();
         renderSets();
     })();
 
