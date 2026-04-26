@@ -646,6 +646,7 @@ window.addEventListener('scroll', () => {
         { file: 'Tuc-Nguc-Kho-Tho.png', title: 'Tức ngực – khó thở', description: 'Giúp thông khí ngực, giảm đau tức và hỗ trợ hô hấp cho người căng thẳng.', note: 'Thích hợp với tức ngực, khó thở, ho và cảm giác nghẹn ngực khi căng thẳng.' }
     ];
     let dcEditingSetKey = null;
+    let dcEditingSetOriginal = null;
     let relativeDataFolderDetected = false;
 
     function tryDataImage(imgEl) {
@@ -3055,6 +3056,9 @@ window.addEventListener('scroll', () => {
         const src = getSetSrc(set);
         const safeSrc = JSON.stringify(src);
         const badge = set._custom ? '<span class="text-[11px] bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Tùy chỉnh</span>' : '<span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-1 rounded-full">Mặc định</span>';
+        const canEdit = set.file || set.imageKey;
+        const editButton = canEdit ? `<button onclick="editSet('${getSetKey(set)}')" class="text-xs bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition">✏️ Chỉnh sửa</button>` : '';
+        const deleteButton = set._custom ? `<button onclick="deleteCustomSet('${set.imageKey}')" class="text-xs bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 px-4 py-2 rounded-lg transition">🗑️ Xóa</button>` : '';
         content.innerHTML = `
             <div class="space-y-4">
                 <div class="flex items-start justify-between gap-3">
@@ -3066,6 +3070,10 @@ window.addEventListener('scroll', () => {
                 </div>
                 <div class="rounded-xl overflow-hidden bg-slate-50 border border-slate-200">
                     ${src ? `<img loading="lazy" src="${src}" alt="${set.title || 'Bộ huyệt'}" class="w-full max-h-[420px] object-cover">` : '<div class="flex items-center justify-center h-64 text-slate-400">Chưa có ảnh hiển thị.</div>'}
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    ${editButton}
+                    ${deleteButton}
                 </div>
                 <div class="space-y-2 text-sm text-slate-600">
                     <p><strong>Ghi chú:</strong> ${set.note || 'Không có.'}</p>
@@ -3101,12 +3109,30 @@ window.addEventListener('scroll', () => {
             return;
         }
         container.innerHTML = `${filtered.map(set => `
-                    <button type="button" data-key="${getSetKey(set)}" onclick="showSetDetail('${getSetKey(set)}')" class="w-full text-left px-4 py-4 border-b border-slate-100 hover:bg-slate-50 transition">
-                        <div class="font-semibold text-slate-900">${set.title || getSetKey(set)}</div>
-                        <div class="text-slate-500 text-sm mt-1">${set.description || 'Không có mô tả.'}</div>
-                        <div class="text-slate-400 text-xs italic mt-1">${set.note || 'Ghi chú chưa có.'}</div>
-                    </button>
+                    <div data-key="${getSetKey(set)}" class="w-full text-left px-4 py-4 border-b border-slate-100 hover:bg-slate-50 transition cursor-pointer">
+                        <div onclick="showSetDetail('${getSetKey(set)}')">
+                            <div class="font-semibold text-slate-900">${set.title || getSetKey(set)}</div>
+                            <div class="text-slate-500 text-sm mt-1">${set.description || 'Không có mô tả.'}</div>
+                            <div class="text-slate-400 text-xs italic mt-1">${set.note || 'Ghi chú chưa có.'}</div>
+                        </div>
+                        <div class="mt-3 flex items-center justify-between gap-2">
+                            <button type="button" data-edit-key="${getSetKey(set)}" class="dc-edit-set-btn text-[11px] bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-full transition">✏️ Chỉnh sửa</button>
+                            ${set._custom ? `<button type="button" data-delete-key="${set.imageKey}" class="dc-delete-set-btn text-[11px] bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 px-3 py-2 rounded-full transition">🗑️ Xóa</button>` : ''}
+                        </div>
+                    </div>
                 `).join('')}`;
+        container.querySelectorAll('.dc-edit-set-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                editSet(btn.dataset.editKey);
+            });
+        });
+        container.querySelectorAll('.dc-delete-set-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                deleteCustomSet(btn.dataset.deleteKey);
+            });
+        });
         const panel = document.getElementById('set-detail-panel');
         const content = document.getElementById('set-detail-content');
         if (panel) panel.classList.add('hidden');
@@ -3239,6 +3265,7 @@ window.addEventListener('scroll', () => {
         document.getElementById('new-set-status').textContent = '';
         document.getElementById('new-set-error').classList.add('hidden');
         dcEditingSetKey = null;
+        dcEditingSetOriginal = null;
     }
 
     async function saveNewSet() {
@@ -3265,13 +3292,13 @@ window.addEventListener('scroll', () => {
             errorEl.classList.remove('hidden');
             return;
         }
-        if (typeof DCcloudinary === 'undefined') {
+        const file = fileInput?.files?.[0];
+        if (file && typeof DCcloudinary === 'undefined') {
             errorEl.textContent = 'Cloudinary chưa được cấu hình. Không thể upload ảnh.';
             errorEl.classList.remove('hidden');
             return;
         }
         errorEl.classList.add('hidden');
-        const file = fileInput?.files?.[0];
         statusEl.textContent = dcEditingSetKey ? 'Đang cập nhật bộ huyệt...' : 'Đang upload ảnh lên Cloudinary...';
         try {
             let result = null;
@@ -3290,7 +3317,7 @@ window.addEventListener('scroll', () => {
                     size: file.size
                 });
             }
-            const originalSet = dcEditingSetKey ? getCustomSetImages().find(item => item.imageKey === dcEditingSetKey) : null;
+            const originalSet = dcEditingSetOriginal || (dcEditingSetKey ? getCustomSetImages().find(item => item.imageKey === dcEditingSetKey) : null);
             const setData = {
                 _custom: true,
                 title,
@@ -3327,11 +3354,28 @@ window.addEventListener('scroll', () => {
         const set = custom.find(item => item.imageKey === imageKey);
         if (!set) return;
         dcEditingSetKey = set.imageKey;
+        dcEditingSetOriginal = set;
         document.getElementById('new-set-title').value = set.title || '';
         document.getElementById('new-set-public-id').value = set.imageKey || '';
         document.getElementById('new-set-description').value = set.description || '';
         document.getElementById('new-set-note').value = set.note || '';
         document.getElementById('new-set-status').textContent = 'Chỉnh sửa bộ huyệt tùy chỉnh. Giữ nguyên ảnh nếu không đổi file.';
+        document.getElementById('new-set-error').classList.add('hidden');
+        const form = document.getElementById('add-set-form');
+        if (form) form.classList.remove('hidden');
+    }
+
+    function editSet(key) {
+        const allSets = getSetImageList();
+        const set = allSets.find(item => getSetKey(item) === key);
+        if (!set) return;
+        dcEditingSetKey = key;
+        dcEditingSetOriginal = set;
+        document.getElementById('new-set-title').value = set.title || '';
+        document.getElementById('new-set-public-id').value = set.imageKey || getSetKey(set);
+        document.getElementById('new-set-description').value = set.description || '';
+        document.getElementById('new-set-note').value = set.note || '';
+        document.getElementById('new-set-status').textContent = 'Chỉnh sửa bộ huyệt. Giữ nguyên ảnh nếu không đổi file.';
         document.getElementById('new-set-error').classList.add('hidden');
         const form = document.getElementById('add-set-form');
         if (form) form.classList.remove('hidden');
