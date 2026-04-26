@@ -3490,6 +3490,7 @@ window.addEventListener('scroll', () => {
         localStorage.setItem('dc_huyet_overrides', JSON.stringify(overrides));
         closeHuyetEditModal();
         searchHuyet();
+        buildProtoJumpNav();
     }
 
     function closeHuyetEditModal() {
@@ -3539,6 +3540,7 @@ window.addEventListener('scroll', () => {
         errEl.classList.add('hidden');
         toggleAddForm();
         searchHuyet();
+        buildProtoJumpNav();
     }
 
     function deleteCustomHuyet(id) {
@@ -3547,6 +3549,7 @@ window.addEventListener('scroll', () => {
         custom = custom.filter(h => h.id !== id);
         localStorage.setItem('dc_custom_huyet', JSON.stringify(custom));
         searchHuyet();
+        buildProtoJumpNav();
     }
 
     function getHuyetImageSrc(h) {
@@ -4170,6 +4173,7 @@ window.addEventListener('scroll', () => {
 
     // Init
     (async () => {
+        loadProtoJumpNavCache();
         await refreshFolderImageCache();
         await checkRelativeDataFolder();
         checkFolderStatus();
@@ -4204,11 +4208,31 @@ window.addEventListener('scroll', () => {
         { label: '🌿 Tổng quát', keywords: ['miễn dịch','cai thuốc','mụn','phục hồi','mệt','thải độc','ung thư'] },
     ];
 
-    function buildProtoJumpNav() {
+    const PROTO_JUMP_NAV_KEY = 'dc_proto_jump_nav';
+
+    function getCachedProtoJumpNav() {
+        try {
+            const cached = localStorage.getItem(PROTO_JUMP_NAV_KEY);
+            return cached ? JSON.parse(cached) : null;
+        } catch (err) {
+            console.warn('Không thể đọc cache ProtoJumpNav:', err);
+            return null;
+        }
+    }
+
+    function saveCachedProtoJumpNav(items) {
+        try {
+            localStorage.setItem(PROTO_JUMP_NAV_KEY, JSON.stringify(items));
+        } catch (err) {
+            console.warn('Không thể lưu cache ProtoJumpNav:', err);
+        }
+    }
+
+    function renderProtoJumpNavItems(items) {
         const nav = document.getElementById('proto-jump-nav');
         if (!nav) return;
         nav.innerHTML = '<span class="text-xs text-slate-400 self-center font-semibold mr-1">Nhảy đến:</span>';
-        protoGroups.forEach(g => {
+        items.forEach(g => {
             const btn = document.createElement('button');
             btn.textContent = g.label;
             btn.onclick = () => {
@@ -4227,6 +4251,25 @@ window.addEventListener('scroll', () => {
         all.style.cssText = 'background:#1e293b;color:#fff;border-color:#1e293b;';
         all.onclick = () => { document.getElementById('protocol-search').value=''; renderProtocols(getAllProtocols()); };
         nav.appendChild(all);
+    }
+
+    function buildProtoJumpNavItems() {
+        return protoGroups.map(g => ({ label: g.label, keywords: g.keywords }));
+    }
+
+    function buildProtoJumpNav() {
+        const items = buildProtoJumpNavItems();
+        saveCachedProtoJumpNav(items);
+        renderProtoJumpNavItems(items);
+    }
+
+    function loadProtoJumpNavCache() {
+        const cached = getCachedProtoJumpNav();
+        if (Array.isArray(cached) && cached.length) {
+            renderProtoJumpNavItems(cached);
+            return true;
+        }
+        return false;
     }
 
     // ── SƠ ĐỒ HUYỆT TƯƠNG TÁC ───────────────────────────────────────
