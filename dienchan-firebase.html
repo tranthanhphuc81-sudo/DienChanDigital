@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Diện Chẩn Firebase - Cloudinary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .card { border: 1px solid #e2e8f0; border-radius: 1rem; background: white; }
+        .card:hover { box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); }
+        .tag { font-size: 0.75rem; padding: 0.25rem 0.65rem; border-radius: 9999px; }
+        .tag-primary { background: #e0f2fe; color: #0369a1; }
+        .tag-secondary { background: #eef2ff; color: #4338ca; }
+        .tab-button { border-radius: 9999px; padding: 0.85rem 1.2rem; min-width: 110px; }
+        .tab-button.active { background: #1e293b; color: white; }
+        .tab-button.inactive { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
+        .detail-panel { border: 1px solid #e2e8f0; border-radius: 1rem; background: white; padding: 1.25rem; }
+        .detail-panel h3 { font-size: 1.125rem; margin-bottom: 0.5rem; }
+        .detail-row { display: grid; grid-template-columns: 110px 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+        .detail-row span:first-child { color: #475569; font-size: 0.82rem; font-weight: 600; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.9rem 0.75rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        th { background: #f8fafc; font-weight: 700; color: #334155; }
+        tr:hover { background: #f8fafc; }
+        #bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px); background: white; border-top: 1px solid #e2e8f0; }
+        #bottom-nav .nav-btn { width: 20%; text-align: center; padding: 0.85rem 0; color: #64748b; }
+        #bottom-nav .nav-btn.active { color: #dc2626; }
+        @media (min-width: 768px) { #bottom-nav { display: none; } }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto space-y-6">
+        <header class="bg-slate-800 text-white rounded-3xl p-6 shadow-xl">
+            <h1 class="text-2xl sm:text-4xl font-bold">Diện Chẩn Firebase</h1>
+            <p class="mt-2 text-slate-200">Trang mới dùng Firestore cho huyệt, phác đồ, bộ huyệt; ảnh vẫn lấy từ Cloudinary như cũ.</p>
+        </header>
+
+        <section class="grid gap-4 md:grid-cols-3">
+            <div class="card p-5 space-y-3">
+                <h2 class="font-semibold text-slate-800">Đăng nhập Firebase</h2>
+                <input id="firebase-email" type="email" placeholder="Email Firebase" class="w-full p-3 border rounded-xl" />
+                <input id="firebase-password" type="password" placeholder="Mật khẩu Firebase" class="w-full p-3 border rounded-xl" />
+                <div class="grid gap-3">
+                    <button onclick="onFirebaseSignIn()" class="w-full px-4 py-3 rounded-xl bg-blue-600 text-white">Đăng nhập</button>
+                    <button onclick="onFirebaseSignUp()" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white">Tạo tài khoản</button>
+                    <button onclick="onFirebaseSignOut()" class="w-full px-4 py-3 rounded-xl bg-slate-300 text-slate-700">Đăng xuất</button>
+                </div>
+                <p id="firebase-status" class="text-sm text-slate-500">Chưa kết nối Firebase.</p>
+            </div>
+            <div class="card p-5 space-y-3">
+                <h2 class="font-semibold text-slate-800">Lấy dữ liệu</h2>
+                <button onclick="loadAllFirebaseData()" class="w-full px-4 py-3 rounded-xl bg-amber-500 text-white">Tải dữ liệu Firestore</button>
+                <button onclick="migrateEmbeddedData()" class="w-full px-4 py-3 rounded-xl bg-indigo-600 text-white">Migrate từ dienchan.html</button>
+                <p class="text-sm text-slate-500">Dữ liệu huyệt, phác đồ, bộ huyệt sẽ được trích xuất từ nội dung cũ của trang <code>dienchan.html</code>.</p>
+                <p id="migrate-status" class="text-sm text-slate-500"></p>
+            </div>
+            <div class="card p-5 space-y-3">
+                <h2 class="font-semibold text-slate-800">Điều khiển</h2>
+                <button onclick="loadFirebaseCollection('acupoints')" class="w-full px-4 py-3 rounded-xl bg-slate-700 text-white">Tải Huyệt</button>
+                <button onclick="loadFirebaseCollection('treatmentPlans')" class="w-full px-4 py-3 rounded-xl bg-slate-700 text-white">Tải Phác đồ</button>
+                <button onclick="loadFirebaseCollection('acupointGroups')" class="w-full px-4 py-3 rounded-xl bg-slate-700 text-white">Tải Bộ huyệt</button>
+                <div class="pt-3 border-t border-slate-200">
+                    <p class="text-sm text-slate-500">Các ảnh vẫn dùng Cloudinary và fallback dùng định danh ảnh gốc.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="space-y-4">
+            <div class="flex flex-wrap gap-3 items-center">
+                <button data-view="huyet" onclick="showSection('huyet')" class="tab-button active">🔍 Tra cứu Huyệt</button>
+                <button data-view="protocols" onclick="showSection('protocols')" class="tab-button inactive">📋 Phác đồ Mẫu</button>
+                <button data-view="groups" onclick="showSection('groups')" class="tab-button inactive">🧩 Bộ huyệt</button>
+            </div>
+            <div class="card p-5 space-y-4">
+                <div class="flex flex-wrap gap-3 items-center justify-between">
+                    <button onclick="toggleFaceMap()" class="px-4 py-3 rounded-2xl bg-slate-900 text-white">🗺️ Sơ đồ huyệt tương tác</button>
+                    <p class="text-sm text-slate-500">Tra cứu huyệt bằng dữ liệu Firebase hoặc dữ liệu cũ.</p>
+                </div>
+                <input id="search-input" type="search" placeholder="Nhập số huyệt (127, 19...) hoặc triệu chứng (đau đầu, đau bao tử)..." class="w-full p-4 border rounded-3xl text-slate-700" oninput="renderCurrentView()" />
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="clearSelection()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">🧹 Xóa chọn</button>
+                    <button onclick="loadAllFirebaseData()" class="px-4 py-3 rounded-2xl bg-amber-500 text-white">🔄 Tải lại dữ liệu</button>
+                </div>
+            </div>
+            <div id="face-map-panel" class="card p-5 hidden">
+                <h3 class="text-lg font-semibold mb-3">Sơ đồ huyệt tương tác</h3>
+                <p class="text-sm text-slate-500">Chức năng sơ đồ hiện tại chỉ để minh hoạ. Bạn có thể mở rộng phần này bằng ảnh tương tác hoặc bản đồ huyệt.</p>
+            </div>
+        </section>
+
+        <section class="grid gap-6 lg:grid-cols-[1.8fr_1.2fr]">
+            <div id="content-area" class="space-y-6"></div>
+            <aside id="detail-panel" class="detail-panel hidden"></aside>
+        </section>
+        <div id="mobile-padding" class="h-24 md:hidden"></div>
+        <nav id="bottom-nav" class="md:hidden">
+            <div class="flex">
+                <button onclick="showSection('huyet')" class="nav-btn active">🔍<div class="text-[11px]">Huyết</div></button>
+                <button onclick="showSection('protocols')" class="nav-btn">📋<div class="text-[11px]">Phác đồ</div></button>
+                <button onclick="showSection('groups')" class="nav-btn">🧩<div class="text-[11px]">Bộ huyệt</div></button>
+            </div>
+        </nav>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+    <script src="cloudinary.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        let currentView = 'huyet';
+        let huyetItems = [];
+        let protocolItems = [];
+        let groupItems = [];
+        let selectedItem = null;
+
+        function showSection(name) {
+            currentView = name;
+            setActiveTab(name);
+            clearSelection();
+            renderCurrentView();
+        }
+
+        function getSearchText() {
+            return document.getElementById('search-input').value.toLowerCase().trim();
+        }
+
+        function renderCurrentView() {
+            const search = getSearchText();
+            const container = document.getElementById('content-area');
+            if (!container) return;
+            if (currentView === 'huyet') return renderHuyetList(container, search);
+            if (currentView === 'protocols') return renderProtocolList(container, search);
+            if (currentView === 'groups') return renderGroupList(container, search);
+        }
+
+        function setActiveTab(name) {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                const isActive = btn.dataset.view === name;
+                btn.classList.toggle('active', isActive);
+                btn.classList.toggle('inactive', !isActive);
+            });
+            document.querySelectorAll('#bottom-nav .nav-btn').forEach(btn => {
+                const view = btn.getAttribute('onclick')?.match(/showSection\('([^']+)'\)/)?.[1];
+                btn.classList.toggle('active', view === name);
+            });
+            const facePanel = document.getElementById('face-map-panel');
+            if (name !== 'huyet' && facePanel) facePanel.classList.add('hidden');
+        }
+
+        function clearSelection() {
+            const detail = document.getElementById('detail-panel');
+            if (detail) detail.classList.add('hidden');
+            selectedItem = null;
+        }
+
+        function toggleFaceMap() {
+            const panel = document.getElementById('face-map-panel');
+            if (!panel) return;
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function renderDetail(item, type) {
+            const detail = document.getElementById('detail-panel');
+            if (!detail) return;
+            if (!item) {
+                detail.classList.add('hidden');
+                return;
+            }
+            detail.classList.remove('hidden');
+            const title = type === 'huyet' ? `${item.id} ${item.name || ''}` : item.title || item.name || '';
+            const subtitle = type === 'huyet' ? item.location || '' : type === 'protocols' ? (item.acupointIds || []).join(', ') : (item.acupointIds || []).join(', ');
+            detail.innerHTML = `
+                <div class="flex items-start justify-between gap-3 mb-4">
+                    <div>
+                        <h3>${title}</h3>
+                        <p class="text-sm text-slate-500">${subtitle}</p>
+                    </div>
+                    <button onclick="clearSelection()" class="px-3 py-2 rounded-xl bg-slate-100 text-slate-700">Đóng</button>
+                </div>
+                <div class="space-y-3">
+                    ${type === 'huyet' ? `
+                        <div class="detail-row"><span>Vị trí</span><span>${item.location || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Tác dụng</span><span>${item.functions || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Thực hiện</span><span>${item.manual || 'Không có'}</span></div>
+                    ` : type === 'protocols' ? `
+                        <div class="detail-row"><span>Phác đồ</span><span>${item.title || item.name || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Mô tả</span><span>${item.description || item.note || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Huyệt</span><span>${(item.acupointIds || []).join(', ') || 'Không có'}</span></div>
+                    ` : `
+                        <div class="detail-row"><span>Bộ huyệt</span><span>${item.title || item.name || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Mô tả</span><span>${item.description || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Huyệt</span><span>${(item.acupointIds || []).join(', ') || 'Không có'}</span></div>
+                    `}
+                    ${getSetImageUrl(item) ? `<img src="${getSetImageUrl(item)}" alt="${title}" class="w-full h-48 object-cover rounded-xl" />` : ''}
+                </div>
+            `;
+        }
+
+        function selectItem(type, id) {
+            let item;
+            if (type === 'huyet') item = huyetItems.find(i => String(i.id) === String(id));
+            if (type === 'protocols') item = protocolItems.find(i => String(i.id) === String(id) || String(i.name) === String(id));
+            if (type === 'groups') item = groupItems.find(i => String(i.id) === String(id) || String(i.title) === String(id));
+            selectedItem = item || null;
+            renderDetail(item, type);
+        }
+
+        function getHuyetSearchResults(search) {
+            const normalized = search.trim().toLowerCase();
+            if (!normalized) return [];
+            const tokens = normalized.split(/[\s,;|]+/).filter(Boolean);
+            const ids = tokens.filter(t => /^\d+$/.test(t));
+            if (ids.length) {
+                const seen = new Set();
+                const results = [];
+                for (const id of ids) {
+                    if (seen.has(id)) continue;
+                    const item = huyetItems.find(i => String(i.id) === id);
+                    if (item) {
+                        seen.add(id);
+                        results.push(item);
+                    }
+                }
+                if (results.length) return results;
+            }
+            return huyetItems.filter(item => {
+                const hay = `${item.id} ${item.name || ''} ${item.location || ''} ${item.functions || ''}`.toLowerCase();
+                return hay.includes(normalized);
+            });
+        }
+
+        function renderHuyetList(container, search) {
+            const filtered = getHuyetSearchResults(search);
+            if (!search.trim()) {
+                container.innerHTML = `
+                    <div class="card p-6 text-slate-600">
+                        <p class="text-lg font-semibold">Nhập huyệt cần tìm</p>
+                        <p class="mt-2 text-sm">Ví dụ: <strong>23 34 1</strong> hoặc triệu chứng như <strong>đau đầu</strong>. Chỉ hiện kết quả sau khi nhập.</p>
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = `
+                <div class="flex flex-wrap justify-between gap-3 items-center mb-3">
+                    <div>
+                        <h2 class="text-xl font-semibold">Kết quả huyệt</h2>
+                        <p class="text-sm text-slate-500">Hiển thị ${filtered.length} huyệt theo tìm kiếm</p>
+                    </div>
+                </div>
+                <div class="grid gap-4 lg:grid-cols-2">${filtered.map(item => `
+                    <article onclick="selectItem('huyet', '${item.id}')" class="card p-4 cursor-pointer hover:border-slate-300">
+                        <div class="flex flex-wrap gap-3 items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-semibold">#${item.id} ${item.name || ''}</h3>
+                                <p class="text-sm text-slate-500 mt-1">${item.location || ''}</p>
+                            </div>
+                            <span class="tag tag-primary">Huyệt</span>
+                        </div>
+                        <p class="text-sm text-slate-600"><strong>Tác dụng:</strong> ${item.functions || ''}</p>
+                        <p class="text-sm text-slate-600 mt-2"><strong>Thực hiện:</strong> ${item.manual || ''}</p>
+                    </article>
+                `).join('')}</div>`;
+        }
+
+        function renderProtocolList(container, search) {
+            const filtered = protocolItems.filter(item => {
+                const hay = `${item.title || item.name || ''} ${item.description || item.note || ''} ${(item.acupointIds || []).join(' ')}`.toLowerCase();
+                return !search || hay.includes(search);
+            });
+            container.innerHTML = `
+                <div class="flex flex-wrap justify-between gap-3 items-center mb-3">
+                    <div>
+                        <h2 class="text-xl font-semibold">Phác đồ mẫu</h2>
+                        <p class="text-sm text-slate-500">${filtered.length} / ${protocolItems.length} kết quả</p>
+                    </div>
+                </div>
+                <div class="grid gap-4 lg:grid-cols-2">${filtered.map(item => `
+                    <article onclick="selectItem('protocols', '${item.id || item.title}')" class="card p-4 cursor-pointer hover:border-slate-300">
+                        <div class="flex flex-wrap gap-3 items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-semibold">${item.title || item.name || ''}</h3>
+                                <p class="text-sm text-slate-500 mt-1">${(item.acupointIds || []).join(', ')}</p>
+                            </div>
+                            <span class="tag tag-secondary">Phác đồ</span>
+                        </div>
+                        <p class="text-sm text-slate-600">${item.description || item.note || ''}</p>
+                    </article>
+                `).join('')}</div>`;
+        }
+
+        function getSetImageUrl(item) {
+            const id = (item.imageIds && item.imageIds[0]) || item.imageKey || (item.file ? item.file.replace(/\.[^.]+$/, '') : '');
+            if (!id) return '';
+            return (typeof DCcloudinary !== 'undefined') ? DCcloudinary.getImageUrlForKey(id) : '';
+        }
+
+        function renderGroupList(container, search) {
+            const filtered = groupItems.filter(item => {
+                const hay = `${item.title || item.name || ''} ${item.description || ''} ${item.notes || item.note || ''}`.toLowerCase();
+                return !search || hay.includes(search);
+            });
+            container.innerHTML = `
+                <div class="flex flex-wrap justify-between gap-3 items-center mb-3">
+                    <div>
+                        <h2 class="text-xl font-semibold">Bộ huyệt</h2>
+                        <p class="text-sm text-slate-500">${filtered.length} / ${groupItems.length} kết quả</p>
+                    </div>
+                </div>
+                <div class="grid gap-4 lg:grid-cols-2">${filtered.map(item => `
+                    <article onclick="selectItem('groups', '${item.id || item.title}')" class="card p-4 cursor-pointer hover:border-slate-300">
+                        <div class="flex flex-wrap gap-3 items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-semibold">${item.title || item.name || ''}</h3>
+                                <p class="text-sm text-slate-500 mt-1">${item.acupointIds ? item.acupointIds.join(', ') : ''}</p>
+                            </div>
+                            <span class="tag tag-primary">Bộ huyệt</span>
+                        </div>
+                        <div class="grid gap-3 sm:grid-cols-[120px_1fr] items-start">
+                            <div class="w-full h-32 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-sm">Chọn để xem ảnh</div>
+                            <div>
+                                <p class="text-sm text-slate-600">${item.description || ''}</p>
+                                ${item.notes || item.note ? `<p class="text-sm text-slate-500 mt-2">${item.notes || item.note}</p>` : ''}
+                            </div>
+                        </div>
+                    </article>
+                `).join('')}</div>`;
+        }
+
+        async function setStatus(message, error = false) {
+            const status = document.getElementById('firebase-status');
+            if (status) {
+                status.textContent = message;
+                status.className = error ? 'text-sm text-red-600' : 'text-sm text-slate-500';
+            }
+        }
+
+        async function onFirebaseSignIn() {
+            const email = document.getElementById('firebase-email').value.trim();
+            const password = document.getElementById('firebase-password').value;
+            if (!email || !password) return setStatus('Nhập email và mật khẩu.', true);
+            try {
+                DCFirebase.initFirebase();
+                await DCFirebase.signInWithFirebase(email, password);
+                setStatus(`Đã đăng nhập ${email}`);
+                await loadAllFirebaseData();
+            } catch (err) {
+                setStatus(`Lỗi đăng nhập: ${err.message || err}`, true);
+            }
+        }
+
+        async function onFirebaseSignUp() {
+            const email = document.getElementById('firebase-email').value.trim();
+            const password = document.getElementById('firebase-password').value;
+            if (!email || !password) return setStatus('Nhập email và mật khẩu.', true);
+            try {
+                DCFirebase.initFirebase();
+                await DCFirebase.signUpWithFirebase(email, password);
+                setStatus(`Tạo tài khoản xong ${email}`);
+                await loadAllFirebaseData();
+            } catch (err) {
+                setStatus(`Lỗi đăng ký: ${err.message || err}`, true);
+            }
+        }
+
+        async function onFirebaseSignOut() {
+            try {
+                DCFirebase.initFirebase();
+                await DCFirebase.signOutFirebase();
+                setStatus('Đã đăng xuất.');
+            } catch (err) {
+                setStatus(`Lỗi đăng xuất: ${err.message || err}`, true);
+            }
+        }
+
+        async function loadFirebaseCollection(collection) {
+            try {
+                DCFirebase.initFirebase();
+                const docs = await DCFirebase.listDocuments(collection);
+                if (collection === 'acupoints') {
+                    huyetItems = docs;
+                    showSection('huyet');
+                } else if (collection === 'treatmentPlans') {
+                    protocolItems = docs;
+                    showSection('protocols');
+                } else if (collection === 'acupointGroups') {
+                    groupItems = docs;
+                    showSection('groups');
+                }
+                setStatus(`Đã tải ${docs.length} bản ghi từ ${collection}.`);
+            } catch (err) {
+                setStatus(`Lỗi tải ${collection}: ${err.message || err}`, true);
+            }
+        }
+
+        async function loadAllFirebaseData() {
+            await loadFirebaseCollection('acupoints');
+            await loadFirebaseCollection('treatmentPlans');
+            await loadFirebaseCollection('acupointGroups');
+            if (!huyetItems.length && !protocolItems.length && !groupItems.length) {
+                await loadFallbackEmbeddedData();
+            }
+        }
+
+        function parseJsArray(html, name) {
+            const regex = new RegExp(`const\\s+${name}\\s*=\\s*(\\[[\\s\\S]*?\\]);`);
+            const match = html.match(regex);
+            if (!match) throw new Error(`Không tìm thấy ${name} trong dienchan.html`);
+            return new Function('return ' + match[1])();
+        }
+
+        async function loadFallbackEmbeddedData() {
+            const statusEl = document.getElementById('migrate-status');
+            if (statusEl) statusEl.textContent = 'Firestore trống, đang dùng dữ liệu cũ để hiển thị tạm thời...';
+            const html = await fetch('dienchan.html').then(r => r.text());
+            const database = parseJsArray(html, 'database');
+            const protocols = parseJsArray(html, 'protocols');
+            const setImages = parseJsArray(html, 'setImages');
+            huyetItems = database.map(item => ({
+                id: item.id,
+                name: item.name || item.id,
+                location: item.pos || '',
+                functions: item.effect || '',
+                manual: item.manual || ''
+            }));
+            protocolItems = protocols.map(item => ({
+                id: item.id || item.name || item.title,
+                title: item.name || item.title || 'Phác đồ',
+                description: item.note || item.description || '',
+                acupointIds: Array.isArray(item.points) ? item.points.map(String) : []
+            }));
+            groupItems = setImages.map(item => ({
+                id: item.imageKey || item.file?.replace(/\.[^.]+$/, '') || item.title,
+                title: item.title || item.name || 'Bộ huyệt',
+                description: item.description || '',
+                acupointIds: item.points || item.acupointIds || [],
+                imageIds: item.file ? [item.file.replace(/\.[^.]+$/, '')] : (item.imageKey ? [item.imageKey] : [])
+            }));
+            setStatus('Đã hiển thị dữ liệu cũ tạm thời. Hãy migrate nếu muốn lưu vào Firestore.');
+            renderCurrentView();
+        }
+
+        async function migrateEmbeddedData() {
+            const statusEl = document.getElementById('migrate-status');
+            if (statusEl) statusEl.textContent = 'Đang đọc dữ liệu cũ từ dienchan.html...';
+            try {
+                DCFirebase.initFirebase();
+                const user = DCFirebase.getFirebaseUser();
+                if (!user) throw new Error('Vui lòng đăng nhập Firebase trước khi migrate.');
+                const html = await fetch('dienchan.html').then(r => r.text());
+                const database = parseJsArray(html, 'database');
+                const protocols = parseJsArray(html, 'protocols');
+                const setImages = parseJsArray(html, 'setImages');
+
+                let count = { huyet: 0, protocol: 0, group: 0 };
+                for (const item of database) {
+                    await DCFirebase.saveAcupoint({
+                        id: item.id,
+                        name: item.name || item.id,
+                        location: item.pos || '',
+                        functions: item.effect || '',
+                        manual: item.manual || '',
+                        imageIds: item.id ? [item.id] : [],
+                        tags: ['embedded', 'legacy'],
+                        createdBy: user.uid,
+                        meta: { legacySource: 'dienchan.html' }
+                    });
+                    count.huyet += 1;
+                }
+                for (const item of protocols) {
+                    await DCFirebase.saveTreatmentPlan({
+                        title: item.name || item.title || 'Phác đồ cũ',
+                        description: item.note || item.description || '',
+                        acupointIds: Array.isArray(item.points) ? item.points.map(String) : [],
+                        keywords: item.keywords || [],
+                        imageIds: item.imageIds || [],
+                        createdBy: user.uid,
+                        meta: { legacySource: 'dienchan.html' }
+                    });
+                    count.protocol += 1;
+                }
+                for (const item of setImages) {
+                    const imageKey = item.file ? item.file.replace(/\.[^.]+$/, '') : item.imageKey || '';
+                    await DCFirebase.saveAcupointGroup({
+                        title: item.title || item.name || 'Bộ huyệt cũ',
+                        description: item.description || '',
+                        acupointIds: item.points || item.acupointIds || [],
+                        imageIds: imageKey ? [imageKey] : [],
+                        tags: ['embedded', 'legacy'],
+                        notes: item.note || '',
+                        createdBy: user.uid,
+                        meta: { legacySource: 'dienchan.html' }
+                    });
+                    count.group += 1;
+                }
+
+                const legacyResult = await DCFirebase.migrateLegacyDataToFirebase();
+                const legacyTotal = legacyResult.acupoints + legacyResult.protocols + legacyResult.groups + legacyResult.records;
+                if (statusEl) statusEl.textContent = `Hoàn tất: ${count.huyet} huyệt, ${count.protocol} phác đồ, ${count.group} bộ huyệt. Đã migrate thêm ${legacyTotal} bản ghi cũ.`;
+                setStatus('Migration đã hoàn thành.');
+                await loadAllFirebaseData();
+            } catch (err) {
+                if (statusEl) statusEl.textContent = `Lỗi: ${err.message || err}`;
+                setStatus(`Migration thất bại: ${err.message || err}`, true);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try { DCFirebase.initFirebase(); } catch (e) { console.warn('Không thể khởi tạo Firebase ngay.', e); }
+            showSection('huyet');
+        });
+    </script>
+</body>
+</html>
