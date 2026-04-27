@@ -119,6 +119,20 @@
         .tab-button.inactive {
             color: #475569;
         }
+        .card p,
+        .guide-card p,
+        .detail-panel p {
+            text-align: left;
+        }
+        .text-justify,
+        .guide-card p.guide-note,
+        .guide-alert p,
+        .card p.text-justify,
+        .detail-panel p.text-justify {
+            text-align: justify;
+            text-align-last: left;
+            text-justify: inter-word;
+        }
         .guide-pill {
             display: inline-flex;
             align-items: center;
@@ -612,7 +626,7 @@
     <div class="max-w-6xl mx-auto space-y-6">
         <header class="main-header rounded-3xl p-6">
             <h1 class="text-2xl sm:text-4xl font-bold">Diện Chẩn Firebase</h1>
-            <p class="mt-2 text-slate-200">Trang mới dùng Firestore cho huyệt, phác đồ, bộ huyệt; ảnh vẫn lấy từ Cloudinary như cũ.</p>
+            <p class="mt-2 text-slate-200 text-justify">Trang mới dùng Firestore cho huyệt, phác đồ, bộ huyệt; ảnh vẫn lấy từ Cloudinary như cũ.</p>
         </header>
 
         <section class="space-y-4">
@@ -622,7 +636,7 @@
                         <h2 class="text-xl font-semibold">Bản đồ huyệt Diện Chẩn</h2>
                         <p class="text-sm text-slate-500">Hình này sẽ cố định hiển thị ở đầu giao diện để tham khảo khi chuyển giữa các tab.</p>
                     </div>
-                    <div class="text-sm text-slate-500">Lưu ý: đặt file ảnh `huyet-map.jpg` cùng thư mục với trang này.</div>
+                    <div class="text-sm text-slate-500 text-justify">Lưu ý: đặt file ảnh `huyet-map.jpg` cùng thư mục với trang này.</div>
                 </div>
                 <div class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
                     <img id="acupoint-map-image" src="huyet-map.jpg" alt="Bản đồ huyệt Diện Chẩn" class="w-full h-auto object-cover image-zoomable" onclick="openImageLightbox(this.src)" />
@@ -650,7 +664,7 @@
                 </div>
                 <div id="face-map-panel" class="card p-5 hidden">
                     <h3 class="text-lg font-semibold mb-3">Sơ đồ huyệt tương tác</h3>
-                    <p class="text-sm text-slate-500">Chức năng sơ đồ hiện tại chỉ để minh hoạ. Bạn có thể mở rộng bằng ảnh tương tác hoặc bản đồ huyệt.</p>
+                    <p class="text-sm text-slate-500 text-justify">Chức năng sơ đồ hiện tại chỉ để minh hoạ. Bạn có thể mở rộng bằng ảnh tương tác hoặc bản đồ huyệt.</p>
                 </div>
             </div>
         </section>
@@ -2533,6 +2547,7 @@
                         </div>
                         <div class="flex flex-wrap gap-3 items-center">
                             <button onclick="loadFirebaseCollection('medicalRecords')" class="px-4 py-3 rounded-2xl bg-amber-500 text-white">Tải Hồ sơ bệnh trạng</button>
+                            <p class="text-sm text-slate-500">Chỉ tải hồ sơ Firebase do bạn tạo.</p>
                         </div>
                     </div>
                     <div class="card p-5 space-y-4">
@@ -2833,7 +2848,12 @@
         async function loadFirebaseCollection(collection, navigate = true) {
             try {
                 DCFirebase.initFirebase();
-                const docs = await DCFirebase.listDocuments(collection);
+                let docs;
+                if (collection === 'medicalRecords') {
+                    docs = await DCFirebase.listMedicalRecordsForCurrentUser();
+                } else {
+                    docs = await DCFirebase.listDocuments(collection);
+                }
                 if (collection === 'acupoints') {
                     huyetItems = docs;
                     if (navigate) showSection('huyet');
