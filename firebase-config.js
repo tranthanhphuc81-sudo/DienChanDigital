@@ -9,7 +9,7 @@
   measurementId: "G-BW66E3R2B7"
     };
 
-    const FIREBASE_ADMIN_EMAIL = 'admin@dienchandigital.com';
+    const FIREBASE_ADMIN_EMAILS = ['admin@dienchandigital.com'];
 
     let app = null;
     let auth = null;
@@ -92,7 +92,8 @@
 
     function isFirebaseAdmin() {
         const user = getFirebaseUser();
-        return !!user && String(user.email || '').toLowerCase() === FIREBASE_ADMIN_EMAIL;
+        const email = String(user?.email || '').toLowerCase();
+        return !!email && FIREBASE_ADMIN_EMAILS.includes(email);
     }
 
     function assertFirebaseWritePermission() {

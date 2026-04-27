@@ -673,7 +673,7 @@
         let highlightedCardId = null;
         let isRecordInputComposing = false;
 
-        const FIREBASE_ADMIN_EMAIL = 'admin@dienchandigital.com';
+        const FIREBASE_ADMIN_EMAILS = ['admin@dienchandigital.com'];
         const LOCAL_DATA_KEYS = {
             acupoints: 'dc_local_acupoints',
             protocols: 'dc_local_protocols',
@@ -688,7 +688,16 @@
         }
 
         function isFirebaseAdmin() {
-            return getFirebaseUserEmail() === FIREBASE_ADMIN_EMAIL;
+            const email = getFirebaseUserEmail();
+            return !!email && FIREBASE_ADMIN_EMAILS.includes(email);
+        }
+
+        function canWriteFirebase() {
+            return typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser() && isFirebaseAdmin();
+        }
+
+        function canUseCloudinary() {
+            return canWriteFirebase();
         }
 
         function getLocalStorageKey(type) {
@@ -869,6 +878,11 @@
                 ? `Firebase đã đăng nhập: ${authUser.email}${isFirebaseAdmin() ? ' (Admin)' : ' (Chỉ đọc)'}`
                 : 'Chưa kết nối Firebase.';
             const authStatusClass = 'text-sm text-slate-500 mt-3';
+            const authInfoNote = authUser
+                ? isFirebaseAdmin()
+                    ? 'Admin có quyền ghi và upload Cloudinary.'
+                    : 'Tài khoản này chỉ đọc Firebase. Mọi thay đổi sẽ chỉ lưu cục bộ.'
+                : 'Đăng nhập Firebase để xem dữ liệu hoặc dùng local fallback.';
             container.innerHTML = `
                 <div class="space-y-4">
                     <div class="accordion-card">
@@ -886,6 +900,7 @@
                             <button onclick="onFirebaseSignUp()" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white mb-2">Tạo tài khoản</button>
                             <button onclick="onFirebaseSignOut()" class="w-full px-4 py-3 rounded-xl bg-slate-300 text-slate-700">Đăng xuất</button>
                             <p id="firebase-auth-status" class="${authStatusClass}">${authStatusText}</p>
+                            <p id="firebase-auth-note" class="text-sm text-slate-500 mt-2">${authInfoNote}</p>
                             <p id="firebase-status" class="text-sm text-slate-500 mt-3"></p>
                         </div>
                     </div>
@@ -1632,8 +1647,8 @@
 
         async function uploadFormImage(file, folder) {
             if (!file) return [];
-            if (!isFirebaseAdmin()) {
-                console.warn('Chỉ admin mới upload ảnh lên Cloudinary.');
+            if (!canUseCloudinary()) {
+                setStatus('Chỉ admin mới được phép upload ảnh Cloudinary. Ảnh không được gắn vào bản ghi này.', true);
                 return [];
             }
             if (typeof DCcloudinary === 'undefined') {
@@ -1977,6 +1992,10 @@
             DCFirebase.initFirebase();
             if (!DCFirebase.getFirebaseUser()) {
                 setStatus('Vui lòng đăng nhập Firebase trước khi tạo bản ghi huyệt.', true);
+                return;
+            }
+            if (!isFirebaseAdmin()) {
+                setStatus('Chỉ admin mới có thể tạo huyệt từ Cloudinary vào Firebase.', true);
                 return;
             }
             const statusText = `Đang tạo ${ids.length} huyệt từ ảnh Cloudinary...`;
