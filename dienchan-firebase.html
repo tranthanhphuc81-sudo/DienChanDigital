@@ -586,7 +586,8 @@
                 <button data-view="protocols" onclick="showSection('protocols')" class="tab-button inactive">📋 Phác đồ Mẫu</button>
                 <button data-view="groups" onclick="showSection('groups')" class="tab-button inactive">🧩 Bộ huyệt</button>
                 <button data-view="records" onclick="showSection('records')" class="tab-button inactive">🩺 Hồ sơ bệnh trạng</button>
-                <button data-view="guide" onclick="showSection('guide')" class="tab-button inactive">📘 Hướng dẫn</button>
+                <button data-view="project" onclick="showSection('project')" class="tab-button inactive">🧭 Hướng dẫn sử dụng</button>
+                <button data-view="guide" onclick="showSection('guide')" class="tab-button inactive">📘 Kỹ thuật Diện Chẩn</button>
             </div>
             <div id="view-controls" class="card p-5 space-y-4">
                 <div id="search-panel" class="space-y-4">
@@ -623,7 +624,8 @@
                 <button onclick="showSection('protocols')" class="nav-btn">📋<div class="text-[11px]">Phác đồ</div></button>
                 <button onclick="showSection('groups')" class="nav-btn">🧩<div class="text-[11px]">Bộ huyệt</div></button>
                 <button onclick="showSection('records')" class="nav-btn">🩺<div class="text-[11px]">Hồ sơ</div></button>
-                <button onclick="showSection('guide')" class="nav-btn">📘<div class="text-[11px]">Hướng dẫn</div></button>
+                <button onclick="showSection('project')" class="nav-btn">🧭<div class="text-[11px]">HDSD</div></button>
+                <button onclick="showSection('guide')" class="nav-btn">📘<div class="text-[11px]">Kỹ thuật</div></button>
             </div>
         </nav>
     </div>
@@ -955,11 +957,12 @@
             if (!container) return;
             const controls = document.getElementById('view-controls');
             if (controls) {
-                controls.style.display = currentView === 'manage' || currentView === 'guide' ? 'none' : 'block';
+                controls.style.display = currentView === 'manage' || currentView === 'guide' || currentView === 'project' ? 'none' : 'block';
             }
             if (currentView === 'manage') {
                 return renderManageView(container);
             }
+            if (currentView === 'project') return renderProjectGuideView(container);
             if (currentView === 'guide') return renderGuideView(container);
             if (currentView === 'huyet') return renderHuyetList(container, search);
             if (currentView === 'protocols') return renderProtocolList(container, search);
@@ -1101,7 +1104,7 @@
             container.innerHTML = `
                 <div class="space-y-6">
                     <div class="guide-card">
-                        <div class="guide-section-title">📘 Hướng dẫn thao tác Diện Chẩn</div>
+                        <div class="guide-section-title">📘 Kỹ thuật Diện Chẩn</div>
                         <p class="guide-note">Trang này trình bày các nguyên tắc, kỹ thuật thao tác, dụng cụ, chống chỉ định và các bước thực hiện phác đồ chuẩn. Nội dung được chia rõ từng phần để bạn tiếp cận nhanh hơn.</p>
                         <div class="guide-nav">
                             <a href="#guide-principle" class="guide-pill">Nguyên tắc</a>
@@ -1240,6 +1243,54 @@
                     </div>
                     <div class="guide-card">
                         <p class="guide-note">Nội dung này mang tính tham khảo. Với các bệnh lý nặng hoặc triệu chứng phức tạp, nên tham khảo thêm chuyên gia Diện Chẩn và bác sĩ chuyên khoa.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjectGuideView(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="guide-card">
+                        <div class="guide-section-title">🧭 Hướng dẫn sử dụng dự án</div>
+                        <p class="guide-note">Trang này giúp bạn biết cách dùng các tab, chức năng lưu dữ liệu, phân quyền và tương tác với Firestore/Cloudinary.</p>
+                    </div>
+                    <div class="guide-card">
+                        <div class="guide-section-title">📌 Tổng quan các tab</div>
+                        <ul class="text-slate-700 space-y-2">
+                            <li><strong>Quản lý:</strong> đăng nhập Firebase, tải dữ liệu, migrate và điều khiển tải từng loại.</li>
+                            <li><strong>Tra cứu Huyệt:</strong> tìm huyệt theo số hoặc triệu chứng.</li>
+                            <li><strong>Phác đồ Mẫu:</strong> xem và tìm phác đồ điều trị.</li>
+                            <li><strong>Bộ huyệt:</strong> xem nhóm huyệt và liên kết các huyệt.</li>
+                            <li><strong>Hồ sơ bệnh trạng:</strong> lưu, sửa, xóa hồ sơ bệnh án.</li>
+                        </ul>
+                    </div>
+                    <div class="guide-card">
+                        <div class="guide-section-title">🔐 Quyền và lưu trữ</div>
+                        <ul class="text-slate-700 space-y-2">
+                            <li><strong>Admin:</strong> email <code>admin@dienchandigital.com</code> được phép ghi Firebase và upload ảnh Cloudinary.</li>
+                            <li><strong>Người dùng khác:</strong> chỉ đọc dữ liệu Firebase; thay đổi sẽ lưu cục bộ trên trình duyệt.</li>
+                            <li>Nếu không đăng nhập hoặc không phải admin, dữ liệu thêm/sửa/xóa sẽ chỉ tồn tại trong <code>localStorage</code> của trình duyệt hiện tại.</li>
+                            <li>Nếu muốn đồng bộ lên Firestore, hãy đăng nhập bằng tài khoản admin.</li>
+                        </ul>
+                    </div>
+                    <div class="guide-card">
+                        <div class="guide-section-title">⚙️ Hướng dẫn thao tác chức năng</div>
+                        <ul class="text-slate-700 space-y-2">
+                            <li>Để thêm huyệt/phác đồ/bộ huyệt/hồ sơ mới: mở form tương ứng, nhập thông tin và bấm “Lưu”.</li>
+                            <li>Để sửa: chọn mục, bấm “Chỉnh sửa”, sau đó bấm “Lưu”.</li>
+                            <li>Để xóa hồ sơ bệnh trạng: dùng nút đỏ “Xóa” trên thẻ hoặc trong chi tiết.</li>
+                            <li>Ảnh chỉ upload qua admin. Nếu bạn không phải admin, hình không được gửi lên Cloudinary.</li>
+                        </ul>
+                    </div>
+                    <div class="guide-card">
+                        <div class="guide-section-title">⚠️ Lưu ý quan trọng</div>
+                        <ul class="text-slate-700 space-y-2">
+                            <li>LocalStorage không đồng bộ giữa các trình duyệt và thiết bị.</li>
+                            <li>Không dùng tài khoản thường nếu bạn cần dữ liệu lưu chung cho nhiều người.</li>
+                            <li>Firebase Auth và Firestore chỉ quản lý dữ liệu từ admin, còn người dùng khác chỉ xem được dữ liệu chung.</li>
+                            <li>Nếu muốn chuyển dữ liệu cục bộ sang Firebase, cần dùng admin để migrate thủ công.</li>
+                        </ul>
                     </div>
                 </div>
             `;
