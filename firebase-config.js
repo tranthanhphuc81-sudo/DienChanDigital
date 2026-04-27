@@ -211,6 +211,7 @@
             symptoms: data.symptoms || data.disease || '',
             diagnosis: data.diagnosis || '',
             protocol: data.protocol || '',
+            linkedItems: Array.isArray(data.linkedItems) ? data.linkedItems : [],
             notes: data.notes || data.note || '',
             attachments: Array.isArray(data.attachments) ? data.attachments : [],
             createdBy: data.createdBy || user.uid,
