@@ -6,76 +6,590 @@
     <title>Diện Chẩn Firebase - Cloudinary</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f8fafc; }
-        .card { border: 1px solid #e2e8f0; border-radius: 1rem; background: white; }
-        .card:hover { box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); }
-        .tag { font-size: 0.75rem; padding: 0.25rem 0.65rem; border-radius: 9999px; }
-        .tag-primary { background: #e0f2fe; color: #0369a1; }
-        .tag-secondary { background: #eef2ff; color: #4338ca; }
-        .tab-button { border-radius: 9999px; padding: 0.85rem 1.2rem; min-width: 110px; }
-        .tab-button.active { background: #1e293b; color: white; }
-        .tab-button.inactive { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
-        .accordion-card { border-radius: 1rem; overflow: hidden; border: 1px solid #e2e8f0; background: white; }
-        .accordion-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; cursor: pointer; background: #f8fafc; }
-        .accordion-header h3 { margin: 0; font-size: 1.05rem; font-weight: 700; }
-        .accordion-header small { color: #64748b; }
-        .accordion-body { border-top: 1px solid #e2e8f0; padding: 1.25rem; }
-        .accordion-body.hidden { display: none; }
-        .detail-panel { border: 1px solid #e2e8f0; border-radius: 1rem; background: white; padding: 1.25rem; }
-        .detail-panel h3 { font-size: 1.125rem; margin-bottom: 0.5rem; }
-        .detail-row { display: grid; grid-template-columns: 110px 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
-        .detail-row span:first-child { color: #475569; font-size: 0.82rem; font-weight: 600; }
-        .huyet-result-card { border-radius: 1.5rem; overflow: hidden; border: 1px solid #e2e8f0; background: white; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08); }
-        .huyet-result-header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem 1.25rem; }
-        .huyet-result-label { display: inline-flex; align-items: center; justify-content: center; min-width: 3.25rem; height: 3.25rem; border-radius: 9999px; background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 0.95rem; }
-        .huyet-result-title { font-size: 1.15rem; font-weight: 700; margin: 0; }
-        .huyet-result-actions { display: flex; gap: 0.75rem; }
-        .huyet-action-btn { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: 9999px; border: 1px solid #e2e8f0; background: #fff; color: #475569; cursor: pointer; transition: all 0.2s ease; }
-        .huyet-action-btn:hover { background: #f8fafc; transform: translateY(-1px); }
-        .huyet-result-image { min-height: 220px; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .huyet-result-image img, .image-zoomable { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
-        .huyet-result-body { padding: 1.25rem; }
-        .image-lightbox { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.85); z-index: 1000; padding: 2rem; }
-        .image-lightbox.hidden { display: none; }
-        .image-lightbox-img { max-width: 100%; max-height: 100%; border-radius: 1rem; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4); }
-        .image-lightbox-close { position: fixed; top: 1.25rem; right: 1.25rem; width: 2.75rem; height: 2.75rem; border: none; border-radius: 9999px; background: rgba(15, 23, 42, 0.8); color: white; font-size: 1.5rem; line-height: 1; cursor: pointer; }
-        .huyet-detail-row { display: grid; grid-template-columns: minmax(120px, auto) 1fr; gap: 0.75rem; margin-bottom: 1rem; }
-        .huyet-detail-row span:first-child { font-weight: 700; color: #334155; }
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 0.9rem 0.75rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
-        th { background: #f8fafc; font-weight: 700; color: #334155; }
-        tr:hover { background: #f8fafc; }
-        #bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px); background: white; border-top: 1px solid #e2e8f0; }
-        #bottom-nav .nav-btn { width: 20%; text-align: center; padding: 0.85rem 0; color: #64748b; }
-        #bottom-nav .nav-btn.active { color: #dc2626; }
-        @media (min-width: 768px) { #bottom-nav { display: none; } }
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 28%),
+                        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 24%),
+                        linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #0f172a;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .card {
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            border-radius: 1.75rem;
+            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.94));
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+            backdrop-filter: blur(22px);
+            transition: transform 0.25s ease, border-color 0.2s ease, box-shadow 0.25s ease;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(14, 165, 233, 0.4);
+            box-shadow: 0 30px 70px rgba(14, 165, 233, 0.14);
+        }
+        .card h3,
+        .card h2 {
+            color: #0f172a;
+        }
+        .card p {
+            color: #475569;
+        }
+        .card .image-placeholder,
+        .card .huyet-result-image {
+            border-radius: 1.25rem;
+            background: linear-gradient(180deg, rgba(241, 245, 249, 0.95), rgba(226, 232, 240, 0.95));
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            color: #64748b;
+        }
+        .card .image-placeholder {
+            min-height: 9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            text-align: center;
+        }
+        .card .huyet-result-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 1.25rem;
+        }
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 9999px;
+            background: rgba(56, 189, 248, 0.12);
+            color: #0369a1;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .tag-primary {
+            background: rgba(56, 189, 248, 0.18);
+            color: #0369a1;
+        }
+        .tag-secondary {
+            background: rgba(99, 102, 241, 0.16);
+            color: #4338ca;
+        }
+        .card .button-pill,
+        .card .button-pill-sm {
+            border-radius: 9999px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        .card .button-pill:hover,
+        .card .button-pill-sm:hover {
+            transform: translateY(-1px);
+        }
+        .card .button-pill-sm {
+            padding: 0.65rem 1rem;
+            font-size: 0.9rem;
+        }
+        .tab-button {
+            border-radius: 9999px;
+            padding: 0.95rem 1.4rem;
+            min-width: 120px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(255,255,255,0.88);
+            color: #334155;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        }
+        .tab-button:hover {
+            transform: translateY(-1px);
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 16px 36px rgba(14, 165, 233, 0.25);
+        }
+        .tab-button.inactive {
+            color: #475569;
+        }
+        .guide-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.65rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(56, 189, 248, 0.16);
+            background: rgba(56, 189, 248, 0.08);
+            color: #0f172a;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .guide-card {
+            border-radius: 1.5rem;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+            padding: 1.6rem;
+        }
+        .guide-card h3 {
+            margin-bottom: 0.85rem;
+            color: #0f172a;
+        }
+        .guide-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .guide-alert {
+            border-radius: 1.5rem;
+            padding: 1.4rem 1.6rem;
+            background: rgba(254, 226, 226, 0.9);
+            border: 1px solid rgba(248, 113, 113, 0.28);
+            color: #991b1b;
+        }
+        .guide-alert h4 {
+            margin: 0 0 0.75rem;
+            font-size: 1.05rem;
+        }
+        .guide-step-list,
+        .guide-techniques {
+            display: grid;
+            gap: 1rem;
+        }
+        .guide-step-card,
+        .guide-technique-card,
+        .guide-tool-card {
+            border-radius: 1.5rem;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            padding: 1.2rem 1.3rem;
+            background: rgba(248, 250, 252, 0.95);
+        }
+        .guide-technique-card {
+            background: rgba(255, 255, 255, 0.96);
+        }
+        .guide-technique-card strong,
+        .guide-tool-card strong {
+            display: block;
+            margin-bottom: 0.45rem;
+            color: #1e3a8a;
+        }
+        .guide-tool-card {
+            min-height: 100px;
+        }
+        .guide-note {
+            color: #334155;
+            font-size: 0.97rem;
+            line-height: 1.7;
+        }
+        .guide-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .guide-nav button {
+            border-radius: 9999px;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: #f8fafc;
+            color: #0f172a;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+        }
+        .acupoint-map-card {
+            background: rgba(248, 250, 252, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+        .acupoint-map-card img {
+            min-height: 240px;
+            max-height: 420px;
+        }
+        .guide-nav button:hover {
+            background: rgba(56, 189, 248, 0.12);
+        }
+        .main-header {
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.22);
+            box-shadow: 0 28px 80px rgba(16, 185, 129, 0.18);
+        }
+        .main-header h1,
+        .main-header p {
+            color: white;
+        }
+        body.mobile-records-view {
+            background: linear-gradient(180deg, #dbeafe 0%, #dcfce7 100%);
+        }
+        body.mobile-records-view .card {
+            border-color: rgba(6, 95, 70, 0.16);
+            background: rgba(255, 255, 255, 0.92);
+        }
+        body.mobile-records-view .tab-button.active {
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            box-shadow: 0 16px 36px rgba(34, 197, 94, 0.15);
+        }
+        body.mobile-records-view .detail-panel {
+            background: rgba(255, 255, 255, 0.94);
+        }
+        body.mobile-records-view #bottom-nav {
+            background: rgba(14, 165, 233, 0.08);
+            border-top-color: rgba(16, 185, 129, 0.18);
+        }
+        body.mobile-records-view #scroll-to-top {
+            background: rgba(16, 185, 129, 0.8);
+        }
+        @media (max-width: 767px) {
+            body.mobile-records-view .card {
+                border-color: rgba(6, 95, 70, 0.16);
+                box-shadow: 0 20px 56px rgba(16, 185, 129, 0.12);
+            }
+            body.mobile-records-view #content-area {
+                min-height: calc(100vh - 120px);
+                padding-bottom: 4rem;
+            }
+            body.mobile-records-view .detail-panel {
+                display: none;
+            }
+            section.grid {
+                display: block;
+            }
+            #detail-panel {
+                display: none;
+            }
+            .mobile-detail-slot {
+                display: block;
+                margin-top: 1rem;
+            }
+        }
+        @media (min-width: 768px) {
+            .mobile-detail-slot {
+                display: none !important;
+            }
+            #detail-panel {
+                display: block;
+            }
+        }
+        .accordion-card {
+            border-radius: 1.5rem;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+        }
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.1rem 1.4rem;
+            cursor: pointer;
+            background: rgba(248, 250, 252, 0.95);
+        }
+        .accordion-header h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+        .accordion-header small {
+            color: #64748b;
+        }
+        .accordion-body {
+            border-top: 1px solid rgba(148, 163, 184, 0.16);
+            padding: 1.25rem 1.4rem 1.6rem;
+        }
+        .accordion-body.hidden {
+            display: none;
+        }
+        .detail-panel {
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 1.5rem;
+            background: rgba(255, 255, 255, 0.94);
+            padding: 1.8rem;
+            box-shadow: 0 22px 48px rgba(15, 23, 42, 0.08);
+        }
+        .detail-panel h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        .detail-row {
+            display: grid;
+            grid-template-columns: minmax(120px, auto) 1fr;
+            gap: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        .detail-row span:first-child {
+            color: #475569;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .huyet-result-card {
+            border-radius: 1.75rem;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 24px 64px rgba(15, 23, 42, 0.08);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .huyet-result-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .huyet-result-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem 1.25rem;
+        }
+        .huyet-result-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 3.25rem;
+            height: 3.25rem;
+            border-radius: 9999px;
+            background: rgba(248, 113, 113, 0.16);
+            color: #b91c1c;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .huyet-result-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .huyet-result-actions {
+            display: flex;
+            gap: 0.85rem;
+        }
+        .huyet-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: #fff;
+            color: #475569;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .huyet-action-btn:hover {
+            background: rgba(15, 23, 42, 0.04);
+            transform: translateY(-1px);
+        }
+        .huyet-result-image {
+            min-height: 220px;
+            background: rgba(241, 245, 249, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .huyet-result-image img,
+        .image-zoomable {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: zoom-in;
+        }
+        .huyet-result-body {
+            padding: 1.25rem;
+        }
+        :is(input, textarea, select) {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+            border-radius: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        :is(input, textarea, select):focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.7);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+        }
+        button,
+        .tab-button,
+        .nav-btn {
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            filter: brightness(1.03);
+        }
+        .highlighted-card {
+            animation: highlight-flash 4.5s ease forwards;
+            border-color: #f97316;
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.28);
+            background: rgba(251, 191, 36, 0.08);
+        }
+        @keyframes highlight-flash {
+            0% { transform: scale(1); background: rgba(251, 191, 36, 0.12); }
+            15% { transform: scale(1.01); }
+            30% { transform: scale(1); }
+            80% { background: rgba(251, 191, 36, 0.08); }
+            100% { border-color: rgba(148, 163, 184, 0.18); box-shadow: none; background: transparent; }
+        }
+        .image-lightbox {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.88);
+            z-index: 1000;
+            padding: 1.5rem;
+        }
+        .image-lightbox.hidden {
+            display: none;
+        }
+        .image-lightbox-img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 1rem;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.32);
+        }
+        .image-lightbox-close {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 2.75rem;
+            height: 2.75rem;
+            border: none;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .huyet-detail-row {
+            display: grid;
+            grid-template-columns: minmax(120px, auto) 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .huyet-detail-row span:first-child {
+            font-weight: 700;
+            color: #334155;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.95rem 0.85rem;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+            text-align: left;
+        }
+        th {
+            background: rgba(248, 250, 252, 0.9);
+            font-weight: 700;
+            color: #334155;
+        }
+        tr:hover {
+            background: rgba(241, 245, 249, 0.9);
+        }
+        #bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid rgba(148, 163, 184, 0.18);
+            backdrop-filter: blur(18px);
+        }
+        #bottom-nav .nav-btn {
+            width: 20%;
+            text-align: center;
+            padding: 0.9rem 0;
+            color: #64748b;
+            font-weight: 600;
+        }
+        #bottom-nav .nav-btn.active {
+            color: #2563eb;
+        }
+        #scroll-to-top {
+            position: fixed;
+            right: 1.25rem;
+            bottom: 5.5rem;
+            z-index: 60;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 9999px;
+            border: none;
+            background: rgba(15, 23, 42, 0.72);
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.14);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            opacity: 0.78;
+        }
+        #scroll-to-top:hover {
+            transform: translateY(-2px);
+            opacity: 1;
+        }
+        @media (min-width: 768px) {
+            #bottom-nav { display: none; }
+            #scroll-to-top { display: flex; }
+        }
+        @media (max-width: 767px) {
+            body { padding: 1rem; }
+            .card { border-radius: 1.5rem; }
+            .tab-button { flex: 1 1 40%; min-width: 110px; }
+            .detail-panel { padding: 1.25rem; }
+            .huyet-result-header { flex-direction: column; align-items: stretch; }
+            .huyet-result-actions { justify-content: flex-start; }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-6xl mx-auto space-y-6">
-        <header class="bg-slate-800 text-white rounded-3xl p-6 shadow-xl">
+        <header class="main-header rounded-3xl p-6">
             <h1 class="text-2xl sm:text-4xl font-bold">Diện Chẩn Firebase</h1>
             <p class="mt-2 text-slate-200">Trang mới dùng Firestore cho huyệt, phác đồ, bộ huyệt; ảnh vẫn lấy từ Cloudinary như cũ.</p>
         </header>
 
         <section class="space-y-4">
+            <div class="card p-5 space-y-4 acupoint-map-card">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div>
+                        <h2 class="text-xl font-semibold">Bản đồ huyệt Diện Chẩn</h2>
+                        <p class="text-sm text-slate-500">Hình này sẽ cố định hiển thị ở đầu giao diện để tham khảo khi chuyển giữa các tab.</p>
+                    </div>
+                    <div class="text-sm text-slate-500">Lưu ý: đặt file ảnh `huyet-map.jpg` cùng thư mục với trang này.</div>
+                </div>
+                <div class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
+                    <img id="acupoint-map-image" src="huyet-map.jpg" alt="Bản đồ huyệt Diện Chẩn" class="w-full h-auto object-cover" />
+                </div>
+            </div>
             <div class="flex flex-wrap gap-3 items-center">
                 <button data-view="manage" onclick="showSection('manage')" class="tab-button active">⚙️ Quản lý</button>
                 <button data-view="huyet" onclick="showSection('huyet')" class="tab-button inactive">🔍 Tra cứu Huyệt</button>
                 <button data-view="protocols" onclick="showSection('protocols')" class="tab-button inactive">📋 Phác đồ Mẫu</button>
                 <button data-view="groups" onclick="showSection('groups')" class="tab-button inactive">🧩 Bộ huyệt</button>
+                <button data-view="records" onclick="showSection('records')" class="tab-button inactive">🩺 Hồ sơ bệnh trạng</button>
+                <button data-view="guide" onclick="showSection('guide')" class="tab-button inactive">📘 Hướng dẫn</button>
             </div>
             <div id="view-controls" class="card p-5 space-y-4">
                 <div id="search-panel" class="space-y-4">
                     <div class="flex flex-wrap gap-3 items-center justify-between">
-                        <button onclick="toggleFaceMap()" class="px-4 py-3 rounded-2xl bg-slate-900 text-white">🗺️ Sơ đồ huyệt tương tác</button>
+                        <button onclick="toggleFaceMap()" class="px-4 py-3 rounded-2xl bg-sky-800 text-white">🗺️ Sơ đồ huyệt tương tác</button>
                         <p class="text-sm text-slate-500">Tra cứu huyệt bằng dữ liệu Firebase hoặc dữ liệu cũ.</p>
                     </div>
-                    <input id="search-input" type="search" placeholder="Nhập số huyệt (127, 19...) hoặc triệu chứng..." class="w-full p-4 border rounded-3xl text-slate-700" oninput="renderCurrentView()" />
+                    <input id="search-input" type="search" placeholder="Nhập số huyệt (127, 19...) hoặc triệu chứng..." class="w-full p-4 border rounded-3xl text-slate-700" oninput="selectedProtocolCategory=''; renderCurrentView()" />
                     <div class="flex flex-wrap gap-3">
                         <button onclick="clearSelection()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">🧹 Xóa chọn</button>
-                        <button onclick="loadAllFirebaseData()" class="px-4 py-3 rounded-2xl bg-amber-500 text-white">🔄 Tải lại dữ liệu</button>
                     </div>
                 </div>
                 <div id="face-map-panel" class="card p-5 hidden">
@@ -87,19 +601,22 @@
 
         <section class="grid gap-6 lg:grid-cols-[1.8fr_1.2fr]">
             <div id="content-area" class="space-y-6"></div>
-            <aside id="detail-panel" class="detail-panel hidden"></aside>
+            <aside id="detail-panel" class="detail-panel"></aside>
             <div id="image-lightbox" class="image-lightbox hidden" onclick="event.stopPropagation(); closeImageLightbox()">
                 <img id="image-lightbox-img" class="image-lightbox-img" src="" alt="Ảnh phóng to" onclick="event.stopPropagation()" />
                 <button class="image-lightbox-close" type="button" onclick="event.stopPropagation(); closeImageLightbox()">×</button>
             </div>
         </section>
         <div id="mobile-padding" class="h-24 md:hidden"></div>
+        <button id="scroll-to-top" type="button" onclick="scrollToTop()" aria-label="Lên đầu trang">↑</button>
         <nav id="bottom-nav" class="md:hidden">
             <div class="flex">
                 <button onclick="showSection('manage')" class="nav-btn active">⚙️<div class="text-[11px]">Quản lý</div></button>
                 <button onclick="showSection('huyet')" class="nav-btn">🔍<div class="text-[11px]">Huyệt</div></button>
                 <button onclick="showSection('protocols')" class="nav-btn">📋<div class="text-[11px]">Phác đồ</div></button>
                 <button onclick="showSection('groups')" class="nav-btn">🧩<div class="text-[11px]">Bộ huyệt</div></button>
+                <button onclick="showSection('records')" class="nav-btn">🩺<div class="text-[11px]">Hồ sơ</div></button>
+                <button onclick="showSection('guide')" class="nav-btn">📘<div class="text-[11px]">Hướng dẫn</div></button>
             </div>
         </nav>
     </div>
@@ -114,11 +631,40 @@
         let huyetItems = [];
         let protocolItems = [];
         let groupItems = [];
+        let recordItems = [];
+        let currentRecordLinks = [];
+        let recordPatientName = '';
+        let recordProtocolText = '';
+        let recordSymptomsText = '';
+        let recordDiagnosisText = '';
+        let recordNotesText = '';
+        let newHuyetCode = '';
+        let newHuyetName = '';
+        let newHuyetLocation = '';
+        let newHuyetFunctions = '';
+        let newHuyetManual = '';
+        let newHuyetImageFile = null;
+        let newHuyetFormOpen = false;
+        let newProtocolTitle = '';
+        let newProtocolDescription = '';
+        let newProtocolAcupointIds = '';
+        let newProtocolKeywords = '';
+        let newProtocolImageFile = null;
+        let newProtocolFormOpen = false;
+        let newGroupTitle = '';
+        let selectedProtocolCategory = '';
+        let newGroupDescription = '';
+        let newGroupAcupointIds = '';
+        let newGroupNotes = '';
+        let newGroupImageFile = null;
+        let newGroupFormOpen = false;
         let selectedItem = null;
         let selectedType = null;
         let editingType = null;
         let cloudinaryImportOpen = false;
         let cloudinaryImportIds = '';
+        let highlightedCardId = null;
+        let isRecordInputComposing = false;
 
         const protocolCategoryMenu = [
             { label: 'Đầu – Não', terms: ['đau đầu', 'chóng mặt', 'đầu', 'não'] },
@@ -138,15 +684,96 @@
             { label: 'Tổng quát', terms: ['tổng quát', 'toàn thân', 'bệnh chung'] }
         ];
 
-        function showSection(name) {
+        function getProtocolIcon(item) {
+            const text = `${item.title || item.name || ''} ${item.description || item.note || ''} ${(item.keywords || []).join(' ')}`.toLowerCase();
+            const iconMap = [
+                { regex: /đau đầu|chóng mặt|não|thần kinh|stress|lo âu|mất ngủ/, icon: '🧠' },
+                { regex: /tim|huyết áp|tăng huyết áp|hạ huyết áp|huyết mạch/, icon: '❤️' },
+                { regex: /hô hấp|ho|hen|phổi|viêm phổi/, icon: '🫁' },
+                { regex: /tiêu hóa|dạ dày|bụng|tiêu|chướng hơi/, icon: '🍃' },
+                { regex: /cơ xương|đau lưng|gai cột sống|khớp/, icon: '💪' },
+                { regex: /phụ khoa|nam khoa|kinh nguyệt|thai|thai nghén/, icon: '👩‍⚕️' },
+                { regex: /mắt|tai|mũi|họng|miệng|ngũ quan/, icon: '👁️' },
+                { regex: /trẻ em|nhi|sốt|tiêu chảy/, icon: '🧒' },
+                { regex: /viêm|bướu|u bướu|viêm nhiễm/, icon: '🛡️' },
+                { regex: /bạch huyết|miễn dịch|miễn dịch/, icon: '🛡️' },
+                { regex: /giảm cân|giảm béo|mỡ|thừa cân/, icon: '⚖️' },
+                { regex: /da liễu|thẩm mỹ|mụn|nám|da/, icon: '✨' },
+                { regex: /cấp cứu|đột quỵ|hôn mê|ngã/, icon: '🚑' },
+                { regex: /tổng quát|toàn thân|bệnh chung/, icon: '🌐' }
+            ];
+            const match = iconMap.find(item => item.regex.test(text));
+            return match ? match.icon : '📋';
+        }
+
+        function showSection(name, options = {}) {
             currentView = name;
             setActiveTab(name);
-            clearSelection();
+            updateMobileRecordsClass();
+            if (options.clear !== false) {
+                clearSelection();
+            }
             renderCurrentView();
         }
 
+        function updateMobileRecordsClass() {
+            const body = document.body;
+            if (!body) return;
+            if (currentView === 'records' && window.matchMedia('(max-width: 767px)').matches) {
+                body.classList.add('mobile-records-view');
+            } else {
+                body.classList.remove('mobile-records-view');
+            }
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateScrollToTopVisibility() {
+            const btn = document.getElementById('scroll-to-top');
+            if (!btn) return;
+            btn.style.display = window.scrollY > 250 ? 'flex' : 'none';
+        }
+
+        window.addEventListener('scroll', updateScrollToTopVisibility);
+        window.addEventListener('resize', updateMobileRecordsClass);
+        document.addEventListener('DOMContentLoaded', () => {
+            updateScrollToTopVisibility();
+            updateMobileRecordsClass();
+        });
+
+        function normalizeSearchString(value, options = {}) {
+            const normalized = String(value || '').normalize('NFC');
+            const text = options.removeTone
+                ? normalized.normalize('NFKD').replace(/[̣̀́̃̉]/g, '').normalize('NFC')
+                : normalized;
+            return text.toLowerCase().trim();
+        }
+
         function getSearchText() {
-            return document.getElementById('search-input').value.toLowerCase().trim();
+            return normalizeSearchString(document.getElementById('search-input').value);
+        }
+
+        function makeSearchHay(value, options = {}) {
+            return normalizeSearchString(value, options);
+        }
+
+        function searchMatches(value, search, options = {}) {
+            const hay = makeSearchHay(value, options);
+            const tokens = String(search || '')
+                .split(/[\s,;|]+/)
+                .map(token => normalizeSearchString(token, options))
+                .filter(Boolean);
+            if (tokens.length === 0) return true;
+
+            const words = hay.split(/[^\p{L}0-9]+/u).filter(Boolean);
+            return tokens.every(token => {
+                if (/^[0-9]+$/.test(token)) {
+                    return words.some(word => word.includes(token));
+                }
+                return words.some(word => word === token || word.startsWith(token) || word.endsWith(token));
+            });
         }
 
         const manageAccordionState = {
@@ -220,7 +847,7 @@
                                     <label class="block text-sm font-semibold text-slate-700 mb-2">Dán danh sách ID ảnh Cloudinary (số hiệu huyệt)</label>
                                     <textarea id="cloudinary-ids-input" class="w-full h-32 p-3 border rounded-2xl text-slate-700" placeholder="Ví dụ: 1 2 3 10 11" oninput="cloudinaryImportIds = this.value">${cloudinaryImportIds || ''}</textarea>
                                     <div class="flex flex-wrap gap-3 mt-3">
-                                        <button type="button" onclick="submitCloudinaryIds()" class="px-4 py-3 rounded-2xl bg-slate-900 text-white">Tạo huyệt từ IDs</button>
+                                        <button type="button" onclick="submitCloudinaryIds()" class="px-4 py-3 rounded-2xl bg-sky-800 text-white">Tạo huyệt từ IDs</button>
                                         <button type="button" onclick="toggleCloudinaryImport()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Đóng</button>
                                     </div>
                                 </div>
@@ -238,13 +865,15 @@
             if (!container) return;
             const controls = document.getElementById('view-controls');
             if (controls) {
-                controls.style.display = currentView === 'manage' ? 'none' : 'block';
+                controls.style.display = currentView === 'manage' || currentView === 'guide' ? 'none' : 'block';
             }
             if (currentView === 'manage') {
                 return renderManageView(container);
             }
+            if (currentView === 'guide') return renderGuideView(container);
             if (currentView === 'huyet') return renderHuyetList(container, search);
             if (currentView === 'protocols') return renderProtocolList(container, search);
+            if (currentView === 'records') return renderMedicalRecordsView(container, search);
             if (currentView === 'groups') return renderGroupList(container, search);
         }
 
@@ -263,11 +892,92 @@
         }
 
         function clearSelection() {
-            const detail = document.getElementById('detail-panel');
-            if (detail) detail.classList.add('hidden');
+            renderDetail(null);
+            const input = document.getElementById('search-input');
+            if (input) {
+                input.value = '';
+            }
             selectedItem = null;
             selectedType = null;
             editingType = null;
+            renderCurrentView();
+        }
+
+        function handleRecordInput(event, field) {
+            if (!event || !field) return;
+            const value = event.target.value;
+            if (field === 'patientName') recordPatientName = value;
+            if (field === 'protocol') recordProtocolText = value;
+            if (field === 'symptoms') recordSymptomsText = value;
+            if (field === 'diagnosis') recordDiagnosisText = value;
+            if (field === 'notes') recordNotesText = value;
+            if (field === 'symptoms') {
+                if (!isRecordInputComposing && !event.isComposing) {
+                    renderRecordSuggestions();
+                }
+            }
+        }
+
+        function startRecordComposition() {
+            isRecordInputComposing = true;
+        }
+
+        function endRecordComposition(event) {
+            isRecordInputComposing = false;
+            if (event && event.target) {
+                recordSymptomsText = event.target.value || recordSymptomsText;
+            }
+            renderRecordSuggestions();
+        }
+
+        function renderRecordSuggestions() {
+            const suggestions = document.getElementById('record-suggestions-container');
+            if (!suggestions) return;
+            const recordSearch = recordSymptomsText.toLowerCase().trim();
+            if (!recordSearch) {
+                suggestions.innerHTML = '<p class="text-sm text-slate-500">Nhập triệu chứng để tìm phác đồ và bộ huyệt phù hợp.</p>';
+                return;
+            }
+            const relatedProtocols = protocolItems.filter(item => {
+                const hay = `${item.title || item.name || ''} ${item.description || item.note || ''} ${(item.acupointIds || []).join(' ')} ${(item.keywords || []).join(' ')}`.toLowerCase();
+                return hay.includes(recordSearch);
+            });
+            const relatedGroups = groupItems.filter(item => {
+                const hay = `${item.title || item.name || ''} ${item.description || ''} ${item.notes || item.note || ''} ${(item.acupointIds || []).join(' ')}`.toLowerCase();
+                return hay.includes(recordSearch);
+            });
+            suggestions.innerHTML = `
+                <div class="grid gap-4 lg:grid-cols-2">
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-700 mb-3">Phác đồ mẫu</h4>
+                        ${relatedProtocols.length ? relatedProtocols.map(item => `
+                            <div class="p-4 border rounded-3xl bg-slate-50">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h5 class="font-semibold">${item.title || item.name || 'Phác đồ'}</h5>
+                                        <p class="text-sm text-slate-500 mt-1">${item.description || item.note || ''}</p>
+                                    </div>
+                                    <button type="button" onclick="addRecordLink('protocols', '${item.id}', '${(item.title||item.name||'Phác đồ').replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-full bg-sky-800 text-white text-sm">Thêm</button>
+                                </div>
+                            </div>
+                        `).join('') : '<p class="text-sm text-slate-500">Không tìm thấy phác đồ liên quan.</p>'}
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-700 mb-3">Bộ huyệt</h4>
+                        ${relatedGroups.length ? relatedGroups.map(item => `
+                            <div class="p-4 border rounded-3xl bg-slate-50">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h5 class="font-semibold">${item.title || item.name || 'Bộ huyệt'}</h5>
+                                        <p class="text-sm text-slate-500 mt-1">${item.description || item.notes || item.note || ''}</p>
+                                    </div>
+                                    <button type="button" onclick="addRecordLink('groups', '${item.id}', '${(item.title||item.name||'Bộ huyệt').replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-full bg-sky-800 text-white text-sm">Thêm</button>
+                                </div>
+                            </div>
+                        `).join('') : '<p class="text-sm text-slate-500">Không tìm thấy bộ huyệt liên quan.</p>'}
+                    </div>
+                </div>
+            `;
         }
 
         function toggleFaceMap() {
@@ -291,33 +1001,189 @@
         function renderDetail(item, type) {
             const detail = document.getElementById('detail-panel');
             if (!detail) return;
-            if (!item) {
-                detail.classList.add('hidden');
-                return;
-            }
+            const mobileHtml = item ? getDetailHtml(item, type) : getEmptyDetailHtml();
             detail.classList.remove('hidden');
-            const title = type === 'huyet' ? getHuyetTitle(item) : item.title || item.name || '';
-            const subtitle = type === 'huyet' ? item.location || '' : (item.acupointIds || []).join(', ');
-            detail.innerHTML = `
-                <div class="flex items-start justify-between gap-3 mb-4">
-                    <div>
-                        <h3>${title}</h3>
-                        <p class="text-sm text-slate-500">${subtitle}</p>
+            detail.innerHTML = mobileHtml;
+            renderMobileDetailSlot(item, type, mobileHtml);
+        }
+
+        function renderGuideView(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="guide-card">
+                        <div class="guide-section-title">📘 Hướng dẫn thao tác Diện Chẩn</div>
+                        <p class="guide-note">Trang này trình bày các nguyên tắc, kỹ thuật thao tác, dụng cụ, chống chỉ định và các bước thực hiện phác đồ chuẩn. Nội dung được chia rõ từng phần để bạn tiếp cận nhanh hơn.</p>
+                        <div class="guide-nav">
+                            <a href="#guide-principle" class="guide-pill">Nguyên tắc</a>
+                            <a href="#guide-proof" class="guide-pill">Quy tắc khóa phác đồ</a>
+                            <a href="#guide-steps" class="guide-pill">Thứ tự phác đồ</a>
+                            <a href="#guide-techniques" class="guide-pill">Kỹ thuật</a>
+                            <a href="#guide-tools" class="guide-pill">Dụng cụ</a>
+                            <a href="#guide-safety" class="guide-pill">Chống chỉ định</a>
+                        </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="clearSelection()" class="px-3 py-2 rounded-xl bg-slate-100 text-slate-700">Đóng</button>
-                        <button type="button" onclick="startEdit('${type}', '${item.id || item.title || item.name}')" class="px-3 py-2 rounded-xl bg-slate-900 text-white">Chỉnh sửa</button>
+                    <div id="guide-principle" class="guide-card">
+                        <div class="guide-section-title">⚖️ Nguyên tắc "Trái trước - Phải sau"</div>
+                        <p class="guide-note">Luôn ưu tiên làm bên trái khuôn mặt trước, bên phải sau để thuận theo chiều vận hành khí cơ thể. Ví dụ: huyệt 50 (Gan – chỉ bên phải), huyệt 37 (Tỳ – chỉ bên trái).</p>
+                        <div class="guide-alert">
+                            <strong>Lưu ý:</strong> Trái – phải được tính từ góc nhìn của người bệnh (tay trái / tay phải của bệnh nhân). Khi người thao tác đứng đối mặt, bên trái bệnh nhân sẽ nằm về phía tay phải của người thao tác — nhưng vẫn gọi là "bên trái" theo quy ước.
+                        </div>
+                    </div>
+                    <div id="guide-proof" class="guide-card">
+                        <div class="guide-section-title">🔐 Quy tắc "Khóa phác đồ" – Huyệt 0</div>
+                        <p class="guide-note">Sau khi hoàn tất mọi thao tác, luôn kết thúc bằng huyệt 0 (rãnh bình tai) để khóa và ổn định năng lượng.</p>
+                        <div class="guide-step-card">
+                            <strong>Áp dụng:</strong> Dán cao hoặc ấn giữ 30–60 giây.
+                        </div>
+                    </div>
+                    <div id="guide-steps" class="guide-card">
+                        <div class="guide-section-title">🧭 Thứ tự thực hiện phác đồ chuẩn</div>
+                        <div class="guide-step-list">
+                            <div class="guide-step-card"><strong>1.</strong> Xác định triệu chứng, chọn phác đồ phù hợp.</div>
+                            <div class="guide-step-card"><strong>2.</strong> Dò tìm sinh huyệt (điểm đau nhất = sinh huyệt).</div>
+                            <div class="guide-step-card"><strong>3.</strong> Thực hiện thao tác: Gạch → Ấn → Nhún → Vuốt / Day.</div>
+                            <div class="guide-step-card"><strong>4.</strong> Kiểm tra lại cảm giác bệnh nhân sau mỗi bộ huyệt.</div>
+                            <div class="guide-step-card"><strong>5.</strong> Khóa phác đồ bằng huyệt 0.</div>
+                        </div>
+                    </div>
+                    <div id="guide-techniques" class="guide-card">
+                        <div class="guide-section-title">🛠️ Các kỹ thuật thao tác</div>
+                        <div class="guide-techniques grid lg:grid-cols-2 gap-4">
+                            <div class="guide-technique-card">
+                                <strong>1. Kỹ thuật Gạch (Tô màu)</strong>
+                                <p>Dùng đầu que dò gạch nhanh, ngắn, khít nhau lên vùng huyệt theo một chiều nhất định.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Giải tỏa bế tắc khí huyết, giảm đau tức thì.</li>
+                                    <li>• Áp dụng: Vùng trán, sống mũi, rãnh mũi má, bộ huyệt lớn.</li>
+                                    <li>• Lưu ý: Gạch đến khi da hơi ửng đỏ là đủ.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>2. Kỹ thuật Ấn – Nhún</strong>
+                                <p>Đặt que dò lên huyệt, ấn thẳng xuống rồi nhún 3 lần liên tiếp, nhanh – dứt khoát.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Kích thích mạnh huyệt, cấp cứu, thăng/giáng khí.</li>
+                                    <li>• Áp dụng: Huyệt 19 (cấp cứu), bộ thăng (103–106), bộ giáng.</li>
+                                    <li>• Lưu ý: Thực hiện 3 nhún/lần. Lặp 3–5 lần nếu cần.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>3. Kỹ thuật Ấn Giữ</strong>
+                                <p>Đặt que dò lên sinh huyệt, ấn với lực vừa phải và giữ nguyên trong 30–60 giây.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Điều hòa, an thần, bổ khí từ từ.</li>
+                                    <li>• Áp dụng: Huyệt 0, 1, 26, 127. Vùng không gạch được (mắt, môi).</li>
+                                    <li>• Lưu ý: Lực ấn tăng dần; không ấn đột ngột mạnh.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>4. Kỹ thuật Vuốt (Miết)</strong>
+                                <p>Đặt que dò nằm nghiêng, vuốt trượt nhẹ theo đường kinh hoặc vùng huyệt theo một hướng.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Thông kinh lạc, lưu thông khí huyết, thư giãn cơ.</li>
+                                    <li>• Áp dụng: Rãnh mũi má, cung quai hàm, vùng trán, cổ hàm.</li>
+                                    <li>• Lưu ý: Vuốt chậm, đều, làm ấm vùng da trước khi vuốt.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>5. Kỹ thuật Day (Xoay tròn)</strong>
+                                <p>Đặt đầu que dò lên huyệt, xoay tròn nhỏ theo chiều kim đồng hồ hoặc ngược lại.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Chiều KĐH (bổ): Bổ hư, tăng cường chức năng tạng phủ yếu.</li>
+                                    <li>• Chiều NKĐH (tả): Tiêu viêm, giảm đau, tán khí trệ.</li>
+                                    <li>• Áp dụng: Huyệt 26, 103, 127, vùng thái dương, dái tai.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>6. Kỹ thuật Gõ nhẹ (Điểm huyệt)</strong>
+                                <p>Dùng đầu que dò gõ nhẹ lên huyệt theo nhịp đều, khoảng 1–2 lần/giây.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Khai thông, dẫn khí, kích hoạt huyệt nhẹ nhàng.</li>
+                                    <li>• Áp dụng: Vùng trán, huyệt nhỏ, người lớn tuổi hoặc nhạy cảm.</li>
+                                    <li>• Lưu ý: Chỉ dùng lực cổ tay, không dùng lực cánh tay.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="guide-tools" class="guide-card">
+                        <div class="guide-section-title">🔧 Dụng cụ trong Diện Chẩn</div>
+                        <div class="grid gap-4 lg:grid-cols-3">
+                            <div class="guide-tool-card">
+                                <strong>Que dò sinh huyệt</strong>
+                                Đầu tù để dò, gạch, ấn. Có loại 1 đầu, 2 đầu, đầu bi, đầu nhọn.
+                            </div>
+                            <div class="guide-tool-card">
+                                <strong>Lăn kim / Lăn sinh huyệt</strong>
+                                Lăn trên vùng rộng (trán, má) để kích hoạt nhiều huyệt cùng lúc.
+                            </div>
+                            <div class="guide-tool-card">
+                                <strong>Bộ cao dán tai – mặt</strong>
+                                Miếng cao nhỏ dán lên huyệt tai hoặc mặt sau khi điều trị để duy trì kích thích liên tục.
+                            </div>
+                            <div class="guide-tool-card">
+                                <strong>Điếu ngải cứu</strong>
+                                Dùng hơ huyệt trong hội chứng hàn, bổ dương khí. Kết hợp cùng que dò cho hiệu quả cao.
+                            </div>
+                            <div class="guide-tool-card">
+                                <strong>Dầu xoa / Kem nền</strong>
+                                Thoa nhẹ lên vùng gạch để giảm ma sát, tránh trầy da và tăng dẫn khí khi thao tác.
+                            </div>
+                            <div class="guide-tool-card">
+                                <strong>Đèn hồng ngoại</strong>
+                                Chiếu lên mặt 10–15 phút để làm ấm vùng điều trị trước thao tác, dùng trước khi vào hội chứng hàn.
+                            </div>
+                        </div>
+                    </div>
+                    <div id="guide-safety" class="guide-card">
+                        <div class="guide-section-title">⚠️ Chống chỉ định &amp; Lưu ý an toàn</div>
+                        <div class="guide-alert">
+                            <ul class="text-slate-700 space-y-2">
+                                <li>Không thực hiện trên vùng da có vết thương hở, viêm nhiễm, mụn nhọt.</li>
+                                <li>Không gạch mạnh vùng quanh mắt, môi, cánh mũi — chỉ ấn nhẹ.</li>
+                                <li>Phụ nữ có thai: tránh ấn mạnh huyệt vùng cằm, bụng phản chiếu.</li>
+                                <li>Người có máu khó đông hoặc đang dùng thuốc chống đông: không gạch mạnh.</li>
+                                <li>Trẻ nhỏ dưới 5 tuổi: chỉ dùng ngón tay ấn nhẹ, không dùng que dò kim loại.</li>
+                                <li>Huyết áp cao nặng: cẩn thận huyệt 19 — chỉ ấn nhẹ, không nhún.</li>
+                                <li>Sau ăn no < 30 phút: không thao tác mạnh vùng bụng phản chiếu.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="guide-card">
+                        <p class="guide-note">Nội dung này mang tính tham khảo. Với các bệnh lý nặng hoặc triệu chứng phức tạp, nên tham khảo thêm chuyên gia Diện Chẩn và bác sĩ chuyên khoa.</p>
                     </div>
                 </div>
-                <div class="space-y-3">
-                    ${type === 'huyet' ? editingType === 'huyet' ? `
+            `;
+        }
+
+        function getEmptyDetailHtml() {
+            return `
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold">Chi tiết</h3>
+                    <p class="text-sm text-slate-500">Chọn một mục bên trái để xem thông tin chi tiết hoặc chỉnh sửa.</p>
+                    <div class="grid gap-3">
+                        <button onclick="showSection(currentView)" class="px-4 py-3 rounded-2xl bg-sky-800 text-white">Quay lại danh sách</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getDetailHtml(item, type) {
+            const title = type === 'huyet' ? getHuyetTitle(item) : type === 'records' ? item.patientName || '' : item.title || item.name || '';
+            const subtitle = type === 'huyet'
+                ? item.location || ''
+                : type === 'records'
+                    ? item.symptoms || item.diagnosis || ''
+                    : (item.acupointIds || []).join(', ');
+            let bodyHtml = '';
+            if (type === 'huyet') {
+                bodyHtml = editingType === 'huyet' ? `
                         <div class="space-y-4">
                             <div>
                                 <label class="text-sm font-semibold text-slate-700">Tên huyệt</label>
                                 <input id="edit-name" class="w-full p-3 border rounded-xl" value="${item.name || ''}" />
                             </div>
                             <div>
-                                <label class="text-sm font-semibold text-slate-700">Vị trí</label>
+                               
                                 <textarea id="edit-location" class="w-full p-3 border rounded-xl" rows="2">${item.location || ''}</textarea>
                             </div>
                             <div>
@@ -337,7 +1203,9 @@
                         <div class="detail-row"><span>Vị trí</span><span>${item.location || 'Không có'}</span></div>
                         <div class="detail-row"><span>Tác dụng</span><span>${item.functions || 'Không có'}</span></div>
                         <div class="detail-row"><span>Thực hiện</span><span>${item.manual || 'Không có'}</span></div>
-                    ` : type === 'protocols' ? editingType === 'protocols' ? `
+                    `;
+            } else if (type === 'protocols') {
+                bodyHtml = editingType === 'protocols' ? `
                         <div class="space-y-4">
                             <div>
                                 <label class="text-sm font-semibold text-slate-700">Tiêu đề</label>
@@ -364,7 +1232,43 @@
                         <div class="detail-row"><span>Phác đồ</span><span>${item.title || item.name || 'Không có'}</span></div>
                         <div class="detail-row"><span>Mô tả</span><span>${item.description || item.note || 'Không có'}</span></div>
                         <div class="detail-row"><span>Huyệt</span><span>${(item.acupointIds || []).join(', ') || 'Không có'}</span></div>
-                    ` : editingType === 'groups' ? `
+                    `;
+            } else if (type === 'records') {
+                bodyHtml = editingType === 'records' ? `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Tên bệnh nhân</label>
+                                <input id="edit-patientName" class="w-full p-3 border rounded-xl" value="${item.patientName || ''}" />
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Triệu chứng</label>
+                                <textarea id="edit-symptoms" class="w-full p-3 border rounded-xl" rows="2">${item.symptoms || ''}</textarea>
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Chẩn đoán</label>
+                                <textarea id="edit-diagnosis" class="w-full p-3 border rounded-xl" rows="2">${item.diagnosis || ''}</textarea>
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Phác đồ</label>
+                                <input id="edit-protocol" class="w-full p-3 border rounded-xl" value="${item.protocol || ''}" />
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Ghi chú</label>
+                                <textarea id="edit-notes" class="w-full p-3 border rounded-xl" rows="3">${item.notes || ''}</textarea>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="saveRecordEdits()" class="px-4 py-3 rounded-xl bg-emerald-600 text-white">Lưu thay đổi</button>
+                                <button onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="detail-row"><span>Triệu chứng</span><span>${item.symptoms || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Chẩn đoán</span><span>${item.diagnosis || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Phác đồ</span><span>${item.protocol || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Ghi chú</span><span>${item.notes || 'Không có'}</span></div>
+                    `;
+            } else if (type === 'groups') {
+                bodyHtml = editingType === 'groups' ? `
                         <div class="space-y-4">
                             <div>
                                 <label class="text-sm font-semibold text-slate-700">Tiêu đề</label>
@@ -391,16 +1295,51 @@
                         <div class="detail-row"><span>Bộ huyệt</span><span>${item.title || item.name || 'Không có'}</span></div>
                         <div class="detail-row"><span>Mô tả</span><span>${item.description || 'Không có'}</span></div>
                         <div class="detail-row"><span>Huyệt</span><span>${(item.acupointIds || []).join(', ') || 'Không có'}</span></div>
-                    `}
+                    `;
+            }
+            return `
+                <div class="flex items-start justify-between gap-3 mb-4">
+                    <div>
+                        <h3>${title}</h3>
+                        <p class="text-sm text-slate-500">${subtitle}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="clearSelection()" class="px-3 py-2 rounded-xl bg-slate-100 text-slate-700">Đóng</button>
+                        <button type="button" onclick="startEdit('${type}', '${String(item.id || item.title || item.name || item.patientName || '').replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-xl bg-sky-800 text-white">Chỉnh sửa</button>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    ${bodyHtml}
                     ${getSetImageUrl(item) ? `<img src="${getSetImageUrl(item)}" alt="${title}" class="w-full h-48 object-cover rounded-xl image-zoomable" onclick="event.stopPropagation(); openImageLightbox(this.src)" />` : ''}
                 </div>
             `;
         }
 
-        function selectItem(type, id) {
+        function getSlotId(item, type) {
+            if (!item) return '';
+            return String(item.id || item.title || item.name || item.patientName || '');
+        }
+
+        function renderMobileDetailSlot(item, type, html) {
+            document.querySelectorAll('.mobile-detail-slot').forEach(slot => {
+                slot.classList.add('hidden');
+                slot.innerHTML = '';
+            });
+            if (!item || !type) return;
+            const slotId = getSlotId(item, type);
+            if (!slotId) return;
+            const selector = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+                ? `.mobile-detail-slot[data-detail-slot-type="${CSS.escape(type)}"][data-detail-slot-id="${CSS.escape(slotId)}"]`
+                : `.mobile-detail-slot[data-detail-slot-type="${type}"][data-detail-slot-id="${slotId}"]`;
+            const slot = document.querySelector(selector);
+            if (!slot) return;
+            slot.innerHTML = html;
+            slot.classList.remove('hidden');
+        }        function selectItem(type, id) {
             let item;
             if (type === 'huyet') item = huyetItems.find(i => String(i.id) === String(id));
             if (type === 'protocols') item = protocolItems.find(i => String(i.id) === String(id) || String(i.name) === String(id));
+            if (type === 'records') item = recordItems.find(i => String(i.id) === String(id) || String(i.patientName) === String(id));
             if (type === 'groups') item = groupItems.find(i => String(i.id) === String(id) || String(i.title) === String(id));
             selectedItem = item || null;
             selectedType = type;
@@ -574,6 +1513,301 @@
             renderCurrentView();
         }
 
+        function resetNewAcupointForm() {
+            newHuyetCode = '';
+            newHuyetName = '';
+            newHuyetLocation = '';
+            newHuyetFunctions = '';
+            newHuyetManual = '';
+            newHuyetImageFile = null;
+            renderCurrentView();
+        }
+
+        function toggleNewHuyetForm() {
+            newHuyetFormOpen = !newHuyetFormOpen;
+            renderCurrentView();
+        }
+
+        function toggleNewProtocolForm() {
+            newProtocolFormOpen = !newProtocolFormOpen;
+            renderCurrentView();
+        }
+
+        function toggleNewGroupForm() {
+            newGroupFormOpen = !newGroupFormOpen;
+            renderCurrentView();
+        }
+
+        async function uploadFormImage(file, folder) {
+            if (!file) return [];
+            if (typeof DCcloudinary === 'undefined') {
+                throw new Error('Cloudinary chưa được cấu hình.');
+            }
+            const result = await DCcloudinary.uploadFile(file, { folder });
+            const publicId = result.public_id || result.asset_id;
+            if (!publicId) throw new Error('Không lấy được public_id từ Cloudinary.');
+            if (typeof DCcloudinary.saveMetadata === 'function') {
+                DCcloudinary.saveMetadata(publicId, result);
+            }
+            return [publicId];
+        }
+
+        async function saveNewAcupoint() {
+            const code = String(newHuyetCode || '').trim();
+            const name = String(newHuyetName || '').trim();
+            const location = String(newHuyetLocation || '').trim();
+            const functions = String(newHuyetFunctions || '').trim();
+            const manual = String(newHuyetManual || '').trim();
+            if (!code) {
+                setStatus('Nhập mã huyệt.', true);
+                return;
+            }
+            const newItem = { id: code, name, location, functions, manual, imageIds: [] };
+            try {
+                let imageIds = [];
+                if (newHuyetImageFile) {
+                    imageIds = await uploadFormImage(newHuyetImageFile, 'dienchan/huyet');
+                }
+                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                    const saved = await DCFirebase.saveAcupoint({
+                        id: code,
+                        name: name || code,
+                        location,
+                        functions,
+                        manual,
+                        imageIds,
+                        createdBy: DCFirebase.getFirebaseUser().uid
+                    });
+                    huyetItems.unshift(saved);
+                    setStatus('Đã lưu huyệt mới vào Firebase.');
+                } else {
+                    huyetItems.unshift({ ...newItem, id: code });
+                    setStatus('Lưu huyệt cục bộ. Đăng nhập Firebase để đồng bộ.');
+                }
+                resetNewAcupointForm();
+            } catch (err) {
+                setStatus(`Lưu huyệt mới thất bại: ${err.message || err}`, true);
+            }
+        }
+
+        function resetNewProtocolForm() {
+            newProtocolTitle = '';
+            newProtocolDescription = '';
+            newProtocolAcupointIds = '';
+            newProtocolKeywords = '';
+            newProtocolImageFile = null;
+            renderCurrentView();
+        }
+
+        async function saveNewProtocol() {
+            const title = String(newProtocolTitle || '').trim();
+            const description = String(newProtocolDescription || '').trim();
+            const acupointIds = String(newProtocolAcupointIds || '').split(/[\s,]+/).filter(Boolean);
+            const keywords = String(newProtocolKeywords || '').split(/[\s,]+/).filter(Boolean);
+            if (!title) {
+                setStatus('Nhập tên phác đồ.', true);
+                return;
+            }
+            const newItem = { title, description, acupointIds, keywords, imageIds: [] };
+            try {
+                let imageIds = [];
+                if (newProtocolImageFile) {
+                    imageIds = await uploadFormImage(newProtocolImageFile, 'dienchan/protocols');
+                }
+                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                    const saved = await DCFirebase.saveTreatmentPlan({
+                        title,
+                        description,
+                        acupointIds,
+                        keywords,
+                        imageIds,
+                        createdBy: DCFirebase.getFirebaseUser().uid
+                    });
+                    protocolItems.unshift(saved);
+                    setStatus('Đã lưu phác đồ mới vào Firebase.');
+                } else {
+                    protocolItems.unshift({ id: `local-${Date.now()}`, ...newItem });
+                    setStatus('Lưu phác đồ cục bộ. Đăng nhập Firebase để đồng bộ.');
+                }
+                resetNewProtocolForm();
+            } catch (err) {
+                setStatus(`Lưu phác đồ mới thất bại: ${err.message || err}`, true);
+            }
+        }
+
+        function resetNewGroupForm() {
+            newGroupTitle = '';
+            newGroupDescription = '';
+            newGroupAcupointIds = '';
+            newGroupNotes = '';
+            newGroupImageFile = null;
+            renderCurrentView();
+        }
+
+        async function saveNewGroup() {
+            const title = String(newGroupTitle || '').trim();
+            const description = String(newGroupDescription || '').trim();
+            const notes = String(newGroupNotes || '').trim();
+            const acupointIds = String(newGroupAcupointIds || '').split(/[\s,]+/).filter(Boolean);
+            if (!title) {
+                setStatus('Nhập tên bộ huyệt.', true);
+                return;
+            }
+            const newItem = { title, description, acupointIds, notes, imageIds: [] };
+            try {
+                let imageIds = [];
+                if (newGroupImageFile) {
+                    imageIds = await uploadFormImage(newGroupImageFile, 'dienchan/groups');
+                }
+                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                    const saved = await DCFirebase.saveAcupointGroup({
+                        title,
+                        description,
+                        acupointIds,
+                        notes,
+                        imageIds,
+                        createdBy: DCFirebase.getFirebaseUser().uid
+                    });
+                    groupItems.unshift(saved);
+                    setStatus('Đã lưu bộ huyệt mới vào Firebase.');
+                } else {
+                    groupItems.unshift({ id: `local-${Date.now()}`, ...newItem });
+                    setStatus('Lưu bộ huyệt cục bộ. Đăng nhập Firebase để đồng bộ.');
+                }
+                resetNewGroupForm();
+            } catch (err) {
+                setStatus(`Lưu bộ huyệt mới thất bại: ${err.message || err}`, true);
+            }
+        }
+
+        async function saveMedicalRecordEntry() {
+            const patientName = document.getElementById('record-patientName')?.value.trim();
+            const symptoms = document.getElementById('record-symptoms')?.value.trim();
+            const diagnosis = document.getElementById('record-diagnosis')?.value.trim();
+            const protocol = document.getElementById('record-protocol')?.value.trim();
+            const notes = document.getElementById('record-notes')?.value.trim();
+            if (!patientName) {
+                setStatus('Nhập tên bệnh nhân.', true);
+                return;
+            }
+            const record = {
+                patientName,
+                symptoms,
+                diagnosis,
+                protocol,
+                notes,
+                linkedItems: currentRecordLinks
+            };
+            try {
+                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                    const saved = await DCFirebase.saveMedicalRecord(record);
+                    recordItems.unshift({ ...saved, linkedItems: Array.isArray(saved.linkedItems) ? saved.linkedItems : record.linkedItems });
+                    setStatus('Đã lưu hồ sơ bệnh trạng vào Firebase.');
+                } else {
+                    recordItems.unshift({ id: `local-${Date.now()}`, ...record });
+                    setStatus('Lưu hồ sơ cục bộ. Đăng nhập Firebase để đồng bộ.');
+                }
+                document.getElementById('record-form')?.reset();
+                currentRecordLinks = [];
+                recordPatientName = '';
+                recordProtocolText = '';
+                recordSymptomsText = '';
+                recordDiagnosisText = '';
+                recordNotesText = '';
+                renderCurrentView();
+            } catch (err) {
+                setStatus(`Lưu hồ sơ thất bại: ${err.message || err}`, true);
+            }
+        }
+
+        async function saveMedicalRecordEdits() {
+            if (!selectedItem) return;
+            const updated = {
+                ...selectedItem,
+                patientName: document.getElementById('edit-patientName')?.value.trim() || selectedItem.patientName,
+                symptoms: document.getElementById('edit-symptoms')?.value.trim() || selectedItem.symptoms,
+                diagnosis: document.getElementById('edit-diagnosis')?.value.trim() || selectedItem.diagnosis,
+                protocol: document.getElementById('edit-protocol')?.value.trim() || selectedItem.protocol,
+                notes: document.getElementById('edit-notes')?.value.trim() || selectedItem.notes,
+                linkedItems: selectedItem.linkedItems || []
+            };
+            const index = recordItems.findIndex(i => String(i.id) === String(selectedItem.id));
+            if (index !== -1) {
+                recordItems[index] = updated;
+            }
+            selectedItem = updated;
+            editingType = null;
+            try {
+                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                    await DCFirebase.saveMedicalRecord(updated);
+                    setStatus('Đã lưu thay đổi hồ sơ bệnh trạng vào Firebase.');
+                } else {
+                    setStatus('Lưu hồ sơ cục bộ. Đăng nhập Firebase để đồng bộ.');
+                }
+            } catch (err) {
+                setStatus(`Lưu hồ sơ thất bại: ${err.message || err}`, true);
+            }
+            renderCurrentView();
+        }
+
+        function addRecordLink(type, id, title) {
+            if (!type || !id) return;
+            const exists = currentRecordLinks.some(link => link.type === type && String(link.id) === String(id));
+            if (!exists) {
+                currentRecordLinks.push({ type, id, title });
+                renderCurrentView();
+            }
+        }
+
+        function removeRecordLink(index) {
+            if (typeof index !== 'number') return;
+            currentRecordLinks.splice(index, 1);
+            renderCurrentView();
+        }
+
+        function resetRecordForm() {
+            document.getElementById('record-form')?.reset();
+            currentRecordLinks = [];
+            renderCurrentView();
+        }
+
+        function normalizeIdForDom(id) {
+            return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '-');
+        }
+
+        function clearHighlightedCard() {
+            if (!highlightedCardId) return;
+            const previous = document.getElementById(highlightedCardId);
+            if (previous) previous.classList.remove('highlighted-card');
+            highlightedCardId = null;
+        }
+
+        function highlightCard(type, id) {
+            clearHighlightedCard();
+            const cardId = `list-card-${type}-${normalizeIdForDom(id)}`;
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            highlightedCardId = cardId;
+            card.classList.add('highlighted-card');
+            setTimeout(() => {
+                if (card) card.classList.remove('highlighted-card');
+                if (highlightedCardId === cardId) highlightedCardId = null;
+            }, 4800);
+        }
+
+        function goToLinkedItem(type, id) {
+            if (!type || !id) return;
+            showSection(type, { clear: false });
+            selectItem(type, id);
+            setTimeout(() => {
+                const card = document.getElementById(`list-card-${type}-${normalizeIdForDom(id)}`);
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    highlightCard(type, id);
+                }
+            }, 60);
+        }
+
         function cancelEdit() {
             editingType = null;
             if (selectedItem && selectedType) {
@@ -619,11 +1853,16 @@
 
         function filterProtocolByTag(tag) {
             const category = protocolCategoryMenu.find(item => item.label === tag);
-            const query = category ? category.terms.join(' ') : tag;
+            selectedProtocolCategory = category ? category.label : '';
             const input = document.getElementById('search-input');
-            if (!input) return;
-            input.value = query;
-            renderCurrentView();
+            if (input) {
+                input.value = category ? category.label : '';
+            }
+            if (currentView !== 'protocols') {
+                showSection('protocols', { clear: false });
+            } else {
+                renderCurrentView();
+            }
         }
 
         function suggestProtocolsFromSearch() {
@@ -637,7 +1876,7 @@
         }
 
         function getHuyetSearchResults(search) {
-            const normalized = search.trim().toLowerCase();
+            const normalized = makeSearchHay(search);
             if (!normalized) return [];
             const tokens = normalized.split(/[\s,;|]+/).filter(Boolean);
             const ids = tokens.filter(t => /^\d+$/.test(t));
@@ -655,18 +1894,56 @@
                 if (results.length) return results;
             }
             return huyetItems.filter(item => {
-                const hay = `${item.id} ${item.name || ''} ${item.location || ''} ${item.functions || ''}`.toLowerCase();
+                const hay = makeSearchHay(`${item.id} ${item.name || ''} ${item.location || ''} ${item.functions || ''}`);
                 return hay.includes(normalized);
             });
         }
 
         function renderHuyetList(container, search) {
             const filtered = getHuyetSearchResults(search);
+            const totalHuyet = huyetItems.length;
+            const filteredWithImage = filtered.filter(item => Boolean(getSetImageUrl(item))).length;
+            const filteredWithoutImage = filtered.length - filteredWithImage;
+            const totalWithImage = huyetItems.filter(item => Boolean(getSetImageUrl(item))).length;
+            const totalWithoutImage = totalHuyet - totalWithImage;
             if (!search.trim()) {
                 container.innerHTML = `
                     <div class="card p-6 text-slate-600">
                         <p class="text-lg font-semibold">Nhập huyệt cần tìm</p>
                         <p class="mt-2 text-sm">Ví dụ: <strong>23 34 1</strong> hoặc triệu chứng như <strong>đau đầu</strong>. Chỉ hiện kết quả sau khi nhập.</p>
+                        <p class="mt-3 text-sm text-slate-500">Tổng số huyệt hiện có: <strong>${totalHuyet}</strong></p>
+                        <p class="mt-1 text-sm text-slate-500">Trong đó đã có ảnh: <strong>${totalWithImage}</strong>, chưa có ảnh: <strong>${totalWithoutImage}</strong></p>
+                    </div>
+                    <div class="card p-5 space-y-4">
+                        <div class="flex items-center justify-between gap-4">
+                            <h3 class="text-lg font-semibold">Thêm huyệt mới</h3>
+                            <button type="button" onclick="toggleNewHuyetForm()" class="px-4 py-2 rounded-2xl bg-sky-800 text-white text-sm">
+                                ${newHuyetFormOpen ? 'Ẩn biểu mẫu' : 'Mở biểu mẫu'}
+                            </button>
+                        </div>
+                        <div class="${newHuyetFormOpen ? '' : 'hidden'}">
+                        <form id="new-huyet-form" class="space-y-4" onsubmit="event.preventDefault(); saveNewAcupoint();">
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <input id="new-huyet-code" type="text" placeholder="Mã huyệt" class="w-full p-3 border rounded-xl" value="${newHuyetCode}" oninput="newHuyetCode = this.value" />
+                                <input id="new-huyet-name" type="text" placeholder="Tên huyệt" class="w-full p-3 border rounded-xl" value="${newHuyetName}" oninput="newHuyetName = this.value" />
+                            </div>
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <textarea id="new-huyet-location" rows="3" placeholder="Vị trí" class="w-full p-3 border rounded-xl" oninput="newHuyetLocation = this.value">${newHuyetLocation}</textarea>
+                                <textarea id="new-huyet-functions" rows="3" placeholder="Tác dụng" class="w-full p-3 border rounded-xl" oninput="newHuyetFunctions = this.value">${newHuyetFunctions}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Ảnh minh họa</label>
+                                <input id="new-huyet-image" type="file" accept="image/*" class="w-full" onchange="newHuyetImageFile = this.files && this.files[0] ? this.files[0] : null" />
+                            </div>
+                            <div>
+                                <textarea id="new-huyet-manual" rows="3" placeholder="Thực hiện" class="w-full p-3 border rounded-xl" oninput="newHuyetManual = this.value">${newHuyetManual}</textarea>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" onclick="saveNewAcupoint()" class="px-4 py-3 rounded-2xl bg-blue-600 text-white">Lưu huyệt</button>
+                                <button type="button" onclick="resetNewAcupointForm()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Xóa form</button>
+                            </div>
+                        </form>
+                        </div>
                     </div>
                 `;
                 return;
@@ -675,11 +1952,43 @@
                 <div class="flex flex-wrap justify-between gap-3 items-center mb-3">
                     <div>
                         <h2 class="text-xl font-semibold">Kết quả huyệt</h2>
-                        <p class="text-sm text-slate-500">Hiển thị ${filtered.length} huyệt theo tìm kiếm</p>
+                        <p class="text-sm text-slate-500">Hiển thị ${filtered.length} / ${totalHuyet} huyệt</p>
+                        <p class="text-sm text-slate-500">Trong kết quả đã có ảnh: <strong>${filteredWithImage}</strong>, chưa có ảnh: <strong>${filteredWithoutImage}</strong></p>
+                    </div>
+                </div>
+                <div class="card p-5 space-y-4">
+                    <div class="flex items-center justify-between gap-4">
+                        <h3 class="text-lg font-semibold">Thêm huyệt mới</h3>
+                        <button type="button" onclick="toggleNewHuyetForm()" class="px-4 py-2 rounded-2xl bg-sky-800 text-white text-sm">
+                            ${newHuyetFormOpen ? 'Ẩn biểu mẫu' : 'Mở biểu mẫu'}
+                        </button>
+                    </div>
+                    <div class="${newHuyetFormOpen ? '' : 'hidden'}">
+                    <form id="new-huyet-form" class="space-y-4" onsubmit="event.preventDefault(); saveNewAcupoint();">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <input id="new-huyet-code" type="text" placeholder="Mã huyệt" class="w-full p-3 border rounded-xl" value="${newHuyetCode}" oninput="newHuyetCode = this.value" />
+                            <input id="new-huyet-name" type="text" placeholder="Tên huyệt" class="w-full p-3 border rounded-xl" value="${newHuyetName}" oninput="newHuyetName = this.value" />
+                        </div>
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <textarea id="new-huyet-location" rows="3" placeholder="Vị trí" class="w-full p-3 border rounded-xl" oninput="newHuyetLocation = this.value">${newHuyetLocation}</textarea>
+                            <textarea id="new-huyet-functions" rows="3" placeholder="Tác dụng" class="w-full p-3 border rounded-xl" oninput="newHuyetFunctions = this.value">${newHuyetFunctions}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Ảnh minh họa</label>
+                            <input id="new-huyet-image" type="file" accept="image/*" class="w-full" onchange="newHuyetImageFile = this.files && this.files[0] ? this.files[0] : null" />
+                        </div>
+                        <div>
+                            <textarea id="new-huyet-manual" rows="3" placeholder="Thực hiện" class="w-full p-3 border rounded-xl" oninput="newHuyetManual = this.value">${newHuyetManual}</textarea>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                            <button type="button" onclick="saveNewAcupoint()" class="px-4 py-3 rounded-2xl bg-blue-600 text-white">Lưu huyệt</button>
+                            <button type="button" onclick="resetNewAcupointForm()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Xóa form</button>
+                        </div>
+                    </form>
                     </div>
                 </div>
                 <div class="grid gap-6 lg:grid-cols-2">${filtered.map(item => `
-                    <article onclick="selectItem('huyet', '${item.id}')" class="huyet-result-card cursor-pointer">
+                    <article onclick="selectItem('huyet', '${String(item.id).replace(/'/g, "\\'")}')" data-item-type="huyet" data-item-id="${item.id}" class="huyet-result-card cursor-pointer">
                         <div class="huyet-result-header">
                             <div class="flex items-center gap-4">
                                 <span class="huyet-result-label">#${item.id}</span>
@@ -689,8 +1998,8 @@
                                 </div>
                             </div>
                             <div class="huyet-result-actions">
-                                <button class="huyet-action-btn" type="button" title="Chèn ảnh">📷</button>
-                                <button onclick="event.stopPropagation(); startEdit('huyet', '${item.id}')" class="huyet-action-btn" type="button" title="Chỉnh sửa">✏️</button>
+                                <button onclick="event.stopPropagation(); selectHuyetImageFile('${String(item.id).replace(/'/g, "\\'")}')" class="huyet-action-btn" type="button" title="Chèn ảnh">📷</button>
+                                <button onclick="event.stopPropagation(); startEdit('huyet', '${String(item.id).replace(/'/g, "\\'")}')" class="huyet-action-btn" type="button" title="Chỉnh sửa">✏️</button>
                             </div>
                         </div>
                         <div class="huyet-result-image">
@@ -707,10 +2016,21 @@
 
         function renderProtocolList(container, search) {
             const filtered = protocolItems.filter(item => {
-                const hay = `${item.title || item.name || ''} ${item.description || item.note || ''} ${(item.acupointIds || []).join(' ')} ${(item.keywords || []).join(' ')}`.toLowerCase();
-                return !search || hay.includes(search);
+                const titleHay = `${item.title || item.name || ''}`;
+                const categoryHay = `${item.title || item.name || ''} ${item.description || item.note || ''} ${(item.acupointIds || []).join(' ')} ${(item.keywords || []).join(' ')}`;
+                if (selectedProtocolCategory) {
+                    const category = protocolCategoryMenu.find(cat => cat.label === selectedProtocolCategory);
+                    if (category) {
+                        return category.terms.some(term => searchMatches(categoryHay, term, { removeTone: false }));
+                    }
+                }
+                return searchMatches(titleHay, search, { removeTone: false });
             });
-            const queryLabel = search ? `Kết quả cho “${search}”` : 'Tất cả phác đồ mẫu';
+            const queryLabel = selectedProtocolCategory
+                ? `Kết quả cho “${selectedProtocolCategory}”`
+                : search
+                    ? `Kết quả cho “${search}”`
+                    : 'Tất cả phác đồ mẫu';
             container.innerHTML = `
                 <div class="space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -722,17 +2042,45 @@
                             <button onclick="suggestProtocolsFromSearch()" class="px-4 py-3 rounded-2xl bg-amber-500 text-white font-semibold">🔎 Gợi ý phác đồ theo triệu chứng</button>
                         </div>
                     </div>
+                    <div class="card p-5 space-y-4">
+                        <div class="flex items-center justify-between gap-4">
+                            <h3 class="text-lg font-semibold">Thêm phác đồ mới</h3>
+                            <button type="button" onclick="toggleNewProtocolForm()" class="px-4 py-2 rounded-2xl bg-sky-800 text-white text-sm">
+                                ${newProtocolFormOpen ? 'Ẩn biểu mẫu' : 'Mở biểu mẫu'}
+                            </button>
+                        </div>
+                        <div class="${newProtocolFormOpen ? '' : 'hidden'}">
+                        <form id="new-protocol-form" class="space-y-4" onsubmit="event.preventDefault(); saveNewProtocol();">
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <input id="new-protocol-title" type="text" placeholder="Tên phác đồ" class="w-full p-3 border rounded-xl" value="${newProtocolTitle}" oninput="newProtocolTitle = this.value" />
+                                <input id="new-protocol-keywords" type="text" placeholder="Keywords (cách nhau dấu cách)" class="w-full p-3 border rounded-xl" value="${newProtocolKeywords}" oninput="newProtocolKeywords = this.value" />
+                            </div>
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <textarea id="new-protocol-description" rows="3" placeholder="Mô tả phác đồ" class="w-full p-3 border rounded-xl" oninput="newProtocolDescription = this.value">${newProtocolDescription}</textarea>
+                                <textarea id="new-protocol-acupointIds" rows="3" placeholder="Danh sách huyệt (ví dụ: 26 103 127)" class="w-full p-3 border rounded-xl" oninput="newProtocolAcupointIds = this.value">${newProtocolAcupointIds}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Ảnh minh họa</label>
+                                <input id="new-protocol-image" type="file" accept="image/*" class="w-full" onchange="newProtocolImageFile = this.files && this.files[0] ? this.files[0] : null" />
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" onclick="saveNewProtocol()" class="px-4 py-3 rounded-2xl bg-blue-600 text-white">Lưu phác đồ</button>
+                                <button type="button" onclick="resetNewProtocolForm()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Xóa form</button>
+                            </div>
+                        </form>
+                        </div>
+                    </div>
                     <div class="flex flex-wrap gap-2">
-                        <button type="button" onclick="document.getElementById('search-input').value=''; renderCurrentView();" class="px-3 py-2 rounded-full bg-slate-900 text-white text-sm">Tất cả</button>
+                        <button type="button" onclick="selectedProtocolCategory=''; document.getElementById('search-input').value=''; renderCurrentView();" class="px-3 py-2 rounded-full bg-sky-800 text-white text-sm">Tất cả</button>
                         ${protocolCategoryMenu.map(tag => `<button type="button" onclick="filterProtocolByTag('${tag.label.replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-full bg-slate-100 text-slate-700 text-sm">${tag.label}</button>`).join('')}
                     </div>
                 </div>
                 <div class="space-y-4">${filtered.map(item => `
-                    <article onclick="selectItem('protocols', '${item.id || item.title}')" class="card p-5 cursor-pointer hover:border-slate-300">
+                    <article id="list-card-protocols-${String(item.id || item.title || '').replace(/[^a-zA-Z0-9_-]/g, '-') }" data-item-type="protocols" data-item-id="${String(item.id || item.title || '').replace(/"/g, '&quot;')}" onclick="selectItem('protocols', '${String(item.id || item.title || '').replace(/'/g, "\\'")}')" class="card p-5 cursor-pointer hover:border-slate-300">
                         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                             <div class="space-y-3">
                                 <div class="flex items-center gap-3">
-                                    <span class="text-2xl">${item.icon || '📋'}</span>
+                                    <span class="text-2xl">${item.icon || getProtocolIcon(item)}</span>
                                     <div>
                                         <h3 class="text-lg font-semibold">${item.title || item.name || ''}</h3>
                                         <p class="text-sm text-slate-500">${item.description || item.note || ''}</p>
@@ -743,12 +2091,149 @@
                                 </div>
                             </div>
                             <div class="flex flex-col gap-2 items-end">
-                                <button type="button" onclick='event.stopPropagation(); startEdit("protocols", "${item.id || item.title}")' class="inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-700 px-4 py-2 text-sm">✏️ Chỉnh sửa</button>
-                                <button type="button" onclick='event.stopPropagation(); goToProtocolHuyetSearch(${JSON.stringify(item.acupointIds || []).replace(/'/g, "\\'")})' class="inline-flex items-center justify-center rounded-full bg-slate-900 text-white px-4 py-2 text-sm">Xem chi tiết</button>
+                                <button type="button" onclick='event.stopPropagation(); startEdit("protocols", "${String(item.id || item.title || '').replace(/'/g, "\\'")}")' class="inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-700 px-4 py-2 text-sm">✏️ Chỉnh sửa</button>
+                                <button type="button" onclick='event.stopPropagation(); goToProtocolHuyetSearch(${JSON.stringify(item.acupointIds || []).replace(/'/g, "\\'")})' class="inline-flex items-center justify-center rounded-full bg-sky-800 text-white px-4 py-2 text-sm">Xem chi tiết</button>
                             </div>
                         </div>
                     </article>
+                    <div class="mobile-detail-slot hidden" data-detail-slot-type="protocols" data-detail-slot-id="${String(item.id || item.title || '').replace(/"/g, '&quot;')}"></div>
                 `).join('')}</div>`;
+        }
+
+        function renderMedicalRecordsView(container, search) {
+            const currentPatientNameValue = recordPatientName;
+            const currentProtocolText = recordProtocolText;
+            const currentSymptomsText = recordSymptomsText;
+            const currentDiagnosisText = recordDiagnosisText;
+            const currentNotesText = recordNotesText;
+            const recordSearch = makeSearchHay(currentSymptomsText);
+            const relatedProtocols = recordSearch ? protocolItems.filter(item => {
+                const hay = makeSearchHay(`${item.title || item.name || ''} ${item.description || item.note || ''} ${(item.acupointIds || []).join(' ')} ${(item.keywords || []).join(' ')}`);
+                return hay.includes(recordSearch);
+            }) : [];
+            const relatedGroups = recordSearch ? groupItems.filter(item => {
+                const hay = makeSearchHay(`${item.title || item.name || ''} ${item.description || ''} ${item.notes || item.note || ''} ${(item.acupointIds || []).join(' ')}`);
+                return hay.includes(recordSearch);
+            }) : [];
+            const filtered = recordItems.filter(item => {
+                return searchMatches(`${item.patientName || ''} ${item.symptoms || ''} ${item.diagnosis || ''} ${item.protocol || ''} ${item.notes || item.note || ''}`, search);
+            });
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <h2 class="text-xl font-semibold">Hồ sơ bệnh trạng</h2>
+                            <p class="text-sm text-slate-500">${filtered.length} / ${recordItems.length} hồ sơ</p>
+                        </div>
+                        <div class="flex flex-wrap gap-3 items-center">
+                            <button onclick="loadFirebaseCollection('medicalRecords')" class="px-4 py-3 rounded-2xl bg-amber-500 text-white">Tải Hồ sơ bệnh trạng</button>
+                        </div>
+                    </div>
+                    <div class="card p-5 space-y-4">
+                        <h3 class="text-lg font-semibold">Thêm hồ sơ mới</h3>
+                        <form id="record-form" class="space-y-4" onsubmit="event.preventDefault(); saveMedicalRecordEntry();">
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <input id="record-patientName" type="text" placeholder="Tên bệnh nhân" class="w-full p-3 border rounded-xl" value="${currentPatientNameValue}" oninput="handleRecordInput(event, 'patientName')" />
+                                <input id="record-protocol" type="text" placeholder="Phác đồ (ví dụ: Đầu – Não)" class="w-full p-3 border rounded-xl" value="${currentProtocolText}" oninput="handleRecordInput(event, 'protocol')" />
+                            </div>
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <textarea id="record-symptoms" rows="3" placeholder="Bệnh trạng / triệu chứng" class="w-full p-3 border rounded-xl" oninput="handleRecordInput(event, 'symptoms')" oncompositionstart="startRecordComposition()" oncompositionend="endRecordComposition(event)" onblur="renderRecordSuggestions()">${currentSymptomsText}</textarea>
+                                <textarea id="record-diagnosis" rows="3" placeholder="Chẩn đoán" class="w-full p-3 border rounded-xl" oninput="handleRecordInput(event, 'diagnosis')">${currentDiagnosisText}</textarea>
+                            </div>
+                            <div>
+                                <textarea id="record-notes" rows="3" placeholder="Ghi chú thêm" class="w-full p-3 border rounded-xl" oninput="handleRecordInput(event, 'notes')">${currentNotesText}</textarea>
+                            </div>
+                            ${currentRecordLinks.length ? `
+                                <div class="space-y-3 p-4 bg-slate-50 rounded-3xl border border-slate-200">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <h4 class="font-semibold">Phác đồ liên kết</h4>
+                                        <span class="text-sm text-slate-500">${currentRecordLinks.length} mục</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${currentRecordLinks.map((link, index) => `
+                                            <span class="tag tag-secondary">
+                                                ${link.title || link.id}
+                                                <button type="button" onclick="removeRecordLink(${index})" class="ml-2 text-xs text-slate-700">✕</button>
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" onclick="saveMedicalRecordEntry()" class="px-4 py-3 rounded-2xl bg-blue-600 text-white">Lưu hồ sơ</button>
+                                <button type="button" onclick="resetRecordForm()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Xóa form</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card p-5 space-y-4">
+                        <h3 class="text-lg font-semibold">Phác đồ / Bộ huyệt gợi ý</h3>
+                        <div id="record-suggestions-container">
+                        ${recordSearch ? `
+                            <div class="grid gap-4 lg:grid-cols-2">
+                                <div>
+                                    <h4 class="text-sm font-semibold text-slate-700 mb-3">Phác đồ mẫu</h4>
+                                    ${relatedProtocols.length ? relatedProtocols.map(item => `
+                                        <div class="p-4 border rounded-3xl bg-slate-50">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <h5 class="font-semibold">${item.title || item.name || 'Phác đồ'}</h5>
+                                                    <p class="text-sm text-slate-500 mt-1">${item.description || item.note || ''}</p>
+                                                </div>
+                                                <button type="button" onclick="addRecordLink('protocols', '${item.id}', '${(item.title||item.name||'Phác đồ').replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-full bg-sky-800 text-white text-sm">Thêm</button>
+                                            </div>
+                                        </div>
+                                    `).join('') : '<p class="text-sm text-slate-500">Không tìm thấy phác đồ liên quan.</p>'}
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-slate-700 mb-3">Bộ huyệt</h4>
+                                    ${relatedGroups.length ? relatedGroups.map(item => `
+                                        <div class="p-4 border rounded-3xl bg-slate-50">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <h5 class="font-semibold">${item.title || item.name || 'Bộ huyệt'}</h5>
+                                                    <p class="text-sm text-slate-500 mt-1">${item.description || item.notes || item.note || ''}</p>
+                                                </div>
+                                                <button type="button" onclick="addRecordLink('groups', '${item.id}', '${(item.title||item.name||'Bộ huyệt').replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-full bg-sky-800 text-white text-sm">Thêm</button>
+                                            </div>
+                                        </div>
+                                    `).join('') : '<p class="text-sm text-slate-500">Không tìm thấy bộ huyệt liên quan.</p>'}
+                                </div>
+                            </div>
+                        ` : '<p class="text-sm text-slate-500">Nhập triệu chứng để tìm phác đồ và bộ huyệt phù hợp.</p>'}</div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="document.getElementById('search-input').value=''; renderCurrentView();" class="px-3 py-2 rounded-full bg-sky-800 text-white text-sm">Tất cả</button>
+                    </div>
+                    <div class="grid gap-4">${filtered.map(item => `
+                        <article onclick="selectItem('records', '${String(item.id || item.patientName || '').replace(/'/g, "\\'")}')" data-item-type="records" data-item-id="${String(item.id || item.patientName || '').replace(/"/g, '&quot;')}" class="card p-5 cursor-pointer hover:border-slate-300">
+                            <div class="space-y-3">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <div>
+                                        <h3 class="text-lg font-semibold">${item.patientName || 'Bệnh nhân không tên'}</h3>
+                                        <p class="text-sm text-slate-500">${item.symptoms || item.diagnosis || 'Không có mô tả'}</p>
+                                    </div>
+                                    <div class="text-right text-sm text-slate-500">${item.protocol ? `Phác đồ: ${item.protocol}` : ''}</div>
+                                </div>
+                                ${(item.linkedItems || []).length ? `
+                                    <div>
+                                        <div class="text-sm font-semibold text-slate-700 mb-2">Liên kết phác đồ / bộ huyệt</div>
+                                        <div class="flex flex-wrap gap-2">
+                                            ${(item.linkedItems || []).map(link => `
+                                                <button type="button" onclick="event.stopPropagation(); goToLinkedItem('${link.type}', '${String(link.id).replace(/'/g, "\\'")}')" class="tag tag-secondary text-sm">
+                                                    ${link.type === 'protocols' ? 'Phác đồ:' : 'Bộ huyệt:'} ${link.title || link.id}
+                                                </button>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </article>
+                        <div class="mobile-detail-slot hidden" data-detail-slot-type="records" data-detail-slot-id="${String(item.id || item.patientName || '').replace(/"/g, '&quot;')}"></div>
+                    `).join('')}</div>
+                </div>
+            `;
         }
 
         function getSetImageUrl(item) {
@@ -780,14 +2265,12 @@
             if (input) {
                 input.value = idsList.join(' ');
             }
-            showSection('huyet');
-            renderCurrentView();
+            showSection('huyet', { clear: false });
         }
 
         function renderGroupList(container, search) {
             const filtered = groupItems.filter(item => {
-                const hay = `${item.title || item.name || ''} ${item.description || ''} ${item.notes || item.note || ''}`.toLowerCase();
-                return !search || hay.includes(search);
+                return searchMatches(`${item.title || item.name || ''} ${item.description || ''} ${item.notes || item.note || ''}`, search);
             });
             container.innerHTML = `
                 <div class="flex flex-wrap justify-between gap-3 items-center mb-3">
@@ -796,8 +2279,34 @@
                         <p class="text-sm text-slate-500">${filtered.length} / ${groupItems.length} kết quả</p>
                     </div>
                 </div>
+                <div class="card p-5 space-y-4">
+                    <div class="flex items-center justify-between gap-4">
+                        <h3 class="text-lg font-semibold">Thêm bộ huyệt mới</h3>
+                        <button type="button" onclick="toggleNewGroupForm()" class="px-4 py-2 rounded-2xl bg-sky-800 text-white text-sm">
+                            ${newGroupFormOpen ? 'Ẩn biểu mẫu' : 'Mở biểu mẫu'}
+                        </button>
+                    </div>
+                    <div class="${newGroupFormOpen ? '' : 'hidden'}">
+                    <form id="new-group-form" class="space-y-4" onsubmit="event.preventDefault(); saveNewGroup();">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <input id="new-group-title" type="text" placeholder="Tên bộ huyệt" class="w-full p-3 border rounded-xl" value="${newGroupTitle}" oninput="newGroupTitle = this.value" />
+                            <input id="new-group-acupointIds" type="text" placeholder="Danh sách huyệt" class="w-full p-3 border rounded-xl" value="${newGroupAcupointIds}" oninput="newGroupAcupointIds = this.value" />
+                        </div>
+                        <textarea id="new-group-description" rows="3" placeholder="Mô tả" class="w-full p-3 border rounded-xl" oninput="newGroupDescription = this.value">${newGroupDescription}</textarea>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Ảnh minh họa</label>
+                            <input id="new-group-image" type="file" accept="image/*" class="w-full" onchange="newGroupImageFile = this.files && this.files[0] ? this.files[0] : null" />
+                        </div>
+                        <textarea id="new-group-notes" rows="3" placeholder="Ghi chú" class="w-full p-3 border rounded-xl" oninput="newGroupNotes = this.value">${newGroupNotes}</textarea>
+                        <div class="flex flex-wrap gap-3">
+                            <button type="button" onclick="saveNewGroup()" class="px-4 py-3 rounded-2xl bg-blue-600 text-white">Lưu bộ huyệt</button>
+                            <button type="button" onclick="resetNewGroupForm()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Xóa form</button>
+                        </div>
+                    </form>
+                    </div>
+                </div>
                 <div class="grid gap-4 lg:grid-cols-2">${filtered.map(item => `
-                    <article onclick="selectItem('groups', '${item.id || item.title}')" class="card p-4 cursor-pointer hover:border-slate-300">
+                    <article id="list-card-groups-${String(item.id || item.title || '').replace(/[^a-zA-Z0-9_-]/g, '-') }" data-item-type="groups" data-item-id="${String(item.id || item.title || '').replace(/"/g, '&quot;')}" onclick="selectItem('groups', '${String(item.id || item.title || '').replace(/'/g, "\\'")}')" class="card p-4 cursor-pointer hover:border-slate-300">
                         <div class="flex flex-wrap gap-3 items-start justify-between mb-3">
                             <div>
                                 <h3 class="text-lg font-semibold">${item.title || item.name || ''}</h3>
@@ -805,7 +2314,7 @@
                             </div>
                             <div class="flex flex-col gap-2 items-end">
                                 <span class="tag tag-primary">Bộ huyệt</span>
-                                <button type="button" onclick='event.stopPropagation(); startEdit("groups", "${item.id || item.title}")' class="inline-flex items-center justify-center rounded-full bg-slate-900 text-white px-4 py-2 text-sm">✏️ Chỉnh sửa</button>
+                                <button type="button" onclick='event.stopPropagation(); startEdit("groups", "${String(item.id || item.title || '').replace(/'/g, "\\'")}")' class="inline-flex items-center justify-center rounded-full bg-sky-800 text-white px-4 py-2 text-sm">✏️ Chỉnh sửa</button>
                             </div>
                         </div>
                         <div class="grid gap-3 sm:grid-cols-[120px_1fr] items-start">
@@ -816,20 +2325,34 @@
                             </div>
                         </div>
                     </article>
-                `).join('')}</div>`;
+                    <div class="mobile-detail-slot hidden" data-detail-slot-type="groups" data-detail-slot-id="${String(item.id || item.title || '').replace(/"/g, '&quot;')}"></div>
+                `).join('')}</div>
+                <div class="card p-5 space-y-4">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl">💡</span>
+                        <div>
+                            <h3 class="text-lg font-semibold">Ý nghĩa &amp; lưu ý của các bộ huyệt</h3>
+                            <p class="text-sm text-slate-500">Các bộ huyệt Diện Chẩn là tổ hợp huyệt được phối hợp để xử lý một nhóm triệu chứng hoặc kích hoạt chức năng tạng phủ liên quan.</p>
+                        </div>
+                    </div>
+                    <ul class="text-slate-700 space-y-2">
+                        <li><strong>Bộ huyệt bổ trợ:</strong> Dùng để tăng cường chức năng thận, gan, tỳ, tâm, phổi; thường kết hợp huyệt trung tâm ở cằm, trán và sống mũi.</li>
+                        <li><strong>Bộ huyệt giảm đau / giải phóng tắc:</strong> Ưu tiên những huyệt ở sống mũi, rãnh nhân trung, gò má và thái dương để khai thông kinh mạch, giảm đau nhanh.</li>
+                        <li><strong>Bộ huyệt ổn định thần kinh:</strong> Thường sử dụng huyệt 26, 103, 106, 127; giúp an thần, giảm stress, mất ngủ và điều hòa hệ thần kinh trung ương.</li>
+                        <li><strong>Lưu ý chung khi dùng bộ huyệt:</strong> Luôn xác định sinh huyệt đầu tiên, thực hiện bên trái trước rồi bên phải, và kết thúc bằng huyệt 0 để khóa phác đồ.</li>
+                        <li><strong>Lưu ý đặc biệt:</strong> Tránh ấn quá mạnh vào vùng mắt, môi, cổ. Phụ nữ có thai không thao tác huyệt phản chiếu ở cằm/bụng. Người tăng huyết áp nên dùng nhẹ huyệt 19, không nhún mạnh.</li>
+                    </ul>
+                </div>`;
         }
 
-        async function setStatus(message, error = false) {
+        function setStatus(message, error = false) {
             const status = document.getElementById('firebase-status');
-            const authStatus = document.getElementById('firebase-auth-status');
-            if (status) {
-                status.textContent = message;
-                status.className = error ? 'text-sm text-red-600' : 'text-sm text-slate-500';
+            if (!status) {
+                console.warn('firebase-status element không tồn tại:', message);
+                return;
             }
-            if (authStatus && !error) {
-                // keep auth status visible but do not override it with every message
-                authStatus.textContent = authStatus.textContent || '';
-            }
+            status.textContent = message;
+            status.className = error ? 'text-sm text-red-600 mt-3' : 'text-sm text-slate-500 mt-3';
         }
 
         async function onFirebaseSignIn() {
@@ -838,10 +2361,13 @@
             if (!email || !password) return setStatus('Nhập email và mật khẩu.', true);
             try {
                 DCFirebase.initFirebase();
-                await DCFirebase.signInWithFirebase(email, password);
+                const user = await DCFirebase.signInWithFirebase(email, password);
+                if (!user) throw new Error('Không nhận được thông tin người dùng sau khi đăng nhập.');
                 setStatus(`Đã đăng nhập ${email}`);
+                await new Promise(resolve => setTimeout(resolve, 600));
                 await loadAllFirebaseData();
             } catch (err) {
+                console.error('onFirebaseSignIn error', err);
                 setStatus(`Lỗi đăng nhập: ${err.message || err}`, true);
             }
         }
@@ -873,6 +2399,10 @@
         async function loadFirebaseCollection(collection, navigate = true) {
             try {
                 DCFirebase.initFirebase();
+                const authUser = DCFirebase.getFirebaseUser();
+                if (!authUser) {
+                    throw new Error('Chưa đăng nhập Firebase hoặc phiên chưa sẵn sàng. Vui lòng đăng nhập lại.');
+                }
                 const docs = await DCFirebase.listDocuments(collection);
                 if (collection === 'acupoints') {
                     huyetItems = docs;
@@ -880,12 +2410,16 @@
                 } else if (collection === 'treatmentPlans') {
                     protocolItems = docs;
                     if (navigate) showSection('protocols');
+                } else if (collection === 'medicalRecords') {
+                    recordItems = docs;
+                    if (navigate) showSection('records');
                 } else if (collection === 'acupointGroups') {
                     groupItems = docs;
                     if (navigate) showSection('groups');
                 }
                 setStatus(`Đã tải ${docs.length} bản ghi từ ${collection}.`);
             } catch (err) {
+                console.error('loadFirebaseCollection error', collection, err);
                 setStatus(`Lỗi tải ${collection}: ${err.message || err}`, true);
             }
         }
@@ -894,6 +2428,7 @@
             const previousView = currentView;
             await loadFirebaseCollection('acupoints', false);
             await loadFirebaseCollection('treatmentPlans', false);
+            await loadFirebaseCollection('medicalRecords', false);
             await loadFirebaseCollection('acupointGroups', false);
             if (!huyetItems.length && !protocolItems.length && !groupItems.length) {
                 await loadFallbackEmbeddedData();
