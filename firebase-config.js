@@ -9,6 +9,8 @@
   measurementId: "G-BW66E3R2B7"
     };
 
+    const FIREBASE_ADMIN_EMAIL = 'admin@dienchandigital.com';
+
     let app = null;
     let auth = null;
     let db = null;
@@ -88,8 +90,20 @@
         return { auth, db };
     }
 
+    function isFirebaseAdmin() {
+        const user = getFirebaseUser();
+        return !!user && String(user.email || '').toLowerCase() === FIREBASE_ADMIN_EMAIL;
+    }
+
+    function assertFirebaseWritePermission() {
+        const user = getFirebaseUser();
+        if (!user) throw new Error('Vui lòng đăng nhập Firebase để thực hiện thao tác này.');
+        if (!isFirebaseAdmin()) throw new Error('Chỉ admin mới được phép ghi lên Firebase.');
+    }
+
     async function saveDocument(collection, id, data) {
         if (!id) throw new Error('Thiếu id khi lưu tài liệu Firestore.');
+        assertFirebaseWritePermission();
         const { db: firestore } = await ensureFirestore();
         const now = new Date().toISOString();
         const payload = {
@@ -149,6 +163,7 @@
     }
 
     async function deleteDocument(collection, id) {
+        assertFirebaseWritePermission();
         const { db: firestore } = await ensureFirestore();
         await firestore.collection(collection).doc(String(id)).delete();
         return true;

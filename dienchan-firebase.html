@@ -395,6 +395,13 @@
             object-fit: cover;
             cursor: zoom-in;
         }
+
+        #acupoint-map-image {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            cursor: zoom-in;
+        }
         .huyet-result-body {
             padding: 1.25rem;
         }
@@ -445,8 +452,8 @@
             display: none;
         }
         .image-lightbox-img {
-            max-width: 100%;
-            max-height: 100%;
+            max-width: min(100%, calc(100vw - 2rem));
+            max-height: min(100%, calc(100vh - 2rem));
             border-radius: 1rem;
             box-shadow: 0 24px 64px rgba(0, 0, 0, 0.32);
         }
@@ -570,7 +577,7 @@
                     <div class="text-sm text-slate-500">Lưu ý: đặt file ảnh `huyet-map.jpg` cùng thư mục với trang này.</div>
                 </div>
                 <div class="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
-                    <img id="acupoint-map-image" src="huyet-map.jpg" alt="Bản đồ huyệt Diện Chẩn" class="w-full h-auto object-cover" />
+                    <img id="acupoint-map-image" src="huyet-map.jpg" alt="Bản đồ huyệt Diện Chẩn" class="w-full h-auto object-cover image-zoomable" onclick="openImageLightbox(this.src)" />
                 </div>
             </div>
             <div class="flex flex-wrap gap-3 items-center">
@@ -666,6 +673,71 @@
         let highlightedCardId = null;
         let isRecordInputComposing = false;
 
+        const FIREBASE_ADMIN_EMAIL = 'admin@dienchandigital.com';
+        const LOCAL_DATA_KEYS = {
+            acupoints: 'dc_local_acupoints',
+            protocols: 'dc_local_protocols',
+            groups: 'dc_local_groups',
+            records: 'dc_local_records'
+        };
+
+        function getFirebaseUserEmail() {
+            if (typeof DCFirebase === 'undefined') return null;
+            const user = DCFirebase.getFirebaseUser();
+            return user?.email?.toLowerCase() || null;
+        }
+
+        function isFirebaseAdmin() {
+            return getFirebaseUserEmail() === FIREBASE_ADMIN_EMAIL;
+        }
+
+        function getLocalStorageKey(type) {
+            return LOCAL_DATA_KEYS[type] || null;
+        }
+
+        function loadLocalCollection(type) {
+            const key = getLocalStorageKey(type);
+            if (!key) return [];
+            try {
+                return JSON.parse(localStorage.getItem(key) || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        function saveLocalCollection(type, items) {
+            const key = getLocalStorageKey(type);
+            if (!key) return;
+            try {
+                localStorage.setItem(key, JSON.stringify(items || []));
+            } catch (err) {
+                console.warn('Không thể lưu dữ liệu cục bộ:', err);
+            }
+        }
+
+        function mergeLocalCollection(type, target) {
+            const localItems = loadLocalCollection(type);
+            for (const item of localItems) {
+                if (!target.some(existing => String(existing.id) === String(item.id))) {
+                    target.unshift(item);
+                }
+            }
+        }
+
+        function loadLocalCachedData() {
+            mergeLocalCollection('acupoints', huyetItems);
+            mergeLocalCollection('protocols', protocolItems);
+            mergeLocalCollection('groups', groupItems);
+            mergeLocalCollection('records', recordItems);
+        }
+
+        function persistAllLocalData() {
+            saveLocalCollection('acupoints', huyetItems);
+            saveLocalCollection('protocols', protocolItems);
+            saveLocalCollection('groups', groupItems);
+            saveLocalCollection('records', recordItems);
+        }
+
         const protocolCategoryMenu = [
             { label: 'Đầu – Não', terms: ['đau đầu', 'chóng mặt', 'đầu', 'não'] },
             { label: 'Ổn định thần kinh', terms: ['thần kinh', 'stress', 'lo âu', 'mất ngủ'] },
@@ -741,6 +813,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateScrollToTopVisibility();
             updateMobileRecordsClass();
+            loadLocalCachedData();
         });
 
         function normalizeSearchString(value, options = {}) {
@@ -792,7 +865,9 @@
                 try { DCFirebase.initFirebase(); } catch (e) { /* ignore */ }
             }
             const authUser = (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) ? DCFirebase.getFirebaseUser() : null;
-            const authStatusText = authUser ? `Firebase đã đăng nhập: ${authUser.email}` : 'Chưa kết nối Firebase.';
+            const authStatusText = authUser
+                ? `Firebase đã đăng nhập: ${authUser.email}${isFirebaseAdmin() ? ' (Admin)' : ' (Chỉ đọc)'}`
+                : 'Chưa kết nối Firebase.';
             const authStatusClass = 'text-sm text-slate-500 mt-3';
             container.innerHTML = `
                 <div class="space-y-4">
@@ -1305,6 +1380,7 @@
                     </div>
                     <div class="flex gap-2">
                         <button onclick="clearSelection()" class="px-3 py-2 rounded-xl bg-slate-100 text-slate-700">Đóng</button>
+                        ${type === 'records' ? `<button type="button" onclick="deleteMedicalRecord('${String(item.id || item.patientName || '').replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-xl bg-red-600 text-white">Xóa</button>` : ''}
                         <button type="button" onclick="startEdit('${type}', '${String(item.id || item.title || item.name || item.patientName || '').replace(/'/g, "\\'")}')" class="px-3 py-2 rounded-xl bg-sky-800 text-white">Chỉnh sửa</button>
                     </div>
                 </div>
@@ -1374,6 +1450,7 @@
         async function uploadHuyetImage(id, file) {
             const item = huyetItems.find(i => String(i.id) === String(id));
             if (!item) return setStatus('Không tìm thấy huyệt để chèn ảnh.', true);
+            if (!isFirebaseAdmin()) return setStatus('Chỉ admin mới có thể upload ảnh huyệt và lưu thay đổi lên Firebase.', true);
             if (typeof DCcloudinary === 'undefined') return setStatus('Cloudinary chưa được cấu hình.', true);
             try {
                 setStatus('Đang upload ảnh huyệt lên Cloudinary...');
@@ -1428,8 +1505,10 @@
             }
             selectedItem = updated;
             editingType = null;
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
             try {
-                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                if (canWriteRemote) {
                     await DCFirebase.saveAcupoint({
                         id: updated.id,
                         name: updated.name || updated.id,
@@ -1437,12 +1516,15 @@
                         functions: updated.functions,
                         manual: updated.manual,
                         tags: updated.tags || [],
-                        createdBy: DCFirebase.getFirebaseUser().uid
+                        createdBy: firebaseUser.uid
                     });
                     setStatus('Đã lưu sửa đổi huyệt trên Firebase.');
+                } else {
+                    saveLocalCollection('acupoints', huyetItems);
+                    setStatus('Lưu sửa đổi huyệt cục bộ. Chỉ admin mới có thể đồng bộ Firebase.');
                 }
             } catch (err) {
-                setStatus(`Lưu huyệt Firebase thất bại: ${err.message || err}`, true);
+                setStatus(`Lưu huyệt thất bại: ${err.message || err}`, true);
             }
             renderCurrentView();
         }
@@ -1453,8 +1535,8 @@
                 ...selectedItem,
                 title: document.getElementById('edit-title')?.value || selectedItem.title,
                 description: document.getElementById('edit-description')?.value || selectedItem.description,
-                acupointIds: String(document.getElementById('edit-acupointIds')?.value || '').split(/[,\s]+/).filter(Boolean),
-                keywords: String(document.getElementById('edit-keywords')?.value || '').split(/[,\s]+/).filter(Boolean)
+                acupointIds: String(document.getElementById('edit-acupointIds')?.value || '').split(/[\s,]+/).filter(Boolean),
+                keywords: String(document.getElementById('edit-keywords')?.value || '').split(/[\s,]+/).filter(Boolean)
             };
             const index = protocolItems.findIndex(i => String(i.id) === String(selectedItem.id));
             if (index !== -1) {
@@ -1462,20 +1544,25 @@
             }
             selectedItem = updated;
             editingType = null;
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
             try {
-                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                if (canWriteRemote) {
                     await DCFirebase.saveTreatmentPlan({
                         id: updated.id,
                         title: updated.title || updated.name || '',
                         description: updated.description || '',
                         acupointIds: updated.acupointIds,
                         keywords: updated.keywords,
-                        createdBy: DCFirebase.getFirebaseUser().uid
+                        createdBy: firebaseUser.uid
                     });
                     setStatus('Đã lưu sửa đổi phác đồ trên Firebase.');
+                } else {
+                    saveLocalCollection('protocols', protocolItems);
+                    setStatus('Lưu sửa đổi phác đồ cục bộ. Chỉ admin mới có thể đồng bộ Firebase.');
                 }
             } catch (err) {
-                setStatus(`Lưu phác đồ Firebase thất bại: ${err.message || err}`, true);
+                setStatus(`Lưu phác đồ thất bại: ${err.message || err}`, true);
             }
             renderCurrentView();
         }
@@ -1486,7 +1573,7 @@
                 ...selectedItem,
                 title: document.getElementById('edit-title')?.value || selectedItem.title,
                 description: document.getElementById('edit-description')?.value || selectedItem.description,
-                acupointIds: String(document.getElementById('edit-acupointIds')?.value || '').split(/[,\s]+/).filter(Boolean),
+                acupointIds: String(document.getElementById('edit-acupointIds')?.value || '').split(/[\s,]+/).filter(Boolean),
                 notes: document.getElementById('edit-notes')?.value || selectedItem.notes || selectedItem.note || ''
             };
             const index = groupItems.findIndex(i => String(i.id) === String(selectedItem.id));
@@ -1495,20 +1582,25 @@
             }
             selectedItem = updated;
             editingType = null;
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
             try {
-                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                if (canWriteRemote) {
                     await DCFirebase.saveAcupointGroup({
                         id: updated.id,
                         title: updated.title || updated.name || '',
                         description: updated.description || '',
                         acupointIds: updated.acupointIds,
                         notes: updated.notes || '',
-                        createdBy: DCFirebase.getFirebaseUser().uid
+                        createdBy: firebaseUser.uid
                     });
                     setStatus('Đã lưu sửa đổi bộ huyệt trên Firebase.');
+                } else {
+                    saveLocalCollection('groups', groupItems);
+                    setStatus('Lưu sửa đổi bộ huyệt cục bộ. Chỉ admin mới có thể đồng bộ Firebase.');
                 }
             } catch (err) {
-                setStatus(`Lưu bộ huyệt Firebase thất bại: ${err.message || err}`, true);
+                setStatus(`Lưu bộ huyệt thất bại: ${err.message || err}`, true);
             }
             renderCurrentView();
         }
@@ -1540,6 +1632,10 @@
 
         async function uploadFormImage(file, folder) {
             if (!file) return [];
+            if (!isFirebaseAdmin()) {
+                console.warn('Chỉ admin mới upload ảnh lên Cloudinary.');
+                return [];
+            }
             if (typeof DCcloudinary === 'undefined') {
                 throw new Error('Cloudinary chưa được cấu hình.');
             }
@@ -1563,12 +1659,14 @@
                 return;
             }
             const newItem = { id: code, name, location, functions, manual, imageIds: [] };
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
             try {
                 let imageIds = [];
                 if (newHuyetImageFile) {
                     imageIds = await uploadFormImage(newHuyetImageFile, 'dienchan/huyet');
                 }
-                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                if (canWriteRemote) {
                     const saved = await DCFirebase.saveAcupoint({
                         id: code,
                         name: name || code,
@@ -1576,13 +1674,14 @@
                         functions,
                         manual,
                         imageIds,
-                        createdBy: DCFirebase.getFirebaseUser().uid
+                        createdBy: firebaseUser.uid
                     });
                     huyetItems.unshift(saved);
                     setStatus('Đã lưu huyệt mới vào Firebase.');
                 } else {
                     huyetItems.unshift({ ...newItem, id: code });
-                    setStatus('Lưu huyệt cục bộ. Đăng nhập Firebase để đồng bộ.');
+                    saveLocalCollection('acupoints', huyetItems);
+                    setStatus('Lưu huyệt cục bộ. Chỉ admin mới có thể đồng bộ Firebase.');
                 }
                 resetNewAcupointForm();
             } catch (err) {
@@ -1609,25 +1708,28 @@
                 return;
             }
             const newItem = { title, description, acupointIds, keywords, imageIds: [] };
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
             try {
                 let imageIds = [];
                 if (newProtocolImageFile) {
                     imageIds = await uploadFormImage(newProtocolImageFile, 'dienchan/protocols');
                 }
-                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                if (canWriteRemote) {
                     const saved = await DCFirebase.saveTreatmentPlan({
                         title,
                         description,
                         acupointIds,
                         keywords,
                         imageIds,
-                        createdBy: DCFirebase.getFirebaseUser().uid
+                        createdBy: firebaseUser.uid
                     });
                     protocolItems.unshift(saved);
                     setStatus('Đã lưu phác đồ mới vào Firebase.');
                 } else {
                     protocolItems.unshift({ id: `local-${Date.now()}`, ...newItem });
-                    setStatus('Lưu phác đồ cục bộ. Đăng nhập Firebase để đồng bộ.');
+                    saveLocalCollection('protocols', protocolItems);
+                    setStatus('Lưu phác đồ cục bộ. Chỉ admin mới có thể đồng bộ Firebase.');
                 }
                 resetNewProtocolForm();
             } catch (err) {
@@ -1654,25 +1756,28 @@
                 return;
             }
             const newItem = { title, description, acupointIds, notes, imageIds: [] };
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
             try {
                 let imageIds = [];
                 if (newGroupImageFile) {
                     imageIds = await uploadFormImage(newGroupImageFile, 'dienchan/groups');
                 }
-                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                if (canWriteRemote) {
                     const saved = await DCFirebase.saveAcupointGroup({
                         title,
                         description,
                         acupointIds,
                         notes,
                         imageIds,
-                        createdBy: DCFirebase.getFirebaseUser().uid
+                        createdBy: firebaseUser.uid
                     });
                     groupItems.unshift(saved);
                     setStatus('Đã lưu bộ huyệt mới vào Firebase.');
                 } else {
                     groupItems.unshift({ id: `local-${Date.now()}`, ...newItem });
-                    setStatus('Lưu bộ huyệt cục bộ. Đăng nhập Firebase để đồng bộ.');
+                    saveLocalCollection('groups', groupItems);
+                    setStatus('Lưu bộ huyệt cục bộ. Chỉ admin mới có thể đồng bộ Firebase.');
                 }
                 resetNewGroupForm();
             } catch (err) {
@@ -1698,14 +1803,17 @@
                 notes,
                 linkedItems: currentRecordLinks
             };
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
             try {
-                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                if (canWriteRemote) {
                     const saved = await DCFirebase.saveMedicalRecord(record);
                     recordItems.unshift({ ...saved, linkedItems: Array.isArray(saved.linkedItems) ? saved.linkedItems : record.linkedItems });
                     setStatus('Đã lưu hồ sơ bệnh trạng vào Firebase.');
                 } else {
                     recordItems.unshift({ id: `local-${Date.now()}`, ...record });
-                    setStatus('Lưu hồ sơ cục bộ. Đăng nhập Firebase để đồng bộ.');
+                    saveLocalCollection('records', recordItems);
+                    setStatus('Lưu hồ sơ cục bộ. Chỉ admin mới có thể đồng bộ Firebase.');
                 }
                 document.getElementById('record-form')?.reset();
                 currentRecordLinks = [];
@@ -1737,15 +1845,46 @@
             }
             selectedItem = updated;
             editingType = null;
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
             try {
-                if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser()) {
+                if (canWriteRemote) {
                     await DCFirebase.saveMedicalRecord(updated);
                     setStatus('Đã lưu thay đổi hồ sơ bệnh trạng vào Firebase.');
                 } else {
-                    setStatus('Lưu hồ sơ cục bộ. Đăng nhập Firebase để đồng bộ.');
+                    saveLocalCollection('records', recordItems);
+                    setStatus('Lưu hồ sơ cục bộ. Chỉ admin mới có thể đồng bộ Firebase.');
                 }
             } catch (err) {
                 setStatus(`Lưu hồ sơ thất bại: ${err.message || err}`, true);
+            }
+            renderCurrentView();
+        }
+
+        async function deleteMedicalRecord(recordId) {
+            if (!recordId) return;
+            if (!confirm('Xác nhận xóa hồ sơ bệnh án này?')) return;
+            const index = recordItems.findIndex(i => String(i.id) === String(recordId));
+            if (index !== -1) {
+                recordItems.splice(index, 1);
+            }
+            if (selectedItem && String(selectedItem.id) === String(recordId)) {
+                selectedItem = null;
+                selectedType = null;
+                editingType = null;
+            }
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
+            try {
+                if (canWriteRemote) {
+                    await DCFirebase.deleteDocument('medicalRecords', recordId);
+                    setStatus('Đã xóa hồ sơ bệnh án khỏi Firebase.');
+                } else {
+                    saveLocalCollection('records', recordItems);
+                    setStatus('Đã xóa hồ sơ bệnh án cục bộ. Chỉ admin mới có thể xóa trên Firebase.');
+                }
+            } catch (err) {
+                setStatus(`Xóa hồ sơ thất bại: ${err.message || err}`, true);
             }
             renderCurrentView();
         }
@@ -2209,12 +2348,15 @@
                     <div class="grid gap-4">${filtered.map(item => `
                         <article onclick="selectItem('records', '${String(item.id || item.patientName || '').replace(/'/g, "\\'")}')" data-item-type="records" data-item-id="${String(item.id || item.patientName || '').replace(/"/g, '&quot;')}" class="card p-5 cursor-pointer hover:border-slate-300">
                             <div class="space-y-3">
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                                     <div>
                                         <h3 class="text-lg font-semibold">${item.patientName || 'Bệnh nhân không tên'}</h3>
                                         <p class="text-sm text-slate-500">${item.symptoms || item.diagnosis || 'Không có mô tả'}</p>
                                     </div>
-                                    <div class="text-right text-sm text-slate-500">${item.protocol ? `Phác đồ: ${item.protocol}` : ''}</div>
+                                    <div class="flex flex-col items-end gap-2">
+                                        <div class="text-right text-sm text-slate-500">${item.protocol ? `Phác đồ: ${item.protocol}` : ''}</div>
+                                        <button type="button" onclick="event.stopPropagation(); deleteMedicalRecord('${String(item.id || item.patientName || '').replace(/'/g, "\\'")}');" class="px-3 py-2 rounded-full bg-red-600 text-white text-sm">Xóa</button>
+                                    </div>
                                 </div>
                                 ${(item.linkedItems || []).length ? `
                                     <div>
@@ -2307,12 +2449,12 @@
                 </div>
                 <div class="grid gap-4 lg:grid-cols-2">${filtered.map(item => `
                     <article id="list-card-groups-${String(item.id || item.title || '').replace(/[^a-zA-Z0-9_-]/g, '-') }" data-item-type="groups" data-item-id="${String(item.id || item.title || '').replace(/"/g, '&quot;')}" onclick="selectItem('groups', '${String(item.id || item.title || '').replace(/'/g, "\\'")}')" class="card p-4 cursor-pointer hover:border-slate-300">
-                        <div class="flex flex-wrap gap-3 items-start justify-between mb-3">
-                            <div>
-                                <h3 class="text-lg font-semibold">${item.title || item.name || ''}</h3>
-                                <p class="text-sm text-slate-500 mt-1">${item.acupointIds ? item.acupointIds.join(', ') : ''}</p>
+                        <div class="flex flex-wrap gap-4 items-start justify-between mb-4">
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-lg font-semibold break-words">${item.title || item.name || ''}</h3>
+                                <p class="text-sm text-slate-500 mt-1 break-words">${item.acupointIds ? item.acupointIds.join(', ') : ''}</p>
                             </div>
-                            <div class="flex flex-col gap-2 items-end">
+                            <div class="flex flex-col gap-2 items-end flex-none">
                                 <span class="tag tag-primary">Bộ huyệt</span>
                                 <button type="button" onclick='event.stopPropagation(); startEdit("groups", "${String(item.id || item.title || '').replace(/'/g, "\\'")}")' class="inline-flex items-center justify-center rounded-full bg-sky-800 text-white px-4 py-2 text-sm">✏️ Chỉnh sửa</button>
                             </div>
@@ -2399,10 +2541,6 @@
         async function loadFirebaseCollection(collection, navigate = true) {
             try {
                 DCFirebase.initFirebase();
-                const authUser = DCFirebase.getFirebaseUser();
-                if (!authUser) {
-                    throw new Error('Chưa đăng nhập Firebase hoặc phiên chưa sẵn sàng. Vui lòng đăng nhập lại.');
-                }
                 const docs = await DCFirebase.listDocuments(collection);
                 if (collection === 'acupoints') {
                     huyetItems = docs;
@@ -2430,6 +2568,7 @@
             await loadFirebaseCollection('treatmentPlans', false);
             await loadFirebaseCollection('medicalRecords', false);
             await loadFirebaseCollection('acupointGroups', false);
+            loadLocalCachedData();
             if (!huyetItems.length && !protocolItems.length && !groupItems.length) {
                 await loadFallbackEmbeddedData();
             }
