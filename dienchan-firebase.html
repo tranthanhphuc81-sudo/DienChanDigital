@@ -863,7 +863,8 @@
         const manageAccordionState = {
             login: true,
             data: false,
-            control: false
+            control: false,
+            backup: false
         };
 
         function toggleManageAccordion(section) {
@@ -945,6 +946,22 @@
                                 </div>
                             ` : ''}
                             <p class="text-sm text-slate-500 mt-4">Dữ liệu vẫn dùng Cloudinary cho ảnh và Firestore cho nội dung.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-card">
+                        <div class="accordion-header" onclick="toggleManageAccordion('backup')">
+                            <div>
+                                <h3>Backup & Khôi phục</h3>
+                                <small>Sao lưu và phục hồi dữ liệu ứng dụng hiện tại.</small>
+                            </div>
+                            <div>${manageAccordionState.backup ? '&#x2212;' : '&#x2b;'}</div>
+                        </div>
+                        <div class="accordion-body ${manageAccordionState.backup ? '' : 'hidden'}">
+                            <button onclick="exportProjectBackup()" class="w-full px-4 py-3 rounded-xl bg-amber-500 text-white mb-3">⬇️ Xuất backup (.json)</button>
+                            <button type="button" onclick="document.getElementById('backup-file-input').click()" class="w-full px-4 py-3 rounded-xl bg-slate-700 text-white mb-3">⬆️ Nhập backup</button>
+                            <input id="backup-file-input" type="file" accept=".json" onchange="importProjectBackup(event)" class="hidden" />
+                            <p class="text-sm text-slate-500 mt-4">Backup bao gồm dữ liệu hiện tại và dữ liệu localStorage để phục hồi nhanh.</p>
+                            <p id="backup-status" class="text-sm text-slate-500 mt-2"></p>
                         </div>
                     </div>
                 </div>
@@ -2033,6 +2050,126 @@
                 return;
             }
             createAcupointsFromCloudinaryIds(ids);
+        }
+
+        function downloadJson(filename, data) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function dedupeItems(items) {
+            const seen = new Set();
+            const result = [];
+            for (const item of items || []) {
+                if (!item || item.id == null) continue;
+                const id = String(item.id);
+                if (!seen.has(id)) {
+                    seen.add(id);
+                    result.push(item);
+                }
+            }
+            return result;
+        }
+
+        function mergeBackupItems(primary, secondary) {
+            const merged = [];
+            const seen = new Set();
+            for (const item of [...(secondary || []), ...(primary || [])]) {
+                if (!item || item.id == null) continue;
+                const id = String(item.id);
+                if (!seen.has(id)) {
+                    seen.add(id);
+                    merged.push(item);
+                }
+            }
+            return merged;
+        }
+
+        function getProjectBackupPayload() {
+            return {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                metadata: {
+                    email: getFirebaseUserEmail(),
+                    isAdmin: isFirebaseAdmin(),
+                    backupType: 'project'
+                },
+                data: {
+                    acupoints: huyetItems,
+                    protocols: protocolItems,
+                    groups: groupItems,
+                    records: recordItems
+                },
+                local: {
+                    acupoints: loadLocalCollection('acupoints'),
+                    protocols: loadLocalCollection('protocols'),
+                    groups: loadLocalCollection('groups'),
+                    records: loadLocalCollection('records')
+                }
+            };
+        }
+
+        async function exportProjectBackup() {
+            const backup = getProjectBackupPayload();
+            const filename = `dienchan-backup-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.json`;
+            downloadJson(filename, backup);
+            const backupStatus = document.getElementById('backup-status');
+            if (backupStatus) {
+                backupStatus.textContent = `✅ Đã xuất backup: ${filename}`;
+                backupStatus.className = 'text-sm mt-2 text-emerald-700';
+            }
+            setStatus('Đã xuất backup dữ liệu.');
+        }
+
+        async function importProjectBackup(event) {
+            const file = event.target?.files?.[0];
+            const backupStatus = document.getElementById('backup-status');
+            if (!file) {
+                if (backupStatus) {
+                    backupStatus.textContent = '❌ Chưa chọn file backup.';
+                    backupStatus.className = 'text-sm mt-2 text-red-600';
+                }
+                return;
+            }
+            try {
+                const text = await file.text();
+                const backup = JSON.parse(text);
+                if (!backup || !backup.data) {
+                    throw new Error('File backup không hợp lệ.');
+                }
+                huyetItems = mergeBackupItems(backup.data.acupoints || [], backup.local?.acupoints || []);
+                protocolItems = mergeBackupItems(backup.data.protocols || [], backup.local?.protocols || []);
+                groupItems = mergeBackupItems(backup.data.groups || [], backup.local?.groups || []);
+                recordItems = mergeBackupItems(backup.data.records || [], backup.local?.records || []);
+                saveLocalCollection('acupoints', huyetItems);
+                saveLocalCollection('protocols', protocolItems);
+                saveLocalCollection('groups', groupItems);
+                saveLocalCollection('records', recordItems);
+                renderCurrentView();
+                if (backupStatus) {
+                    backupStatus.textContent = `✅ Khôi phục backup thành công (${backup.exportedAt || 'không rõ ngày'}).`;
+                    backupStatus.className = 'text-sm mt-2 text-emerald-700';
+                }
+                setStatus('Khôi phục backup dữ liệu thành công.');
+            } catch (err) {
+                const message = err.message || 'Lỗi khi đọc file backup.';
+                if (backupStatus) {
+                    backupStatus.textContent = `❌ ${message}`;
+                    backupStatus.className = 'text-sm mt-2 text-red-600';
+                }
+                setStatus(`Khôi phục backup thất bại: ${message}`, true);
+            } finally {
+                if (event.target) {
+                    event.target.value = '';
+                }
+            }
         }
 
         async function createAcupointsFromCloudinaryIds(ids) {
