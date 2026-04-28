@@ -55,6 +55,13 @@
             } else {
                 updateStatus('Chưa đăng nhập Firebase.');
             }
+            if (typeof global.onFirebaseAuthStateChanged === 'function') {
+                try {
+                    global.onFirebaseAuthStateChanged(user);
+                } catch (err) {
+                    console.warn('onFirebaseAuthStateChanged callback failed', err);
+                }
+            }
         });
 
         return { app, auth, db };
@@ -114,6 +121,31 @@
         };
         await firestore.collection(collection).doc(String(id)).set(payload, { merge: true });
         return { id: String(id), ...payload };
+    }
+
+    async function saveUserProfile(data) {
+        const user = getFirebaseUser();
+        if (!user) throw new Error('Vui lòng đăng nhập Firebase để lưu thông tin hồ sơ người dùng.');
+        if (!data || !data.uid) throw new Error('Thiếu UID người dùng khi lưu hồ sơ.');
+        const { db: firestore } = await ensureFirestore();
+        const now = new Date().toISOString();
+        const payload = {
+            email: String(data.email || user.email || '').toLowerCase(),
+            fullName: data.fullName || '',
+            phoneNumber: data.phoneNumber || '',
+            createdBy: user.uid,
+            updatedAt: now,
+            createdAt: data.createdAt || now
+        };
+        await firestore.collection('userProfiles').doc(String(data.uid)).set(payload, { merge: true });
+        return { id: String(data.uid), ...payload };
+    }
+
+    async function listUserProfilesForAdmin() {
+        if (!isFirebaseAdmin()) throw new Error('Chỉ admin mới được phép xem danh sách người dùng.');
+        return listDocuments('userProfiles', {
+            orderBy: { field: 'createdAt', direction: 'desc' }
+        });
     }
 
     async function getDocument(collection, id) {
@@ -223,6 +255,7 @@
         const id = data.id || slugify(`${data.patientName || 'patient'}-${Date.now()}`);
         return saveDocument('medicalRecords', id, {
             patientName: data.patientName || data.name || '',
+            patientPhone: data.patientPhone || '',
             patientUid: data.patientUid || null,
             symptoms: data.symptoms || data.disease || '',
             diagnosis: data.diagnosis || '',
@@ -230,6 +263,7 @@
             linkedItems: Array.isArray(data.linkedItems) ? data.linkedItems : [],
             notes: data.notes || data.note || '',
             attachments: Array.isArray(data.attachments) ? data.attachments : [],
+            savedAt: data.savedAt || new Date().toISOString(),
             createdBy: data.createdBy || user.uid,
             patientType: data.patientType || '',
             meta: data.meta || {}
@@ -423,6 +457,8 @@
         firebaseSignUpHandler,
         firebaseSignOutHandler,
         getFirebaseUser,
+        saveUserProfile,
+        listUserProfilesForAdmin,
         saveAcupoint,
         saveAcupointGroup,
         saveTreatmentPlan,
