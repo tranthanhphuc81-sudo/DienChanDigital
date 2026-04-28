@@ -1,0 +1,51 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Commit and push dienchan changes",
+			"type": "shell",
+			"command": "git add dienchan-firebase.html firebase-config.js .vscode/tasks.json && git commit -m \"Enforce admin-only Firebase writes and local fallback for other users\" && git push origin master",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit and push risk fixes",
+			"type": "shell",
+			"command": "git add dienchan-firebase.html firebase-config.js && git commit -m \"Fix admin-only write/Cloudinary paths and improve Firebase user messaging\" && git push origin master",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit and push guide tab update",
+			"type": "shell",
+			"command": "git add dienchan-firebase.html && git commit -m \"Add project usage guide tab and rename technique guide tab\" && git push origin master",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit and push backup feature",
+			"type": "shell",
+			"command": "git add dienchan-firebase.html && git commit -m \"Add backup and restore functionality for project data\" && git push origin master",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit and push changes",
+			"type": "shell",
+			"command": "git add dienchan-firebase.html && git commit -m \"Update search layout and guide-nav button layout\" && git push origin master",
+			"isBackground": false,
+			"problemMatcher": [
+				"$git"
+			]
+		},
+		{
+			"label": "Commit and push privacy update",
+			"type": "shell",
+			"command": "git add dienchan-firebase.html && git commit -m \"Restrict medical records to creator and add UI note\" && git push origin master",
+			"isBackground": false,
+			"problemMatcher": [
+				"$git"
+			]
+		}
+	]
+}
