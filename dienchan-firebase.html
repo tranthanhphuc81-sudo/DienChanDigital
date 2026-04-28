@@ -705,10 +705,14 @@
         let recordItems = [];
         let currentRecordLinks = [];
         let recordPatientName = '';
+        let recordPatientPhone = '';
         let recordProtocolText = '';
         let recordSymptomsText = '';
         let recordDiagnosisText = '';
         let recordNotesText = '';
+        let recordSearchText = '';
+        let recordFormOpen = false;
+        let userProfiles = [];
         let newHuyetCode = '';
         let newHuyetName = '';
         let newHuyetLocation = '';
@@ -762,6 +766,78 @@
 
         function canUseCloudinary() {
             return canWriteFirebase();
+        }
+
+        window.onFirebaseAuthStateChanged = function(user) {
+            if (isFirebaseAdmin()) {
+                loadFirebaseUserProfiles().then(() => {
+                    if (currentView === 'manage') renderCurrentView();
+                }).catch(err => console.warn('loadFirebaseUserProfiles failed', err));
+            }
+            renderCurrentView();
+        };
+
+        function normalizePhoneNumber(phone) {
+            return String(phone || '').replace(/[^0-9+]/g, '').trim();
+        }
+
+        function isValidPhoneNumber(phone) {
+            const normalized = normalizePhoneNumber(phone);
+            return /^(?:\+84|0)\d{9,10}$/.test(normalized);
+        }
+
+        function formatPhoneNumber(phone) {
+            const normalized = normalizePhoneNumber(phone);
+            if (!normalized) return '';
+            let digits = normalized;
+            if (digits.startsWith('+')) digits = digits.slice(1);
+            if (digits.startsWith('84') && digits.length === 11) digits = '0' + digits.slice(2);
+            if (!/^\d+$/.test(digits)) return phone;
+            if (digits.length === 10) {
+                return `${digits.slice(0, 4)}.${digits.slice(4, 7)}.${digits.slice(7)}`;
+            }
+            if (digits.length === 11) {
+                return `${digits.slice(0, 4)}.${digits.slice(4, 7)}.${digits.slice(7)}`;
+            }
+            return digits;
+        }
+
+        function formatDatetime(value, includeTime = false) {
+            if (!value) return '';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return String(value);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(-2);
+            const datePart = `${day}/${month}/${year}`;
+            if (!includeTime) return datePart;
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${datePart} ${hours}:${minutes}`;
+        }
+
+        function getRecordHistory(patientPhone, currentRecordId) {
+            const normalized = normalizePhoneNumber(patientPhone);
+            if (!normalized) return [];
+            return recordItems
+                .filter(item => String(item.id) !== String(currentRecordId) && normalizePhoneNumber(item.patientPhone) === normalized)
+                .sort((a, b) => new Date(b.savedAt || b.updatedAt || b.createdAt) - new Date(a.savedAt || a.updatedAt || a.createdAt));
+        }
+
+        function renderMedicalRecordHistory(item) {
+            if (!item || !item.patientPhone) return '';
+            const historyItems = getRecordHistory(item.patientPhone, item.id);
+            if (!historyItems.length) return '';
+            return `
+                <div class="card p-4 rounded-3xl border border-slate-200 bg-slate-50">
+                    <div class="font-semibold text-slate-800 mb-3">Lịch sử khám cùng số điện thoại</div>
+                    <div class="space-y-3">
+                        ${historyItems.map(history => `
+                            <div class="detail-row"><span>${formatDatetime(history.savedAt || history.updatedAt || history.createdAt)}</span><span>${history.symptoms || history.diagnosis || 'Không có mô tả'}</span></div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
         }
 
         function getLocalStorageKey(type) {
@@ -859,6 +935,13 @@
                 clearSelection();
             }
             renderCurrentView();
+            if (name === 'manage' && typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser() && isFirebaseAdmin() && !userProfiles.length) {
+                loadFirebaseUserProfiles().then(() => {
+                    if (currentView === 'manage') {
+                        renderCurrentView();
+                    }
+                }).catch(err => console.warn('loadFirebaseUserProfiles failed', err));
+            }
         }
 
         function updateMobileRecordsClass() {
@@ -926,6 +1009,7 @@
             login: true,
             data: false,
             control: false,
+            userProfiles: false,
             backup: false,
             changePassword: false
         };
@@ -966,7 +1050,10 @@
                         </div>
                         <div class="accordion-body ${manageAccordionState.login ? '' : 'hidden'}">
                             <input id="firebase-email" type="email" placeholder="Email Firebase" class="w-full p-3 border rounded-xl mb-3" />
+                            <input id="firebase-fullname" type="text" placeholder="Họ tên" class="w-full p-3 border rounded-xl mb-3" />
                             <input id="firebase-password" type="password" placeholder="Mật khẩu Firebase" class="w-full p-3 border rounded-xl mb-3" />
+                            <input id="firebase-phone" type="tel" placeholder="0901.234.567" title="Nhập số điện thoại dạng 0901.234.567 hoặc +84901.234.567" class="w-full p-3 border rounded-xl mb-1" />
+                            <p class="text-xs text-slate-500 mb-3">Hướng dẫn: nhập số điện thoại đúng định dạng Việt Nam, ví dụ 0901.234.567 hoặc +84901.234.567.</p>
                             <button onclick="onFirebaseSignIn()" class="w-full px-4 py-3 rounded-xl bg-blue-600 text-white mb-2">Đăng nhập</button>
                             <button onclick="onFirebaseSignUp()" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white mb-2">Tạo tài khoản</button>
                             <button onclick="onFirebaseSignOut()" class="w-full px-4 py-3 rounded-xl bg-slate-300 text-slate-700">Đăng xuất</button>
@@ -1022,6 +1109,37 @@
                             <p class="text-sm text-slate-500 mt-4">Dữ liệu vẫn dùng Cloudinary cho ảnh và Firestore cho nội dung.</p>
                         </div>
                     </div>
+                    ${isFirebaseAdmin() ? `
+                    <div class="accordion-card">
+                        <div class="accordion-header" onclick="toggleManageAccordion('userProfiles')">
+                            <div>
+                                <h3>Danh sách người dùng</h3>
+                                <small>Chỉ admin mới nhìn thấy số điện thoại đăng ký. Hiển thị user đã tạo hồ sơ trong Firestore.</small>
+                            </div>
+                            <div>${manageAccordionState.userProfiles ? '&#x2212;' : '&#x2b;'}</div>
+                        </div>
+                        <div class="accordion-body ${manageAccordionState.userProfiles ? '' : 'hidden'}">
+                            ${userProfiles.length ? `
+                                <div class="overflow-x-auto rounded-3xl border border-slate-200 bg-slate-50">
+                                    <div class="grid items-center grid-cols-1 gap-0 border-b border-slate-200 bg-slate-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600 md:grid-cols-[1.5fr_2fr_1fr]">
+                                        <div>Họ tên</div>
+                                        <div>Email</div>
+                                        <div>Số điện thoại</div>
+                                    </div>
+                                    <div class="space-y-2 p-3">
+                                        ${userProfiles.map((profile, index) => `
+                                            <div class="grid items-center gap-2 rounded-3xl border border-slate-200 px-4 py-3 text-sm text-slate-700 md:grid-cols-[1.5fr_2fr_1fr] ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-sky-50 transition-colors duration-150">
+                                                <div class="font-semibold text-slate-900">${profile.fullName || 'Không có họ tên'}</div>
+                                                <div class="break-words text-slate-600">${profile.email || 'Không có email'}</div>
+                                                <div class="font-semibold text-slate-900">${profile.phoneNumber ? formatPhoneNumber(profile.phoneNumber) : 'Không có số'}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : `<p class="text-sm text-slate-500">Không có dữ liệu người dùng.</p>`}
+                        </div>
+                    </div>
+                    ` : ''}
                     <div class="accordion-card">
                         <div class="accordion-header" onclick="toggleManageAccordion('backup')">
                             <div>
@@ -1048,7 +1166,7 @@
             if (!container) return;
             const controls = document.getElementById('view-controls');
             if (controls) {
-                controls.style.display = currentView === 'manage' || currentView === 'guide' || currentView === 'project' ? 'none' : 'block';
+                controls.style.display = currentView === 'manage' || currentView === 'guide' || currentView === 'project' || currentView === 'records' ? 'none' : 'block';
             }
             if (currentView === 'manage') {
                 return renderManageView(container);
@@ -1091,10 +1209,12 @@
             if (!event || !field) return;
             const value = event.target.value;
             if (field === 'patientName') recordPatientName = value;
+            if (field === 'patientPhone') recordPatientPhone = value;
             if (field === 'protocol') recordProtocolText = value;
             if (field === 'symptoms') recordSymptomsText = value;
             if (field === 'diagnosis') recordDiagnosisText = value;
             if (field === 'notes') recordNotesText = value;
+            if (field === 'recordSearch') recordSearchText = value;
             if (field === 'symptoms') {
                 if (!isRecordInputComposing && !event.isComposing) {
                     renderRecordSuggestions();
@@ -1112,6 +1232,18 @@
                 recordSymptomsText = event.target.value || recordSymptomsText;
             }
             renderRecordSuggestions();
+        }
+
+        function resetRecordSearch() {
+            recordSearchText = '';
+            const input = document.getElementById('record-search-input');
+            if (input) input.value = '';
+            renderCurrentView();
+        }
+
+        function toggleRecordForm() {
+            recordFormOpen = !recordFormOpen;
+            renderCurrentView();
         }
 
         function renderRecordSuggestions() {
@@ -1344,43 +1476,45 @@
                 <div class="space-y-6">
                     <div class="guide-card">
                         <div class="guide-section-title">🧭 Hướng dẫn sử dụng dự án</div>
-                        <p class="guide-note">Trang này giúp bạn biết cách dùng các tab, chức năng lưu dữ liệu, phân quyền và tương tác với Firestore/Cloudinary.</p>
+                        <p class="guide-note">Phần này hướng dẫn bạn cách dùng các tab, quản lý hồ sơ, tìm kiếm phác đồ và phân quyền Firebase/LocalStorage.</p>
                     </div>
                     <div class="guide-card">
-                        <div class="guide-section-title">📌 Tổng quan các tab</div>
+                        <div class="guide-section-title">📌 Dùng các tab</div>
                         <ul class="text-slate-700 space-y-2">
-                            <li><strong>Quản lý:</strong> đăng nhập Firebase, tải dữ liệu, migrate và điều khiển tải từng loại.</li>
-                            <li><strong>Tra cứu Huyệt:</strong> tìm huyệt theo số hoặc triệu chứng.</li>
-                            <li><strong>Phác đồ Mẫu:</strong> xem và tìm phác đồ điều trị.</li>
-                            <li><strong>Bộ huyệt:</strong> xem nhóm huyệt và liên kết các huyệt.</li>
-                            <li><strong>Hồ sơ bệnh trạng:</strong> lưu, sửa, xóa hồ sơ bệnh án.</li>
+                            <li><strong>Hướng dẫn sử dụng:</strong> đọc nhanh cách thao tác với từng chức năng trong app.</li>
+                            <li><strong>Kỹ thuật Diện Chẩn:</strong> xem nguyên tắc, kỹ thuật thao tác, dụng cụ và lưu ý an toàn.</li>
+                            <li><strong>Tra cứu Huyệt:</strong> tìm huyệt theo số, tên và triệu chứng.</li>
+                            <li><strong>Phác đồ Mẫu:</strong> xem, tìm và chọn phác đồ điều trị sẵn có.</li>
+                            <li><strong>Bộ huyệt:</strong> xem nhóm huyệt, chỉnh sửa và liên kết các huyệt với hồ sơ.</li>
+                            <li><strong>Hồ sơ bệnh trạng:</strong> tạo, tìm kiếm, chỉnh sửa và xóa hồ sơ bệnh án.</li>
                         </ul>
                     </div>
                     <div class="guide-card">
-                        <div class="guide-section-title">🔐 Quyền và lưu trữ</div>
+                        <div class="guide-section-title">🔍 Cách dùng tab Hồ sơ bệnh trạng</div>
                         <ul class="text-slate-700 space-y-2">
-                            <li><strong>Admin:</strong> email <code>admin@dienchandigital.com</code> được phép ghi Firebase và upload ảnh Cloudinary.</li>
-                            <li><strong>Người dùng khác:</strong> chỉ đọc dữ liệu Firebase; thay đổi sẽ lưu cục bộ trên trình duyệt.</li>
-                            <li>Nếu không đăng nhập hoặc không phải admin, dữ liệu thêm/sửa/xóa sẽ chỉ tồn tại trong <code>localStorage</code> của trình duyệt hiện tại.</li>
-                            <li>Nếu muốn đồng bộ lên Firestore, hãy đăng nhập bằng tài khoản admin.</li>
+                            <li>Gõ triệu chứng, tên bệnh nhân hoặc phác đồ vào ô tìm kiếm để lọc hồ sơ.</li>
+                            <li>Nhập triệu chứng vào ô “Bệnh trạng / triệu chứng” để hệ thống gợi ý phác đồ và bộ huyệt phù hợp.</li>
+                            <li>Bấm “Thêm” ở phần gợi ý để gắn phác đồ hoặc bộ huyệt vào mục liên kết.</li>
+                            <li>Phác đồ liên kết sẽ hiển thị trong khung “Liên kết” cạnh phải trên desktop.</li>
+                            <li>Để xóa hồ sơ, dùng nút đỏ “Xóa” trên thẻ hoặc trong khung chi tiết.</li>
                         </ul>
                     </div>
                     <div class="guide-card">
-                        <div class="guide-section-title">⚙️ Hướng dẫn thao tác chức năng</div>
+                        <div class="guide-section-title">🔐 Phân quyền và lưu trữ</div>
                         <ul class="text-slate-700 space-y-2">
-                            <li>Để thêm huyệt/phác đồ/bộ huyệt/hồ sơ mới: mở form tương ứng, nhập thông tin và bấm “Lưu”.</li>
-                            <li>Để sửa: chọn mục, bấm “Chỉnh sửa”, sau đó bấm “Lưu”.</li>
-                            <li>Để xóa hồ sơ bệnh trạng: dùng nút đỏ “Xóa” trên thẻ hoặc trong chi tiết.</li>
-                            <li>Ảnh chỉ upload qua admin. Nếu bạn không phải admin, hình không được gửi lên Cloudinary.</li>
+                            <li><strong>Admin:</strong> tài khoản admin được phép ghi Firestore và upload ảnh Cloudinary.</li>
+                            <li><strong>Người dùng thường:</strong> chỉ đọc dữ liệu Firebase; thay đổi sẽ lưu cục bộ trên trình duyệt.</li>
+                            <li>Nếu bạn không đăng nhập hoặc không phải admin, mọi sửa đổi chỉ tồn tại trong <code>localStorage</code>.</li>
+                            <li>Để đồng bộ dữ liệu lên Firebase, hãy đăng nhập bằng tài khoản admin.</li>
                         </ul>
                     </div>
                     <div class="guide-card">
                         <div class="guide-section-title">⚠️ Lưu ý quan trọng</div>
                         <ul class="text-slate-700 space-y-2">
-                            <li>LocalStorage không đồng bộ giữa các trình duyệt và thiết bị.</li>
-                            <li>Không dùng tài khoản thường nếu bạn cần dữ liệu lưu chung cho nhiều người.</li>
-                            <li>Firebase Auth và Firestore chỉ quản lý dữ liệu từ admin, còn người dùng khác chỉ xem được dữ liệu chung.</li>
-                            <li>Nếu muốn chuyển dữ liệu cục bộ sang Firebase, cần dùng admin để migrate thủ công.</li>
+                            <li>LocalStorage không đồng bộ qua trình duyệt hoặc thiết bị khác.</li>
+                            <li>Không dùng tài khoản thường nếu bạn cần dữ liệu chung cho nhiều người.</li>
+                            <li>Chỉ admin mới có quyền thay đổi dữ liệu chung trên Firebase.</li>
+                            <li>Nếu cần sao lưu dữ liệu cục bộ, hãy export hoặc dùng admin để migrate.</li>
                         </ul>
                     </div>
                 </div>
@@ -1473,6 +1607,10 @@
                                 <input id="edit-patientName" class="w-full p-3 border rounded-xl" value="${item.patientName || ''}" />
                             </div>
                             <div>
+                                <label class="text-sm font-semibold text-slate-700">Số điện thoại bệnh nhân</label>
+                                <input id="edit-patientPhone" class="w-full p-3 border rounded-xl" value="${item.patientPhone || ''}" />
+                            </div>
+                            <div>
                                 <label class="text-sm font-semibold text-slate-700">Triệu chứng</label>
                                 <textarea id="edit-symptoms" class="w-full p-3 border rounded-xl" rows="2">${item.symptoms || ''}</textarea>
                             </div>
@@ -1494,10 +1632,12 @@
                             </div>
                         </div>
                     ` : `
+                        <div class="detail-row"><span>Số điện thoại</span><span>${item.patientPhone ? formatPhoneNumber(item.patientPhone) : 'Không có'}</span></div>
                         <div class="detail-row"><span>Triệu chứng</span><span>${item.symptoms || 'Không có'}</span></div>
                         <div class="detail-row"><span>Chẩn đoán</span><span>${item.diagnosis || 'Không có'}</span></div>
                         <div class="detail-row"><span>Phác đồ</span><span>${item.protocol || 'Không có'}</span></div>
                         <div class="detail-row"><span>Ghi chú</span><span>${item.notes || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Ngày lưu</span><span>${formatDatetime(item.savedAt || item.updatedAt || item.createdAt, true)}</span></div>
                     `;
             } else if (type === 'groups') {
                 bodyHtml = editingType === 'groups' ? `
@@ -1543,6 +1683,7 @@
                 </div>
                 <div class="space-y-3">
                     ${bodyHtml}
+                    ${type === 'records' ? renderMedicalRecordHistory(item) : ''}
                     ${getSetImageUrl(item) ? `<img src="${getSetImageUrl(item)}" alt="${title}" class="w-full h-48 object-cover rounded-xl image-zoomable" onclick="event.stopPropagation(); openImageLightbox(this.src)" />` : ''}
                 </div>
             `;
@@ -1944,6 +2085,7 @@
 
         async function saveMedicalRecordEntry() {
             const patientName = document.getElementById('record-patientName')?.value.trim();
+            const patientPhone = document.getElementById('record-patientPhone')?.value.trim();
             const symptoms = document.getElementById('record-symptoms')?.value.trim();
             const diagnosis = document.getElementById('record-diagnosis')?.value.trim();
             const protocol = document.getElementById('record-protocol')?.value.trim();
@@ -1952,13 +2094,20 @@
                 setStatus('Nhập tên bệnh nhân.', true);
                 return;
             }
+            if (!patientPhone || !isValidPhoneNumber(patientPhone)) {
+                setStatus('Nhập số điện thoại bệnh nhân đúng định dạng.', true);
+                return;
+            }
+            const normalizedPhone = normalizePhoneNumber(patientPhone);
             const record = {
                 patientName,
+                patientPhone: normalizedPhone,
                 symptoms,
                 diagnosis,
                 protocol,
                 notes,
-                linkedItems: currentRecordLinks
+                linkedItems: currentRecordLinks,
+                savedAt: new Date().toISOString()
             };
             const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
             const canWriteRemote = firebaseUser && isFirebaseAdmin();
@@ -1975,6 +2124,7 @@
                 document.getElementById('record-form')?.reset();
                 currentRecordLinks = [];
                 recordPatientName = '';
+                recordPatientPhone = '';
                 recordProtocolText = '';
                 recordSymptomsText = '';
                 recordDiagnosisText = '';
@@ -1990,11 +2140,13 @@
             const updated = {
                 ...selectedItem,
                 patientName: document.getElementById('edit-patientName')?.value.trim() || selectedItem.patientName,
+                patientPhone: normalizePhoneNumber(document.getElementById('edit-patientPhone')?.value.trim() || selectedItem.patientPhone),
                 symptoms: document.getElementById('edit-symptoms')?.value.trim() || selectedItem.symptoms,
                 diagnosis: document.getElementById('edit-diagnosis')?.value.trim() || selectedItem.diagnosis,
                 protocol: document.getElementById('edit-protocol')?.value.trim() || selectedItem.protocol,
                 notes: document.getElementById('edit-notes')?.value.trim() || selectedItem.notes,
-                linkedItems: selectedItem.linkedItems || []
+                linkedItems: selectedItem.linkedItems || [],
+                savedAt: selectedItem.savedAt || selectedItem.createdAt || new Date().toISOString()
             };
             const index = recordItems.findIndex(i => String(i.id) === String(selectedItem.id));
             if (index !== -1) {
@@ -2522,6 +2674,7 @@
 
         function renderMedicalRecordsView(container, search) {
             const currentPatientNameValue = recordPatientName;
+            const currentPatientPhoneValue = recordPatientPhone;
             const currentProtocolText = recordProtocolText;
             const currentSymptomsText = recordSymptomsText;
             const currentDiagnosisText = recordDiagnosisText;
@@ -2535,31 +2688,42 @@
                 const hay = makeSearchHay(`${item.title || item.name || ''} ${item.description || ''} ${item.notes || item.note || ''} ${(item.acupointIds || []).join(' ')}`);
                 return hay.includes(recordSearch);
             }) : [];
+            const recordFilter = makeSearchHay(recordSearchText);
             const filtered = recordItems.filter(item => {
-                return searchMatches(`${item.patientName || ''} ${item.symptoms || ''} ${item.diagnosis || ''} ${item.protocol || ''} ${item.notes || item.note || ''}`, search);
+                const hay = makeSearchHay(`${item.patientName || ''} ${item.symptoms || ''} ${item.diagnosis || ''} ${item.protocol || ''} ${item.notes || item.note || ''}`);
+                return !recordFilter || hay.includes(recordFilter);
             });
             container.innerHTML = `
                 <div class="space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <h2 class="text-xl font-semibold">Hồ sơ bệnh trạng</h2>
                             <p class="text-sm text-slate-500">${filtered.length} / ${recordItems.length} hồ sơ</p>
                         </div>
-                        <div class="flex flex-wrap gap-3 items-center">
+                        <div class="grid gap-3 sm:grid-cols-[minmax(16rem,1fr)_auto] items-center">
+                            <div class="relative" style="display:none;">
+                                <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">�</span>
+                                ${recordSearchText ? `<button type="button" onclick="resetRecordSearch()" class="absolute inset-y-0 right-3 flex items-center rounded-full bg-slate-100 px-3 text-slate-500 transition hover:bg-slate-200">✕</button>` : ''}
+                            </div>
                             <button onclick="loadFirebaseCollection('medicalRecords')" class="px-4 py-3 rounded-2xl bg-amber-500 text-white">Tải Hồ sơ bệnh trạng</button>
-                            <p class="text-sm text-slate-500">${isFirebaseAdmin() ? 'Admin tải toàn bộ hồ sơ Firebase.' : 'Chỉ tải hồ sơ Firebase do bạn tạo.'}</p>
                         </div>
                     </div>
+                    <div class="flex">
+                        <button type="button" onclick="toggleRecordForm()" class="w-full px-5 py-3 rounded-2xl bg-sky-800 text-white shadow-sm hover:bg-sky-900 transition">
+                            ${recordFormOpen ? 'Ẩn form thêm hồ sơ' : 'Thêm hồ sơ mới'}
+                        </button>
+                    </div>
+                    ${recordFormOpen ? `
                     <div class="card p-5 space-y-4">
                         <h3 class="text-lg font-semibold">Thêm hồ sơ mới</h3>
                         <form id="record-form" class="space-y-4" onsubmit="event.preventDefault(); saveMedicalRecordEntry();">
                             <div class="grid gap-4 sm:grid-cols-2">
                                 <input id="record-patientName" type="text" placeholder="Tên bệnh nhân" class="w-full p-3 border rounded-xl" value="${currentPatientNameValue}" oninput="handleRecordInput(event, 'patientName')" />
-                                <input id="record-protocol" type="text" placeholder="Phác đồ (ví dụ: Đầu – Não)" class="w-full p-3 border rounded-xl" value="${currentProtocolText}" oninput="handleRecordInput(event, 'protocol')" />
+                                <input id="record-patientPhone" type="tel" placeholder="Số điện thoại bệnh nhân" class="w-full p-3 border rounded-xl" value="${recordPatientPhone}" oninput="handleRecordInput(event, 'patientPhone')" />
                             </div>
                             <div class="grid gap-4 sm:grid-cols-2">
+                                <input id="record-protocol" type="text" placeholder="Phác đồ (ví dụ: Đầu – Não)" class="w-full p-3 border rounded-xl" value="${currentProtocolText}" oninput="handleRecordInput(event, 'protocol')" />
                                 <textarea id="record-symptoms" rows="3" placeholder="Bệnh trạng / triệu chứng" class="w-full p-3 border rounded-xl" oninput="handleRecordInput(event, 'symptoms')" oncompositionstart="startRecordComposition()" oncompositionend="endRecordComposition(event)" onblur="renderRecordSuggestions()">${currentSymptomsText}</textarea>
-                                <textarea id="record-diagnosis" rows="3" placeholder="Chẩn đoán" class="w-full p-3 border rounded-xl" oninput="handleRecordInput(event, 'diagnosis')">${currentDiagnosisText}</textarea>
                             </div>
                             <div>
                                 <textarea id="record-notes" rows="3" placeholder="Ghi chú thêm" class="w-full p-3 border rounded-xl" oninput="handleRecordInput(event, 'notes')">${currentNotesText}</textarea>
@@ -2586,6 +2750,7 @@
                             </div>
                         </form>
                     </div>
+                    ` : ''}
                     <div class="card p-5 space-y-4">
                         <h3 class="text-lg font-semibold">Phác đồ / Bộ huyệt gợi ý</h3>
                         <div id="record-suggestions-container">
@@ -2624,34 +2789,71 @@
                     </div>
                 </div>
                 <div class="space-y-4">
+                    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div class="relative w-full md:max-w-2xl">
+                            <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">🔎</span>
+                            <input id="record-search-input" type="text" placeholder="Tìm hồ sơ theo tên, triệu chứng, phác đồ..." value="${recordSearchText}" oninput="handleRecordInput(event, 'recordSearch')" class="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-12 text-slate-700 shadow-sm focus:border-sky-400 focus:outline-none" />
+                            ${recordSearchText ? `<button type="button" onclick="resetRecordSearch()" class="absolute inset-y-0 right-3 flex items-center rounded-full bg-slate-100 px-3 text-slate-500 transition hover:bg-slate-200">✕</button>` : ''}
+                        </div>
+                        <button type="button" onclick="resetRecordSearch()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Xóa tìm kiếm</button>
+                    </div>
                     <div class="flex flex-wrap gap-2">
                         <button type="button" onclick="document.getElementById('search-input').value=''; renderCurrentView();" class="px-3 py-2 rounded-full bg-sky-800 text-white text-sm">Tất cả</button>
                     </div>
                     <div class="grid gap-4">${filtered.map(item => `
-                        <article onclick="selectItem('records', '${String(item.id || item.patientName || '').replace(/'/g, "\\'")}')" data-item-type="records" data-item-id="${String(item.id || item.patientName || '').replace(/"/g, '&quot;')}" class="card p-5 cursor-pointer hover:border-slate-300">
-                            <div class="space-y-3">
-                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                                    <div>
-                                        <h3 class="text-lg font-semibold">${item.patientName || 'Bệnh nhân không tên'}</h3>
-                                        <p class="text-sm text-slate-500">${item.symptoms || item.diagnosis || 'Không có mô tả'}</p>
-                                    </div>
-                                    <div class="flex flex-col items-end gap-2">
-                                        <div class="text-right text-sm text-slate-500">${item.protocol ? `Phác đồ: ${item.protocol}` : ''}</div>
-                                        <button type="button" onclick="event.stopPropagation(); deleteMedicalRecord('${String(item.id || item.patientName || '').replace(/'/g, "\\'")}');" class="px-3 py-2 rounded-full bg-red-600 text-white text-sm">Xóa</button>
-                                    </div>
-                                </div>
-                                ${(item.linkedItems || []).length ? `
-                                    <div>
-                                        <div class="text-sm font-semibold text-slate-700 mb-2">Liên kết phác đồ / bộ huyệt</div>
-                                        <div class="flex flex-wrap gap-2">
-                                            ${(item.linkedItems || []).map(link => `
-                                                <button type="button" onclick="event.stopPropagation(); goToLinkedItem('${link.type}', '${String(link.id).replace(/'/g, "\\'")}')" class="tag tag-secondary text-sm">
-                                                    ${link.type === 'protocols' ? 'Phác đồ:' : 'Bộ huyệt:'} ${link.title || link.id}
-                                                </button>
-                                            `).join('')}
+                        <article onclick="selectItem('records', '${String(item.id || item.patientName || '').replace(/'/g, "\\'")}')" data-item-type="records" data-item-id="${String(item.id || item.patientName || '').replace(/"/g, '&quot;')}" class="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-sm cursor-pointer">
+                            <div class="grid gap-3 lg:grid-cols-[1.8fr_1fr]">
+                                <div class="space-y-3">
+                                    <div class="flex flex-col gap-2">
+                                        <div class="inline-flex items-center gap-2 rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-700">Hồ sơ bệnh án</div>
+                                        <h3 class="text-lg font-semibold text-slate-900">${item.patientName || 'Bệnh nhân không tên'}</h3>
+                                        <div class="grid gap-2 sm:grid-cols-2">
+                                            <div class="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                                                <span>👤</span>
+                                                <span>${item.patientName || 'Không có tên'}</span>
+                                            </div>
+                                            <div class="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                                                <span>📞</span>
+                                                <span>${item.patientPhone ? formatPhoneNumber(item.patientPhone) : 'Không có số'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="grid gap-2 sm:grid-cols-2">
+                                            <div class="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                                                <span>📝</span>
+                                                <span>${item.symptoms || item.diagnosis || 'Không có mô tả'}</span>
+                                            </div>
+                                            <div class="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                                                <span>📅</span>
+                                                <span>${formatDatetime(item.savedAt || item.updatedAt || item.createdAt, true)}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                ` : ''}
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="rounded-2xl bg-slate-50 p-3">
+                                        <div class="text-[10px] uppercase tracking-[0.2em] text-slate-500">Phác đồ</div>
+                                        <div class="mt-1 text-sm font-semibold text-slate-900">${item.protocol || 'Chưa gắn phác đồ'}</div>
+                                    </div>
+                                    <div class="rounded-2xl bg-slate-50 p-3">
+                                        <div class="text-[10px] uppercase tracking-[0.2em] text-slate-500">Ghi chú</div>
+                                        <div class="mt-1 text-sm text-slate-700">${item.notes || 'Không có ghi chú'}</div>
+                                    </div>
+                                </div>
+                                <div class="lg:col-span-2 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-4 mt-4">
+                                    <div class="text-sm font-semibold text-slate-700 mb-2">Liên kết</div>
+                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <div class="min-w-0 sm:flex-1">
+                                            <div class="rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                                                ${(item.linkedItems || []).length ? (item.linkedItems || []).map(link => `
+                                                    <button type="button" onclick="event.stopPropagation(); goToLinkedItem('${link.type}', '${String(link.id).replace(/'/g, "\\'")}')" class="w-full text-left rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                                                        ${link.type === 'protocols' ? 'Phác đồ:' : 'Bộ huyệt:'} ${link.title || link.id}
+                                                    </button>
+                                                `).join('') : '<span class="text-sm text-slate-500">Chưa có mục liên kết</span>'}
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="event.stopPropagation(); deleteMedicalRecord('${String(item.id || item.patientName || '').replace(/'/g, "\\'")}');" class="shrink-0 inline-flex items-center justify-center rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700">🗑️ Xóa</button>
+                                    </div>
+                                </div>
                             </div>
                         </article>
                         <div class="mobile-detail-slot hidden" data-detail-slot-type="records" data-detail-slot-id="${String(item.id || item.patientName || '').replace(/"/g, '&quot;')}"></div>
@@ -2787,6 +2989,7 @@
                 DCFirebase.initFirebase();
                 const user = await DCFirebase.signInWithFirebase(email, password);
                 if (!user) throw new Error('Không nhận được thông tin người dùng sau khi đăng nhập.');
+                await ensureUserProfileExists(user);
                 setStatus(`Đã đăng nhập ${email}`);
                 await new Promise(resolve => setTimeout(resolve, 600));
                 await loadAllFirebaseData();
@@ -2798,12 +3001,20 @@
 
         async function onFirebaseSignUp() {
             const email = document.getElementById('firebase-email').value.trim();
+            const fullName = document.getElementById('firebase-fullname')?.value.trim();
             const password = document.getElementById('firebase-password').value;
-            if (!email || !password) return setStatus('Nhập email và mật khẩu.', true);
+            const phone = document.getElementById('firebase-phone')?.value.trim();
+            if (!email || !fullName || !password || !phone) return setStatus('Nhập email, họ tên, mật khẩu và số điện thoại.', true);
+            if (!isValidPhoneNumber(phone)) return setStatus('Số điện thoại không đúng định dạng. Dùng 0xxxxxxxxx hoặc +84xxxxxxxxx.', true);
             try {
                 DCFirebase.initFirebase();
-                await DCFirebase.signUpWithFirebase(email, password);
+                const user = await DCFirebase.signUpWithFirebase(email, password);
+                const normalizedPhone = normalizePhoneNumber(phone);
+                await DCFirebase.saveUserProfile({ uid: user.uid, email, fullName, phoneNumber: normalizedPhone });
                 setStatus(`Tạo tài khoản xong ${email}`);
+                if (isFirebaseAdmin()) {
+                    await loadFirebaseUserProfiles();
+                }
                 await loadAllFirebaseData();
             } catch (err) {
                 setStatus(`Lỗi đăng ký: ${err.message || err}`, true);
@@ -2880,11 +3091,46 @@
             await loadFirebaseCollection('treatmentPlans', false);
             await loadFirebaseCollection('medicalRecords', false);
             await loadFirebaseCollection('acupointGroups', false);
+            if (isFirebaseAdmin()) {
+                await loadFirebaseUserProfiles();
+            }
             loadLocalCachedData();
             if (!huyetItems.length && !protocolItems.length && !groupItems.length) {
                 await loadFallbackEmbeddedData();
             }
             showSection(previousView);
+        }
+
+        async function loadFirebaseUserProfiles() {
+            try {
+                DCFirebase.initFirebase();
+                if (!isFirebaseAdmin()) {
+                    userProfiles = [];
+                    return;
+                }
+                userProfiles = await DCFirebase.listUserProfilesForAdmin();
+            } catch (err) {
+                console.warn('loadFirebaseUserProfiles failed', err);
+                setStatus('Không thể tải danh sách người dùng. Kiểm tra quyền Firestore.', true);
+                userProfiles = [];
+            }
+        }
+
+        async function ensureUserProfileExists(user) {
+            if (!user || !user.uid) return;
+            try {
+                DCFirebase.initFirebase();
+                const existing = await DCFirebase.getDocument('userProfiles', user.uid);
+                if (existing) return;
+                await DCFirebase.saveUserProfile({
+                    uid: user.uid,
+                    email: user.email || '',
+                    fullName: user.displayName || user.email || '',
+                    phoneNumber: ''
+                });
+            } catch (err) {
+                console.warn('ensureUserProfileExists failed', err);
+            }
         }
 
         function parseJsArray(html, name) {
