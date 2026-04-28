@@ -239,6 +239,11 @@
     async function listMedicalRecordsForCurrentUser() {
         const user = getFirebaseUser();
         if (!user) throw new Error('Vui lòng đăng nhập Firebase để đọc hồ sơ bệnh án.');
+        if (isFirebaseAdmin()) {
+            return listDocuments('medicalRecords', {
+                orderBy: { field: 'updatedAt', direction: 'desc' }
+            });
+        }
         return listDocuments('medicalRecords', {
             where: ['createdBy', '==', user.uid],
             orderBy: { field: 'updatedAt', direction: 'desc' }

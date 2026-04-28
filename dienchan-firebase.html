@@ -2547,7 +2547,7 @@
                         </div>
                         <div class="flex flex-wrap gap-3 items-center">
                             <button onclick="loadFirebaseCollection('medicalRecords')" class="px-4 py-3 rounded-2xl bg-amber-500 text-white">Tải Hồ sơ bệnh trạng</button>
-                            <p class="text-sm text-slate-500">Chỉ tải hồ sơ Firebase do bạn tạo.</p>
+                            <p class="text-sm text-slate-500">${isFirebaseAdmin() ? 'Admin tải toàn bộ hồ sơ Firebase.' : 'Chỉ tải hồ sơ Firebase do bạn tạo.'}</p>
                         </div>
                     </div>
                     <div class="card p-5 space-y-4">
