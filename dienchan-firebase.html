@@ -1714,7 +1714,7 @@
                 <div class="space-y-3">
                     ${bodyHtml}
                     ${type === 'records' ? renderMedicalRecordHistory(item) : ''}
-                    ${getSetImageUrl(item) ? `<img src="${getSetImageUrl(item)}" alt="${title}" class="w-full h-48 object-cover rounded-xl image-zoomable" onclick="event.stopPropagation(); openImageLightbox(this.src)" />` : ''}
+                    ${getSetImageUrl(item) ? `<img src="${getSetImageUrl(item)}" alt="${title}" class="w-full h-48 object-cover rounded-xl image-zoomable" onclick="event.stopPropagation(); openImageLightbox(this.src)" onerror="tryNextHuyetImage(this)" data-huyet-image-candidates='${JSON.stringify(getHuyetImageCandidates(item)).replace(/'/g, '&#39;')}' />` : ''}
                 </div>
             `;
         }
@@ -2660,7 +2660,7 @@
                             </div>
                         </div>
                         <div class="huyet-result-image">
-                            ${getSetImageUrl(item) ? `<img src="${getSetImageUrl(item)}" alt="Huyệt ${item.id}" class="image-zoomable" onclick="event.stopPropagation(); openImageLightbox(this.src)" />` : '<span class="text-sm text-slate-400">Ảnh huyệt</span>'}
+                            ${getSetImageUrl(item) ? `<img src="${getSetImageUrl(item)}" alt="Huyệt ${item.id}" class="image-zoomable" onclick="event.stopPropagation(); openImageLightbox(this.src)" onerror="tryNextHuyetImage(this)" data-huyet-image-candidates='${JSON.stringify(getHuyetImageCandidates(item)).replace(/'/g, '&#39;')}' />` : '<span class="text-sm text-slate-400">Ảnh huyệt</span>'}
                         </div>
                         <div class="huyet-result-body">
                             <div class="huyet-detail-row"><span>Vị trí</span><span>${item.location || 'Không có'}</span></div>
@@ -2950,28 +2950,59 @@
             `;
         }
 
-        function getSetImageUrl(item) {
-            if (!item || typeof DCcloudinary === 'undefined') return '';
-            const candidates = [];
-            if (Array.isArray(item.imageIds) && item.imageIds.length) {
-                candidates.push(...item.imageIds.map(String).filter(Boolean));
-            }
-            if (item.imageKey) candidates.push(String(item.imageKey));
-            if (item.file) candidates.push(String(item.file).replace(/\.[^.]+$/, ''));
-            if (item.id) {
-                const idKey = String(item.id).trim();
-                if (idKey) {
-                    candidates.push(`huyet/${idKey}`);
-                    candidates.push(`dienchan/huyet/${idKey}`);
-                    candidates.push(idKey);
+        function getHuyetImageCandidates(item) {
+            if (!item || typeof DCcloudinary === 'undefined') return [];
+            const keys = [];
+            function addKey(rawKey) {
+                const key = String(rawKey || '').trim();
+                if (!key) return;
+                if (!keys.includes(key)) keys.push(key);
+                if (!key.includes('/')) {
+                    if (/^\d+$/.test(key)) {
+                        const idKey = key;
+                        const paths = [`huyet/${idKey}`, `dienchan/huyet/${idKey}`, `dienchan/data/${idKey}`];
+                        for (const path of paths) {
+                            if (!keys.includes(path)) keys.push(path);
+                        }
+                    }
                 }
             }
-            for (const key of candidates) {
-                if (!key) continue;
-                const url = DCcloudinary.getImageUrlForKey(key);
-                if (url) return url;
+            if (Array.isArray(item.imageIds)) {
+                for (const id of item.imageIds) addKey(id);
             }
-            return '';
+            addKey(item.imageKey);
+            if (item.file) addKey(String(item.file).replace(/\.[^.]+$/, ''));
+            addKey(item.id);
+            return keys.map(key => DCcloudinary.getImageUrlForKey(key));
+        }
+
+        function getSetImageUrl(item) {
+            const candidates = getHuyetImageCandidates(item);
+            return candidates.length ? candidates[0] : '';
+        }
+
+        function tryNextHuyetImage(img) {
+            if (!img || !img.dataset || !img.dataset.huyetImageCandidates) return;
+            let candidates;
+            try {
+                candidates = JSON.parse(img.dataset.huyetImageCandidates || '[]');
+            } catch {
+                img.onerror = null;
+                return;
+            }
+            if (!Array.isArray(candidates) || candidates.length <= 1) {
+                img.onerror = null;
+                return;
+            }
+            const currentSrc = img.src;
+            const currentIndex = candidates.findIndex(url => url === currentSrc);
+            const nextIndex = currentIndex >= 0 ? currentIndex + 1 : 1;
+            if (nextIndex >= candidates.length) {
+                img.onerror = null;
+                return;
+            }
+            img.dataset.huyetImageCandidates = JSON.stringify(candidates.slice(nextIndex));
+            img.src = candidates[nextIndex];
         }
 
         function openImageLightbox(url) {
