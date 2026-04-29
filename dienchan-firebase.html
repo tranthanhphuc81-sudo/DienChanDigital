@@ -1844,6 +1844,7 @@
                         location: updated.location,
                         functions: updated.functions,
                         manual: updated.manual,
+                        imageIds: updated.imageIds || [],
                         tags: updated.tags || [],
                         createdBy: firebaseUser.uid
                     });
@@ -1883,6 +1884,7 @@
                         description: updated.description || '',
                         acupointIds: updated.acupointIds,
                         keywords: updated.keywords,
+                        imageIds: updated.imageIds || [],
                         createdBy: firebaseUser.uid
                     });
                     setStatus('Đã lưu sửa đổi phác đồ trên Firebase.');
@@ -1921,6 +1923,7 @@
                         description: updated.description || '',
                         acupointIds: updated.acupointIds,
                         notes: updated.notes || '',
+                        imageIds: updated.imageIds || [],
                         createdBy: firebaseUser.uid
                     });
                     setStatus('Đã lưu sửa đổi bộ huyệt trên Firebase.');
@@ -2948,9 +2951,27 @@
         }
 
         function getSetImageUrl(item) {
-            const key = (item.imageIds && item.imageIds[0]) || item.imageKey || (item.file ? item.file.replace(/\.[^.]+$/, '') : '');
-            if (!key) return '';
-            return (typeof DCcloudinary !== 'undefined') ? DCcloudinary.getImageUrlForKey(key) : '';
+            if (!item || typeof DCcloudinary === 'undefined') return '';
+            const candidates = [];
+            if (Array.isArray(item.imageIds) && item.imageIds.length) {
+                candidates.push(...item.imageIds.map(String).filter(Boolean));
+            }
+            if (item.imageKey) candidates.push(String(item.imageKey));
+            if (item.file) candidates.push(String(item.file).replace(/\.[^.]+$/, ''));
+            if (item.id) {
+                const idKey = String(item.id).trim();
+                if (idKey) {
+                    candidates.push(`huyet/${idKey}`);
+                    candidates.push(`dienchan/huyet/${idKey}`);
+                    candidates.push(idKey);
+                }
+            }
+            for (const key of candidates) {
+                if (!key) continue;
+                const url = DCcloudinary.getImageUrlForKey(key);
+                if (url) return url;
+            }
+            return '';
         }
 
         function openImageLightbox(url) {
