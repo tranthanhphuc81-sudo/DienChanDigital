@@ -105,8 +105,9 @@
         if (meta && meta.secure_url) {
             return meta.secure_url;
         }
-        // Fallback: nếu ảnh đã upload lên Cloudinary với public_id giống id huyệt
-        return makeUrl(`dienchan/data/${key}`, urlOptions);
+        // Fallback: nếu key là ID đơn hoặc path public_id đầy đủ
+        const publicId = key.includes('/') ? key : `dienchan/data/${key}`;
+        return makeUrl(publicId, urlOptions);
     }
 
     global.DCcloudinary = {
