@@ -743,9 +743,45 @@
                 height: 2.35rem;
             }
         }
+
+        #toast-container {
+            position: fixed;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            z-index: 1100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            max-width: min(100vw - 2rem, 340px);
+            padding: 0.95rem 1.1rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.3;
+            opacity: 0;
+            transform: translateY(0.75rem) scale(0.96);
+            animation: toast-slide-in 0.24s ease forwards;
+        }
+        .toast-success { background: linear-gradient(135deg, #22c55e, #0ea5e9); }
+        .toast-error { background: linear-gradient(135deg, #ef4444, #f97316); }
+        @keyframes toast-slide-in {
+            from { opacity: 0; transform: translateY(0.75rem) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
     <div class="max-w-6xl mx-auto space-y-6">
         <header class="main-header rounded-3xl p-6">
             <h1 class="text-2xl sm:text-4xl font-bold">Diện Chẩn Firebase</h1>
@@ -1569,6 +1605,7 @@
                         <div class="guide-section-title">📘 Kỹ thuật Diện Chẩn</div>
                         <p class="guide-note">Trang này trình bày các nguyên tắc, kỹ thuật thao tác, dụng cụ, chống chỉ định và các bước thực hiện phác đồ chuẩn. Nội dung được chia rõ từng phần để bạn tiếp cận nhanh hơn.</p>
                         <div class="guide-nav">
+                            <a href="#guide-theory" class="guide-pill">Cơ sở lý thuyết</a>
                             <a href="#guide-principle" class="guide-pill">Nguyên tắc</a>
                             <a href="#guide-proof" class="guide-pill">Quy tắc khóa phác đồ</a>
                             <a href="#guide-steps" class="guide-pill">Thứ tự phác đồ</a>
@@ -1576,6 +1613,41 @@
                             <a href="#guide-tools" class="guide-pill">Dụng cụ</a>
                             <a href="#guide-safety" class="guide-pill">Chống chỉ định</a>
                         </div>
+                    </div>
+                    <div id="guide-theory" class="guide-card">
+                        <div class="guide-section-title">📖 Cơ sở lý thuyết Diện Chẩn</div>
+                        <p class="guide-note">Diện Chẩn là phương pháp chẩn đoán và điều trị qua da vùng mặt được phát triển tại Việt Nam từ năm 1980. Phương pháp này dựa trên thuyết phản chiếu, thuyết đồng ứng và hình dạng tương tự để tìm ra huyệt và đồ hình chữa bệnh.</p>
+                        <div class="guide-technique-card">
+                            <strong>Định nghĩa Diện Chẩn</strong>
+                            <p>Diện Chẩn là chẩn đoán vùng mặt dựa trên khảo sát nhiều hình thức như: nhìn bằng mắt, khám bằng tay, hoặc dùng dụng cụ/máy móc để phát hiện biểu hiện bệnh lý hệ thống trên khuôn mặt. Mặt là tấm gương phản chiếu toàn bộ cơ thể.</p>
+                        </div>
+                        <div class="guide-step-list">
+                            <div class="guide-step-card"><strong>1. Thuyết Phản Chiếu</strong> - Mặt phản chiếu tổng thể cơ thể; mỗi huyệt mặt là điểm phản chiếu của một hay nhiều bộ phận tương ứng.</div>
+                            <div class="guide-step-card"><strong>2. Thuyết Biểu Hiện</strong> - Mọi biểu hiện bệnh lý trên mặt đều có tính hệ thống và chọn lọc theo không gian, thời gian và dấu hiệu bệnh lý. Vùng biểu hiện vừa là chẩn đoán vừa là nơi điều trị.</div>
+                            <div class="guide-step-card"><strong>3. Thuyết Phản Hiện</strong> - Dấu hiệu bệnh trên mặt thường tỷ lệ thuận với mức độ bệnh, nhưng có thể ngược lại khi thông tin tín hiệu bị rối loạn hoặc tắc nghẽn.</div>
+                            <div class="guide-step-card"><strong>4. Thuyết Cục Bộ</strong> - Vùng da tại cơ quan bị bệnh cũng biểu hiện dấu hiệu trên mặt. Huyệt ngoài tác dụng xa còn có tác dụng cục bộ và lân cận.</div>
+                            <div class="guide-step-card"><strong>5. Thuyết Đồng Bộ</strong> - Dấu hiệu bệnh trên mặt và dưới cơ thể tương ứng về vị trí, sắc độ, hình thái và thời kỳ xuất hiện, dù đôi khi xuất hiện không đồng thời.</div>
+                            <div class="guide-step-card"><strong>6. Thuyết Biến Dạng</strong> - Dấu hiệu trên mặt thay đổi theo thời gian, mức độ và diễn tiến bệnh; màu sắc, hình dạng và độ rõ nét biểu hiện tăng khi bệnh nặng và giảm khi bệnh thuyên giảm.</div>
+                            <div class="guide-step-card"><strong>7. Thuyết Đồng Ứng</strong> - Những gì giống nhau hoặc có hình dạng tương tự thường có liên hệ mật thiết và tác động lẫn nhau. Ví dụ: cánh mũi tương tự mông, sống mũi tương tự sống lưng, gờ mày tương tự cánh tay.</div>
+                            <div class="guide-step-card"><strong>8. Thuyết Giao Thoa</strong> - Một số dấu hiệu trên mặt có thể giao thoa sang bên đối diện hoặc sang vùng khác, thường xuất hiện khi thông tin bệnh lý bị nhiễu. Dấu hiệu giao thoa thường gợi ý bệnh nặng hơn hoặc phức tạp hơn bình thường.</div>
+                        </div>
+                        <div class="guide-alert">
+                            <strong>Lưu ý:</strong> Diện Chẩn không phải là châm cứu Trung Quốc. Phương pháp này không dùng kim, không dùng thuốc, không bắt mạch, và dựa trên hệ phản chiếu đa hệ khác với phản xạ học cổ điển.</div>
+                    </div>
+                    <div id="guide-basic-groups" class="guide-card">
+                        <div class="guide-section-title">🧩 8 bộ huyệt căn bản</div>
+                        <p class="guide-note">Trong Diện Chẩn, 8 bộ huyệt căn bản là những tổ hợp chính giúp xử lý các thể bệnh khác nhau theo nguyên lý bổ, tả, điều hòa và giải độc.</p>
+                        <ul class="text-slate-700 space-y-2">
+                            <li><strong>Bộ Bổ Ấm Huyết</strong> - tăng cường khí huyết, bồi bổ chính khí cho người suy yếu, mệt mỏi, da xanh xao.</li>
+                            <li><strong>Bộ Tiêu Viêm – Tiêu Độc</strong> - giải độc, giảm viêm, hạ sốt, phù hợp với tình trạng tích độc, mẩn ngứa, đau sưng.</li>
+                            <li><strong>Bộ Tiêu U Bướu</strong> - dùng cho trường hợp u nhọt, bướu cục, u nang, tình trạng ứ trệ chất độc lâu ngày.</li>
+                            <li><strong>Bộ Thăng</strong> - nâng dương khí lên những vùng suy yếu, thường dùng cho mệt mỏi, hạ huyết áp, sa sút tinh thần.</li>
+                            <li><strong>Bộ Giáng</strong> - hạ khí, tả nhiệt, điều chỉnh những tình trạng quá thịnh, kích động, cao huyết áp, đau đầu.</li>
+                            <li><strong>Bộ Điều Chỉnh Âm Dương</strong> - cân bằng hai chiều âm dương, phù hợp với các rối loạn nội tiết, thần kinh, mãn kinh và rối loạn chức năng tạng phủ.</li>
+                            <li><strong>Bộ Tan Máu Bầm</strong> - thúc đẩy lưu thông máu, giải quyết bầm tím, đau nhức cơ xương, vết bầm ứ.</li>
+                            <li><strong>Bộ Đặc trị Toàn Thân</strong> - tổ hợp huyệt dùng khi bệnh đã lan rộng, tác động qua các đồ hình phản chiếu toàn thân để điều hòa hệ thống.</li>
+                        </ul>
+                        <p class="guide-note">Những bộ huyệt này không phải là danh sách cố định, mà là nhóm nguyên lý để lựa chọn và kết hợp linh hoạt theo từng bệnh nhân.</p>
                     </div>
                     <div id="guide-principle" class="guide-card">
                         <div class="guide-section-title">⚖️ Nguyên tắc "Trái trước - Phải sau"</div>
@@ -1659,6 +1731,81 @@
                                 </ul>
                             </div>
                         </div>
+                    </div>
+                    <div id="guide-taminh" class="guide-card">
+                        <div class="guide-section-title">📚 Bản tóm tắt Giáo án Tạ Minh 2011</div>
+                        <p class="guide-note">Tài liệu này trình bày kinh nghiệm Diện Chẩn - Điều Khiển Liệu Pháp kết hợp Đông Tây y của lương y Tạ Minh, nhấn mạnh DC là phương tiện chẩn trị và cần nền tảng y lý vững chắc.</p>
+                        <ul class="text-slate-700 space-y-2">
+                            <li><strong>Thành phần cần học:</strong> thuộc kỹ đồ hình phản chiếu, hệ thống huyệt, lý thuyết âm dương, ngũ hành, bát cương và bát pháp, cùng giải phẫu - sinh lý tây y.</li>
+                            <li><strong>Chẩn đoán toàn diện:</strong> kết hợp Tây y (đo huyết áp, sờ nắn, hỏi bệnh, cận lâm sàng) và Đông y (vọng, văn, thiết, vấn), chú ý nghề nghiệp, sinh hoạt, ăn uống, tiểu tiện, đại tiện và giấc ngủ.</li>
+                            <li><strong>Nguyên tắc điều trị:</strong> ưu tiên dùng huyệt có triệu chứng và sinh huyệt, không dùng dàn trải; bệnh mới phát thường thực, bệnh lâu ngày dễ hư nhưng không cứng nhắc máy móc.</li>
+                            <li><strong>Phác đồ linh hoạt:</strong> các bộ huyệt có thể dùng ở mặt, tay, chân, lưng, bụng tùy nơi phản chiếu, và nên kết hợp với các phương pháp châm cứu, bấm huyệt khác khi cần.</li>
+                            <li><strong>Lưu ý quan trọng:</strong> linh động không có nghĩa bừa bãi; cần tôn trọng nguyên tắc chẩn đoán để tránh làm tổn thương bệnh nhân.</li>
+                        </ul>
+                        <p class="guide-note">Giao án 2011 của Tạ Minh cũng nhắc rằng các công thức điều trị chỉ mang tính tổng quát, phải dùng sinh huyệt và điều chỉnh theo từng bệnh nhân để có hiệu quả tốt nhất.</p>
+                        <div class="guide-technique-card">
+                            <strong>Danh sách nguyên tắc chẩn đoán</strong>
+                            <ul class="text-slate-600 space-y-2">
+                                <li>• Kết hợp Tây y và Đông y: đo huyết áp, sờ nắn, hỏi bệnh, cận lâm sàng; đồng thời vọng, văn, thiết, vấn.</li>
+                                <li>• Phân định Hàn – Nhiệt: toàn thân và cục bộ đều cần chẩn đoán riêng. Hỏi bệnh nhân “bệnh tăng khi trời nóng hay trời lạnh?” thay vì áp đặt câu trả lời.</li>
+                                <li>• Phân định Hư – Thực: triệu chứng mạnh, rõ rệt thường thực; triệu chứng nhẹ, kín đáo thường hư.</li>
+                                <li>• Phân định Âm – Dương: ba khía cạnh Dương là nhiệt, thực, biểu; ba khía cạnh Âm là hàn, hư, lý.</li>
+                                <li>• Luôn tự hỏi “hay là mình đã sai?” nếu điều trị không đạt kết quả, và kiểm chứng lời khai bệnh nhân bằng sinh huyệt hoặc câu hỏi khác.</li>
+                                <li>• Đánh giá chính khí bệnh nhân: tổng trạng mạnh sẽ khó nhiễm bệnh, yếu dễ mắc bệnh và dễ sai chẩn.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-technique-card w-full">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <strong>Phiếu hỏi bệnh chi tiết theo Bát Cương</strong>
+                                <button type="button" onclick="copyQuestionnaireText()" class="px-4 py-2 rounded-2xl bg-sky-200 text-slate-800 hover:bg-sky-300 text-sm font-semibold">Sao chép nhanh</button>
+                            </div>
+                            <pre id="questionnaire-text" class="text-slate-700 text-sm whitespace-pre-wrap p-4 rounded-3xl bg-slate-100 border border-slate-200" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+PHẦN 1 - THÔNG TIN CƠ BẢN
+- Tên bệnh nhân: __________________________
+- Tuổi: ____, Nghề nghiệp: ___________________
+- Tiền sử bệnh: _____________________________
+- Các thuốc/biện pháp đã dùng: _______________
+
+PHẦN 2 - HÀN / NHIỆT
+- Toàn thân: bệnh tăng khi trời nóng hay trời lạnh? ________
+- Toàn thân: thích mát hay thích ấm? __________________
+- Vùng đau: khi sờ cảm thấy lạnh hay nóng? _____________
+- Vùng đau: đau tăng khi lạnh hay tăng khi nóng? ________
+- Bệnh có cải thiện khi tiếp xúc với nhiệt hay lạnh? _____
+
+PHẦN 3 - HƯ / THỰC
+- Triệu chứng có dữ dội, rõ rệt, ồn ào không? __________
+- Triệu chứng có nhẹ nhàng, kín đáo, uể oải không? _____
+- Có cảm thấy người yếu, mệt, chóng mặt không? ________
+- Có cảm giác đầy trướng, tức ngực, nặng nề không? _______
+- Các triệu chứng xuất hiện sau khi cơ thể suy yếu hay sau khi chịu tác động mạnh? ______
+
+PHẦN 4 - BIỂU / LÝ
+- Bệnh có biểu hiện ngoài da/khớp/cơ bắp rõ rệt không? ____
+- Bệnh có đau sâu, khó chịu nhưng bên ngoài không rõ ràng không? ____
+- Biểu hiện bên ngoài có sưng, mẩn đỏ, nóng, lạnh không? ____
+- Có triệu chứng nội tạng như đau bụng, hồi hộp, khó thở không? ____
+
+PHẦN 5 - ÂM / DƯƠNG
+- Tổng thể: cảm thấy lạnh lẽo, thiếu sức bền không? ______
+- Tổng thể: cảm thấy bứt rứt, nóng trong người không? _____
+- Có thể chịu nóng/lạnh tốt không hay dễ khó chịu? _______
+- Bệnh có thay đổi theo mùa, khi thức dậy, buổi tối không? ____
+
+PHẦN 6 - HỎI THÊM
+- Ăn uống: ngày ăn mấy lần, ăn no hay ăn ít, cảm giác tiêu hóa? __________
+- Tiểu tiện: ngày/đêm bao nhiêu lần, màu sắc, mùi, cảm giác? _________
+- Đại tiện: mấy ngày một lần, phân thế nào, khó đại tiện không? _______
+- Ngủ: dễ vào giấc không, thức giấc giữa đêm không, sáng dậy tỉnh táo không? ____
+- Kinh nguyệt / sinh dục: đều không, đau bụng kinh, rối loạn? _________
+
+PHẦN 7 - KẾT LUẬN TẠM THỜI
+- Thể bệnh chính: ____________________________
+- Cần ưu tiên giải quyết: Hàn / Nhiệt / Hư / Thực / Biểu / Lý / Âm / Dương
+- Ghi chú thêm: ______________________________
+                            </pre>
+                        </div>
+                        <p class="guide-note">Tạ Minh đặc biệt lưu ý: phải tin cậy bệnh nhân, hỏi kỹ và kiểm chứng khéo léo nếu thấy lời khai chưa rõ ràng. Cần ân cần với bệnh nhân trình độ thấp để tránh sai sót khi họ ngại khai báo.</p>
                     </div>
                     <div id="guide-tools" class="guide-card">
                         <div class="guide-section-title">🔧 Dụng cụ trong Diện Chẩn</div>
@@ -3582,6 +3729,36 @@
                 if (statusEl) statusEl.textContent = `Lỗi: ${err.message || err}`;
                 setStatus(`Migration thất bại: ${err.message || err}`, true);
             }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            window.setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(0.75rem) scale(0.96)';
+            }, 2800);
+            window.setTimeout(() => {
+                if (toast.parentNode === container) {
+                    container.removeChild(toast);
+                }
+            }, 3400);
+        }
+
+        function copyQuestionnaireText() {
+            const textarea = document.getElementById('questionnaire-text');
+            if (!textarea) return;
+            const text = textarea.innerText || textarea.textContent || '';
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Phiếu hỏi bệnh đã được sao chép!', 'success');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                showToast('Không thể sao chép phiếu hỏi bệnh. Vui lòng thử lại.', 'error');
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
