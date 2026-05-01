@@ -1548,7 +1548,7 @@
                         raw: meta
                     };
                 })
-                .filter(item => item.publicId.startsWith('dienchan/mirrors/') || item.folder === 'dienchan/mirrors');
+                .filter(item => item.publicId.startsWith('dienchan/mirrors/') || item.publicId.startsWith('dienchan/mirror/') || item.folder === 'dienchan/mirrors' || item.folder === 'dienchan/mirror');
         }
 
         function mapCloudinaryEntryToMirrorItem(entry) {
@@ -3441,23 +3441,19 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
 
         async function loadCloudinaryMetadataFromStaticFile() {
             if (cloudinaryMetadataLoaded) return;
-            const existing = getCloudinaryMetadataStore();
-            if (Object.keys(existing).length) {
-                cloudinaryMetadataLoaded = true;
-                return;
-            }
             if (!CLOUDINARY_METADATA_URL) return;
             try {
                 const response = await fetch(CLOUDINARY_METADATA_URL);
                 if (!response.ok) {
+                    cloudinaryMetadataLoaded = true;
                     return;
                 }
                 const payload = await response.json();
                 if (!payload || typeof payload !== 'object') return;
+                const existing = getCloudinaryMetadataStore();
                 const merged = { ...existing, ...payload };
                 saveCloudinaryMetadataStore(merged);
                 cloudinaryMetadataLoaded = true;
-                setStatus('Đã tải metadata Cloudinary từ file tĩnh.');
             } catch (err) {
                 console.warn('loadCloudinaryMetadataFromStaticFile failed', err);
             }
