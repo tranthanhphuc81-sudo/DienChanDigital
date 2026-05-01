@@ -806,6 +806,7 @@
                 <button data-view="huyet" onclick="showSection('huyet')" class="tab-button inactive">🔍 Tra cứu Huyệt</button>
                 <button data-view="protocols" onclick="showSection('protocols')" class="tab-button inactive">📋 Phác đồ Mẫu</button>
                 <button data-view="groups" onclick="showSection('groups')" class="tab-button inactive">🧩 Bộ huyệt</button>
+                <button data-view="mirror" onclick="showSection('mirror')" class="tab-button inactive">🪞 Đồ hình</button>
                 <button data-view="records" onclick="showSection('records')" class="tab-button inactive">🩺 Hồ sơ bệnh trạng</button>
                 <button data-view="project" onclick="showSection('project')" class="tab-button inactive">🧭 Hướng dẫn sử dụng</button>
                 <button data-view="guide" onclick="showSection('guide')" class="tab-button inactive">📘 Kỹ thuật Diện Chẩn</button>
@@ -844,6 +845,7 @@
                 <button onclick="showSection('huyet')" class="nav-btn">🔍<div class="text-[11px]">Huyệt</div></button>
                 <button onclick="showSection('protocols')" class="nav-btn">📋<div class="text-[11px]">Phác đồ</div></button>
                 <button onclick="showSection('groups')" class="nav-btn">🧩<div class="text-[11px]">Bộ huyệt</div></button>
+                <button onclick="showSection('mirror')" class="nav-btn">🪞<div class="text-[11px]">Đồ hình</div></button>
                 <button onclick="showSection('records')" class="nav-btn">🩺<div class="text-[11px]">Hồ sơ</div></button>
                 <button onclick="showSection('project')" class="nav-btn">🧭<div class="text-[11px]">HDSD</div></button>
                 <button onclick="showSection('guide')" class="nav-btn">📘<div class="text-[11px]">Kỹ thuật</div></button>
@@ -892,6 +894,11 @@
         let newGroupNotes = '';
         let newGroupImageFile = null;
         let newGroupFormOpen = false;
+        let mirrorUploadFiles = [];
+        let mirrorUploadTags = '';
+        let mirrorUploadNotes = '';
+        let mirrorUploadOpen = false;
+        let mirrorUploadStatus = '';
         let selectedItem = null;
         let selectedType = null;
         let editingType = null;
@@ -1381,6 +1388,23 @@
                                     </div>
                                 </div>
                             ` : ''}
+                            <button onclick="toggleMirrorUploadPanel()" class="w-full px-4 py-3 rounded-xl bg-fuchsia-600 text-white mt-3">Upload đồ hình phản chiếu</button>
+                            ${mirrorUploadOpen ? `
+                                <div class="mt-4 p-4 bg-slate-50 rounded-3xl border border-slate-200">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Chọn ảnh phản chiếu</label>
+                                    <input id="mirror-upload-files" type="file" accept="image/*" class="w-full" multiple onchange="mirrorUploadFiles = Array.from(this.files || []); renderCurrentView()" />
+                                    <p class="text-sm text-slate-500 mt-2">${mirrorUploadFiles.length} file đã chọn.</p>
+                                    <div class="grid gap-4 sm:grid-cols-2 mt-4">
+                                        <input id="mirror-upload-tags" type="text" placeholder="Keywords, cách nhau bởi dấu cách" class="w-full p-3 border rounded-xl" value="${mirrorUploadTags}" oninput="mirrorUploadTags = this.value" />
+                                        <input id="mirror-upload-notes" type="text" placeholder="Ghi chú chung cho các ảnh" class="w-full p-3 border rounded-xl" value="${mirrorUploadNotes}" oninput="mirrorUploadNotes = this.value" />
+                                    </div>
+                                    <div class="flex flex-wrap gap-3 mt-4">
+                                        <button type="button" onclick="uploadMirrorShapes()" class="px-4 py-3 rounded-2xl bg-sky-200 text-slate-800 hover:bg-sky-300">Upload lên Cloudinary</button>
+                                        <button type="button" onclick="resetMirrorUploadForm()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Reset form</button>
+                                    </div>
+                                    <p class="text-sm text-slate-500 mt-3">${mirrorUploadStatus || 'Ảnh sẽ được nén và resize trước khi upload để tiết kiệm băng thông và token.'}</p>
+                                </div>
+                            ` : ''}
                             <p class="text-sm text-slate-500 mt-4">Dữ liệu vẫn dùng Cloudinary cho ảnh và Firestore cho nội dung.</p>
                         </div>
                     </div>
@@ -1452,6 +1476,91 @@
             if (currentView === 'protocols') return renderProtocolList(container, search);
             if (currentView === 'records') return renderMedicalRecordsView(container, search);
             if (currentView === 'groups') return renderGroupList(container, search);
+            if (currentView === 'mirror') return renderMirrorShapesView(container, search);
+        }
+
+        function getCloudinaryImageEntries() {
+            const store = {};
+            try {
+                const raw = localStorage.getItem('dc_cloudinary_images');
+                Object.assign(store, raw ? JSON.parse(raw) : {});
+            } catch {
+                return [];
+            }
+            return Object.entries(store).map(([key, data]) => {
+                const meta = data || {};
+                const publicId = meta.public_id || meta.asset_id || String(key);
+                const tags = Array.isArray(meta.tags)
+                    ? meta.tags.filter(Boolean)
+                    : typeof meta.tags === 'string'
+                        ? meta.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+                        : [];
+                const context = typeof meta.context === 'object' && meta.context ? meta.context : {};
+                const custom = typeof context.custom === 'object' && context.custom ? context.custom : {};
+                const note = String(custom.note || custom.caption || custom.alt || custom.description || '').trim();
+                const name = String(meta.original_filename || meta.public_id || key).trim();
+                const imageUrl = typeof DCcloudinary !== 'undefined'
+                    ? DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' })
+                    : '';
+                return {
+                    key,
+                    publicId,
+                    name: name || key,
+                    tags,
+                    note,
+                    imageUrl,
+                    raw: meta
+                };
+            });
+        }
+
+        function renderMirrorShapesView(container, search) {
+            const entries = getCloudinaryImageEntries();
+            const filtered = entries.filter(item => searchMatches(`${item.name} ${item.tags.join(' ')} ${item.note}`, search));
+            const total = entries.length;
+            if (!search.trim()) {
+                container.innerHTML = `
+                    <div class="card p-6 text-slate-600">
+                        <p class="text-lg font-semibold">Tìm nhanh đồ hình phản chiếu</p>
+                        <p class="mt-2 text-sm">Nhập tên đồ hình, keyword hoặc ghi chú để lọc nhanh các ảnh phản chiếu đã lưu trên Cloudinary.</p>
+                        <p class="mt-3 text-sm text-slate-500">Tổng số đồ hình phản chiếu đang lưu: <strong>${total}</strong></p>
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <h2 class="text-xl font-semibold">Đồ hình phản chiếu</h2>
+                            <p class="text-sm text-slate-500">Hiển thị ${filtered.length} / ${total} đồ hình</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        ${filtered.length ? filtered.map(item => `
+                            <article class="card p-5 cursor-pointer hover:border-slate-300" onclick="${item.imageUrl ? `openImageLightbox('${String(item.imageUrl).replace(/'/g, "\\'")}')` : 'void(0)'}">
+                                <div class="grid gap-4 lg:grid-cols-[1.8fr_1fr] items-start">
+                                    <div class="space-y-3">
+                                        <h3 class="text-lg font-semibold">${item.name || item.publicId}</h3>
+                                        <p class="text-sm text-slate-500">${item.note || 'Không có ghi chú'}</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            ${item.tags.length ? item.tags.map(tag => `<span class="tag tag-primary">${tag}</span>`).join('') : '<span class="text-sm text-slate-500">Không có keyword</span>'}
+                                        </div>
+                                        <div class="text-xs text-slate-400">Key: ${item.publicId}</div>
+                                    </div>
+                                    <div class="rounded-3xl overflow-hidden border border-slate-200 bg-slate-100 min-h-[12rem]">
+                                        ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name || item.publicId}" class="w-full h-full object-cover" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Không có ảnh xem trước</div>`}
+                                    </div>
+                                </div>
+                            </article>
+                        `).join('') : `
+                            <div class="card p-6 text-slate-600">
+                                <p class="text-sm">Không tìm thấy đồ hình phản chiếu phù hợp với từ khóa tìm kiếm.</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
         }
 
         function setActiveTab(name) {
@@ -2139,7 +2248,10 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             if (typeof DCcloudinary === 'undefined') return setStatus('Cloudinary chưa được cấu hình.', true);
             try {
                 setStatus('Đang upload ảnh huyệt lên Cloudinary...');
-                const result = await DCcloudinary.uploadFile(file, { folder: 'dienchan/huyet' });
+                const uploadFile = await prepareImageFileForUpload(file, 1200, 0.75);
+                const result = await DCcloudinary.uploadFile(uploadFile, {
+                    folder: 'dienchan/huyet'
+                });
                 const publicId = result.public_id || result.asset_id || result.public_id;
                 if (!publicId) throw new Error('Không lấy được public_id từ Cloudinary.');
                 const existing = Array.isArray(item.imageIds) ? [...item.imageIds] : (item.imageIds ? [item.imageIds] : []);
@@ -2327,7 +2439,10 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             if (typeof DCcloudinary === 'undefined') {
                 throw new Error('Cloudinary chưa được cấu hình.');
             }
-            const result = await DCcloudinary.uploadFile(file, { folder });
+            const uploadFile = await prepareImageFileForUpload(file, 1200, 0.75);
+            const result = await DCcloudinary.uploadFile(uploadFile, {
+                folder
+            });
             const publicId = result.public_id || result.asset_id;
             if (!publicId) throw new Error('Không lấy được public_id từ Cloudinary.');
             if (typeof DCcloudinary.saveMetadata === 'function') {
@@ -2703,8 +2818,100 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             }
         }
 
+        async function prepareImageFileForUpload(file, maxWidth = 1200, quality = 0.75) {
+            if (!file || !file.type.startsWith('image/')) return file;
+            const fileSizeLimit = 500 * 1024;
+            const shouldConvert = file.type !== 'image/jpeg' && file.type !== 'image/webp';
+            let bitmap;
+            try {
+                bitmap = await createImageBitmap(file);
+            } catch (err) {
+                return file;
+            }
+            const width = bitmap.width;
+            const height = bitmap.height;
+            const scale = Math.min(1, maxWidth / width);
+            const needResize = scale < 1;
+            if (!needResize && !shouldConvert && file.size <= fileSizeLimit) {
+                return file;
+            }
+            const targetWidth = Math.round(width * scale);
+            const targetHeight = Math.round(height * scale);
+            const canvas = document.createElement('canvas');
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+            if (!blob) return file;
+            return new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+        }
+
         function toggleCloudinaryImport() {
             cloudinaryImportOpen = !cloudinaryImportOpen;
+            renderCurrentView();
+        }
+
+        function toggleMirrorUploadPanel() {
+            mirrorUploadOpen = !mirrorUploadOpen;
+            if (!mirrorUploadOpen) {
+                mirrorUploadStatus = '';
+            }
+            renderCurrentView();
+        }
+
+        function resetMirrorUploadForm() {
+            mirrorUploadFiles = [];
+            mirrorUploadTags = '';
+            mirrorUploadNotes = '';
+            mirrorUploadStatus = '';
+            const input = document.getElementById('mirror-upload-files');
+            if (input) input.value = '';
+            renderCurrentView();
+        }
+
+        async function uploadMirrorShapes() {
+            if (!mirrorUploadFiles.length) {
+                setStatus('Chọn ít nhất một file hình để upload.', true);
+                return;
+            }
+            if (!canUseCloudinary()) {
+                setStatus('Chỉ admin mới có thể upload lên Cloudinary.', true);
+                return;
+            }
+            mirrorUploadStatus = `Đang upload ${mirrorUploadFiles.length} file...`;
+            renderCurrentView();
+            let uploadedCount = 0;
+            for (const file of mirrorUploadFiles) {
+                try {
+                    const uploadFile = await prepareImageFileForUpload(file, 1200, 0.75);
+                    const result = await DCcloudinary.uploadFile(uploadFile, {
+                        folder: 'dienchan/mirror'
+                    });
+                    const publicId = result.public_id || result.asset_id || String(result.public_id || file.name).replace(/\.[^.]+$/, '');
+                    const meta = {
+                        ...result,
+                        tags: mirrorUploadTags ? mirrorUploadTags.split(/[\s,;]+/).filter(Boolean) : (Array.isArray(result.tags) ? result.tags : (typeof result.tags === 'string' ? result.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [])),
+                        context: {
+                            ...(typeof result.context === 'object' && result.context ? result.context : {}),
+                            custom: {
+                                ...((result.context && typeof result.context === 'object' && result.context.custom) || {}),
+                                note: mirrorUploadNotes || ''
+                            }
+                        }
+                    };
+                    DCcloudinary.saveMetadata(publicId, meta);
+                    uploadedCount += 1;
+                } catch (err) {
+                    console.error('uploadMirrorShapes error', err);
+                    setStatus(`Upload hình "${file.name}" thất bại: ${err.message || err}`, true);
+                }
+            }
+            mirrorUploadStatus = `Đã upload ${uploadedCount}/${mirrorUploadFiles.length} hình.`;
+            if (uploadedCount > 0) {
+                setStatus(`Đã upload ${uploadedCount} hình đồ hình phản chiếu lên Cloudinary.`);
+            }
+            mirrorUploadFiles = [];
             renderCurrentView();
         }
 
