@@ -904,6 +904,7 @@
         let mirrorUploadNotes = '';
         let mirrorUploadOpen = false;
         let mirrorUploadStatus = '';
+        let selectedMirrorShapePublicId = null;
         let selectedItem = null;
         let selectedType = null;
         let editingType = null;
@@ -1220,6 +1221,9 @@
             if (options.clear !== false) {
                 clearSelection();
             }
+            if (name === 'mirror' && options.clear !== false) {
+                selectedMirrorShapePublicId = null;
+            }
             renderCurrentView();
             if (name === 'manage' && typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser() && isFirebaseAdmin() && !userProfiles.length) {
                 loadFirebaseUserProfiles().then(() => {
@@ -1492,80 +1496,161 @@
             } catch {
                 return [];
             }
-            return Object.entries(store).map(([key, data]) => {
-                const meta = data || {};
-                const publicId = meta.public_id || meta.asset_id || String(key);
-                const tags = Array.isArray(meta.tags)
-                    ? meta.tags.filter(Boolean)
-                    : typeof meta.tags === 'string'
-                        ? meta.tags.split(',').map(tag => tag.trim()).filter(Boolean)
-                        : [];
-                const context = typeof meta.context === 'object' && meta.context ? meta.context : {};
-                const custom = typeof context.custom === 'object' && context.custom ? context.custom : {};
-                const note = String(custom.note || custom.caption || custom.alt || custom.description || '').trim();
-                const name = String(meta.original_filename || meta.public_id || key).trim();
-                const imageUrl = typeof DCcloudinary !== 'undefined'
-                    ? DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' })
-                    : '';
-                return {
-                    key,
-                    publicId,
-                    name: name || key,
-                    tags,
-                    note,
-                    imageUrl,
-                    raw: meta
-                };
-            });
+            return Object.entries(store)
+                .map(([key, data]) => {
+                    const meta = data || {};
+                    const publicId = meta.public_id || meta.asset_id || String(key);
+                    const tags = Array.isArray(meta.tags)
+                        ? meta.tags.filter(Boolean)
+                        : typeof meta.tags === 'string'
+                            ? meta.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+                            : [];
+                    const context = typeof meta.context === 'object' && meta.context ? meta.context : {};
+                    const custom = typeof context.custom === 'object' && context.custom ? context.custom : {};
+                    const note = String(custom.note || custom.caption || custom.alt || custom.description || '').trim();
+                    const name = String(meta.original_filename || meta.public_id || key).trim();
+                    const imageUrl = typeof DCcloudinary !== 'undefined'
+                        ? DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' })
+                        : '';
+                    return {
+                        key,
+                        publicId,
+                        name: name || key,
+                        tags,
+                        note,
+                        imageUrl,
+                        folder: meta.folder || (typeof meta.public_id === 'string' && meta.public_id.includes('/') ? meta.public_id.replace(/\/[^/]+$/, '') : ''),
+                        raw: meta
+                    };
+                })
+                .filter(item => item.publicId.startsWith('dienchan/mirror/') || item.folder === 'dienchan/mirror');
         }
 
         function renderMirrorShapesView(container, search) {
             const entries = getCloudinaryImageEntries();
-            const filtered = entries.filter(item => searchMatches(`${item.name} ${item.tags.join(' ')} ${item.note}`, search));
+            const hasSearch = String(search || '').trim() !== '';
+            const filtered = hasSearch
+                ? entries.filter(item => searchMatches(`${item.name} ${item.tags.join(' ')} ${item.note}`, search))
+                : entries;
             const total = entries.length;
-            if (!search.trim()) {
+            if (!total) {
                 container.innerHTML = `
                     <div class="card p-6 text-slate-600">
-                        <p class="text-lg font-semibold">Tìm nhanh đồ hình phản chiếu</p>
-                        <p class="mt-2 text-sm">Nhập tên đồ hình, keyword hoặc ghi chú để lọc nhanh các ảnh phản chiếu đã lưu trên Cloudinary.</p>
-                        <p class="mt-3 text-sm text-slate-500">Tổng số đồ hình phản chiếu đang lưu: <strong>${total}</strong></p>
+                        <p class="text-lg font-semibold">Đồ hình phản chiếu</p>
+                        <p class="mt-2 text-sm">Chưa có đồ hình phản chiếu nào được lưu.</p>
+                        <p class="mt-3 text-sm text-slate-500">Bạn có thể upload đồ hình mới trong mục Quản lý.</p>
+                    </div>
+                `;
+                return;
+            }
+            const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+            const selected = filtered.find(item => item.publicId === selectedMirrorShapePublicId) || null;
+            if (isMobile) {
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="card p-6 text-slate-600">
+                            <p class="text-lg font-semibold">Tìm nhanh đồ hình phản chiếu</p>
+                            <p class="mt-2 text-sm">Nhấn vào tên để xem ảnh và chi tiết ngay phía dưới.</p>
+                            <p class="mt-3 text-sm text-slate-500">Tổng số đồ hình phản chiếu đang lưu: <strong>${total}</strong></p>
+                        </div>
+                        <div class="space-y-3">
+                            ${filtered.length ? filtered.map(item => `
+                                <div class="card border border-slate-200 rounded-3xl overflow-hidden">
+                                    <button type="button" onclick="selectMirrorShape('${String(item.publicId).replace(/'/g, "\\'")}')" class="w-full text-left p-4 bg-white hover:bg-slate-50 flex items-center justify-between gap-3">
+                                        <div>
+                                            <div class="font-semibold text-slate-900">${item.name || item.publicId}</div>
+                                            <div class="text-xs text-slate-500 truncate">${item.publicId}</div>
+                                        </div>
+                                        <div class="text-xs text-slate-500">${item.tags.length ? item.tags.join(', ') : 'Không có keyword'}</div>
+                                    </button>
+                                    ${selected && selected.publicId === item.publicId ? `
+                                        <div class="p-4 bg-slate-50 border-t border-slate-200">
+                                            <div class="space-y-4">
+                                                <div>
+                                                    <p class="text-sm text-slate-500">Key: ${selected.publicId}</p>
+                                                </div>
+                                                <div class="rounded-3xl overflow-hidden border border-slate-200 bg-white min-h-[12rem]">
+                                                    ${selected.imageUrl ? `<img src="${selected.imageUrl}" alt="${selected.name || selected.publicId}" class="w-full h-full object-cover cursor-zoom-in" onclick="openImageLightbox('${String(selected.imageUrl).replace(/'/g, "\\'")}')" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Không có ảnh xem trước</div>`}
+                                                </div>
+                                                <div>
+                                                    <div class="text-sm font-semibold text-slate-700">Ghi chú</div>
+                                                    <p class="text-sm text-slate-500">${selected.note || 'Không có ghi chú'}</p>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2">
+                                                    ${selected.tags.length ? selected.tags.map(tag => `<span class="tag tag-primary">${tag}</span>`).join('') : '<span class="text-sm text-slate-500">Không có keyword</span>'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('') : `<div class="card p-5 text-slate-600">Không tìm thấy đồ hình phản chiếu phù hợp với từ khóa tìm kiếm.</div>`}
+                        </div>
                     </div>
                 `;
                 return;
             }
             container.innerHTML = `
                 <div class="space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div>
-                            <h2 class="text-xl font-semibold">Đồ hình phản chiếu</h2>
-                            <p class="text-sm text-slate-500">Hiển thị ${filtered.length} / ${total} đồ hình</p>
-                        </div>
+                    <div class="card p-6 text-slate-600">
+                        <p class="text-lg font-semibold">Tìm nhanh đồ hình phản chiếu</p>
+                        <p class="mt-2 text-sm">Nhập tên đồ hình, keyword hoặc ghi chú để lọc nhanh các ảnh phản chiếu đã lưu trên Cloudinary.</p>
+                        <p class="mt-3 text-sm text-slate-500">Tổng số đồ hình phản chiếu đang lưu: <strong>${total}</strong></p>
                     </div>
-                    <div class="space-y-4">
-                        ${filtered.length ? filtered.map(item => `
-                            <article class="card p-5 cursor-pointer hover:border-slate-300" onclick="${item.imageUrl ? `openImageLightbox('${String(item.imageUrl).replace(/'/g, "\\'")}')` : 'void(0)'}">
-                                <div class="grid gap-4 lg:grid-cols-[1.8fr_1fr] items-start">
-                                    <div class="space-y-3">
-                                        <h3 class="text-lg font-semibold">${item.name || item.publicId}</h3>
-                                        <p class="text-sm text-slate-500">${item.note || 'Không có ghi chú'}</p>
-                                        <div class="flex flex-wrap gap-2">
-                                            ${item.tags.length ? item.tags.map(tag => `<span class="tag tag-primary">${tag}</span>`).join('') : '<span class="text-sm text-slate-500">Không có keyword</span>'}
-                                        </div>
-                                        <div class="text-xs text-slate-400">Key: ${item.publicId}</div>
+                    <div class="grid gap-4 lg:grid-cols-[1.2fr_2fr]">
+                        <div class="space-y-3">
+                            <div class="card p-4 bg-white border border-slate-200 rounded-3xl">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div>
+                                        <h2 class="text-lg font-semibold">Danh sách đồ hình</h2>
+                                        <p class="text-sm text-slate-500">Nhấn vào tên để xem ảnh và chi tiết.</p>
                                     </div>
-                                    <div class="rounded-3xl overflow-hidden border border-slate-200 bg-slate-100 min-h-[12rem]">
-                                        ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name || item.publicId}" class="w-full h-full object-cover" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Không có ảnh xem trước</div>`}
+                                    <span class="text-sm text-slate-400">${filtered.length} items</span>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                ${filtered.length ? filtered.map(item => `
+                                    <button type="button" onclick="selectMirrorShape('${String(item.publicId).replace(/'/g, "\\'")}')" class="w-full text-left p-4 rounded-3xl border ${selected && selected.publicId === item.publicId ? 'border-sky-500 bg-sky-50' : 'border-slate-200 bg-white'} hover:border-sky-300">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <div>
+                                                <div class="font-semibold text-slate-900">${item.name || item.publicId}</div>
+                                                <div class="text-xs text-slate-500 truncate">${item.publicId}</div>
+                                            </div>
+                                            <div class="text-xs text-slate-500">${item.tags.length ? item.tags.join(', ') : 'Không có keyword'}</div>
+                                        </div>
+                                    </button>
+                                `).join('') : `<div class="card p-5 text-slate-600">Không tìm thấy đồ hình phản chiếu phù hợp với từ khóa tìm kiếm.</div>`}
+                            </div>
+                        </div>
+                        <div class="card p-5 bg-white border border-slate-200 rounded-3xl">
+                            ${selected ? `
+                                <div class="space-y-4">
+                                    <div>
+                                        <h3 class="text-xl font-semibold">${selected.name || selected.publicId}</h3>
+                                        <p class="text-sm text-slate-500">Key: ${selected.publicId}</p>
+                                    </div>
+                                    <div class="rounded-3xl overflow-hidden border border-slate-200 bg-slate-100 min-h-[16rem]">
+                                        ${selected.imageUrl ? `<img src="${selected.imageUrl}" alt="${selected.name || selected.publicId}" class="w-full h-full object-cover cursor-zoom-in" onclick="openImageLightbox('${String(selected.imageUrl).replace(/'/g, "\\'")}')" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Không có ảnh xem trước</div>`}
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="text-sm font-semibold text-slate-700">Ghi chú</div>
+                                        <p class="text-sm text-slate-500">${selected.note || 'Không có ghi chú'}</p>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${selected.tags.length ? selected.tags.map(tag => `<span class="tag tag-primary">${tag}</span>`).join('') : '<span class="text-sm text-slate-500">Không có keyword</span>'}
                                     </div>
                                 </div>
-                            </article>
-                        `).join('') : `
-                            <div class="card p-6 text-slate-600">
-                                <p class="text-sm">Không tìm thấy đồ hình phản chiếu phù hợp với từ khóa tìm kiếm.</p>
-                            </div>
-                        `}
+                            ` : `
+                                <div class="text-slate-600">Chưa có vật thể đồ hình được chọn.</div>
+                            `}
+                        </div>
                     </div>
                 </div>
             `;
+        }
+
+        function selectMirrorShape(publicId) {
+            selectedMirrorShapePublicId = publicId;
+            renderCurrentView();
         }
 
         function setActiveTab(name) {
