@@ -1553,13 +1553,15 @@
 
         function mapCloudinaryEntryToMirrorItem(entry) {
             const publicId = entry.publicId || entry.public_id || String(entry.key || '');
+            const raw = entry.raw || {};
+            const displayName = raw.display_name || raw.original_filename || entry.name || publicId.split('/').pop();
             return {
                 id: publicId,
-                title: entry.name || publicId,
+                title: displayName,
                 imageIds: publicId ? [publicId] : [],
                 note: entry.note || '',
                 tags: Array.isArray(entry.tags) ? entry.tags : typeof entry.tags === 'string' ? entry.tags.split(/[,\s]+/).filter(Boolean) : [],
-                secureUrl: entry.raw && entry.raw.secure_url ? String(entry.raw.secure_url) : ''
+                secureUrl: raw.secure_url ? String(raw.secure_url) : ''
             };
         }
 
@@ -1658,7 +1660,7 @@
                                                 <div class="text-sm text-slate-500">${item.note || 'Không có ghi chú'}</div>
                                                 <div class="flex flex-wrap gap-2">${(item.tags || []).length ? (item.tags || []).map(tag => `<span class="tag tag-primary">${tag}</span>`).join('') : '<span class="text-sm text-slate-500">Không có keyword</span>'}</div>
                                                 <div class="flex flex-wrap gap-2">
-                                                    <button type="button" onclick="selectItem('mirrors', '${String(item.id).replace(/'/g, "\\'")}'); editingType = 'mirrors'; renderCurrentView();" class="px-4 py-2 rounded-2xl bg-sky-200 text-slate-800 hover:bg-sky-300 text-sm">✏️ Chỉnh sửa</button>
+                                                    <button type="button" onclick="startEdit('mirrors', '${String(item.id).replace(/'/g, "\\'")}')" class="px-4 py-2 rounded-2xl bg-sky-200 text-slate-800 hover:bg-sky-300 text-sm">✏️ Chỉnh sửa</button>
                                                     ${isFirebaseAdmin() ? `<button type="button" onclick="deleteAppItem('mirrors', '${String(item.id).replace(/'/g, "\\'")}')" class="px-4 py-2 rounded-2xl bg-red-100 text-red-700 hover:bg-red-200 text-sm">🗑️ Xóa</button>` : ''}
                                                 </div>
                                             </div>
@@ -2600,11 +2602,12 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             if (type === 'protocols') item = protocolItems.find(i => String(i.id) === String(id) || String(i.name) === String(id));
             if (type === 'records') item = recordItems.find(i => String(i.id) === String(id) || String(i.patientName) === String(id));
             if (type === 'groups') item = groupItems.find(i => String(i.id) === String(id) || String(i.title) === String(id));
-            if (type === 'mirrors') item = mirrorItems.find(i => String(i.id) === String(id) || String(i.title) === String(id));
+            if (type === 'mirrors') item = getMirrorItems().find(i => String(i.id) === String(id) || String(i.title) === String(id));
             if (!item) return;
             selectedItem = item;
             selectedType = type;
             editingType = type;
+            if (type === 'mirrors') { renderCurrentView(); return; }
             renderDetail(item, type);
         }
 
