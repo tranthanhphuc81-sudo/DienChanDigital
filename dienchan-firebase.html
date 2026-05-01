@@ -1514,9 +1514,16 @@
                     const custom = typeof context.custom === 'object' && context.custom ? context.custom : {};
                     const note = String(custom.note || custom.caption || custom.alt || custom.description || '').trim();
                     const name = String(meta.original_filename || meta.public_id || key).trim();
-                    const imageUrl = typeof DCcloudinary !== 'undefined'
-                        ? (meta.secure_url || DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' }))
-                        : (meta.secure_url || '');
+                    let imageUrl = '';
+                    if (meta.secure_url) {
+                        try {
+                            imageUrl = new URL(String(meta.secure_url), window.location.href).href;
+                        } catch {
+                            imageUrl = String(meta.secure_url);
+                        }
+                    } else if (typeof DCcloudinary !== 'undefined') {
+                        imageUrl = DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' });
+                    }
                     return {
                         key,
                         publicId,
