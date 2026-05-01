@@ -4313,7 +4313,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
 
         document.addEventListener('DOMContentLoaded', () => {
             try { DCFirebase.initFirebase(); } catch (e) { console.warn('Không thể khởi tạo Firebase ngay.', e); }
-            showSection('manage');
+            loadCloudinaryMetadataFromStaticFile().finally(() => showSection('manage'));
         });
     </script>
 </body>
