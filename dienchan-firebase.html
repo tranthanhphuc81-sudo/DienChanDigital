@@ -2560,7 +2560,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                 <div class="space-y-3">
                     ${bodyHtml}
                     ${type === 'records' ? renderMedicalRecordHistory(item) : ''}
-                    ${type === 'huyet' && typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? '' : getSetImageUrl(item) ? `<img src="${getSetImageUrl(item)}" alt="${title}" class="w-full h-48 object-cover rounded-xl image-zoomable" onclick="event.stopPropagation(); openImageLightbox(this.src)" onerror="tryNextHuyetImage(this)" data-huyet-image-candidates='${JSON.stringify(getHuyetImageCandidates(item)).replace(/'/g, '&#39;')}' />` : ''}
+                    ${type === 'huyet' && typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? '' : (type !== 'mirrors' && getSetImageUrl(item)) ? `<img src="${getSetImageUrl(item)}" alt="${title}" class="w-full h-48 object-cover rounded-xl image-zoomable" onclick="event.stopPropagation(); openImageLightbox(this.src)" onerror="tryNextHuyetImage(this)" data-huyet-image-candidates='${JSON.stringify(getHuyetImageCandidates(item)).replace(/'/g, '&#39;')}' />` : ''}
                 </div>
             `;
         }
