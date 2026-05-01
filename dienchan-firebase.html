@@ -809,7 +809,7 @@
                 <button data-view="mirror" onclick="showSection('mirror')" class="tab-button inactive">🪞 Đồ hình</button>
                 <button data-view="records" onclick="showSection('records')" class="tab-button inactive">🩺 Hồ sơ bệnh trạng</button>
                 <button data-view="project" onclick="showSection('project')" class="tab-button inactive">🧭 Hướng dẫn sử dụng</button>
-                <button data-view="guide" onclick="showSection('guide')" class="tab-button inactive">📘 Kỹ thuật Diện Chẩn</button>
+                <button data-view="guide" onclick="showSection('guide')" class="tab-button inactive">📘 Kỹ thuật diện chẩn - Điều khiển liệu pháp</button>
             </div>
             <div id="view-controls" class="card p-5 space-y-4">
                 <div id="search-panel" class="space-y-4">
@@ -848,7 +848,7 @@
                 <button onclick="showSection('mirror')" class="nav-btn">🪞<div class="text-[11px]">Đồ hình</div></button>
                 <button onclick="showSection('records')" class="nav-btn">🩺<div class="text-[11px]">Hồ sơ</div></button>
                 <button onclick="showSection('project')" class="nav-btn">🧭<div class="text-[11px]">HDSD</div></button>
-                <button onclick="showSection('guide')" class="nav-btn">📘<div class="text-[11px]">Kỹ thuật</div></button>
+                <button onclick="showSection('guide')" class="nav-btn">📘<div class="text-[11px]">Kỹ thuật diện chẩn</div></button>
             </div>
         </nav>
     </div>
@@ -1715,10 +1715,12 @@
                         <p class="guide-note">Trang này trình bày các nguyên tắc, kỹ thuật thao tác, dụng cụ, chống chỉ định và các bước thực hiện phác đồ chuẩn. Nội dung được chia rõ từng phần để bạn tiếp cận nhanh hơn.</p>
                         <div class="guide-nav">
                             <a href="#guide-theory" class="guide-pill">Cơ sở lý thuyết</a>
-                            <a href="#guide-principle" class="guide-pill">Nguyên tắc</a>
+                            <a href="#guide-principle" class="guide-pill">Nguyên tắc cơ bản</a>
+                            <a href="#guide-nerve" class="guide-pill">12 cặp dây thần kinh</a>
                             <a href="#guide-proof" class="guide-pill">Quy tắc khóa phác đồ</a>
                             <a href="#guide-steps" class="guide-pill">Thứ tự phác đồ</a>
                             <a href="#guide-techniques" class="guide-pill">Kỹ thuật</a>
+                            <a href="#guide-action-principles" class="guide-pill">Nguyên tắc tác động</a>
                             <a href="#guide-tools" class="guide-pill">Dụng cụ</a>
                             <a href="#guide-safety" class="guide-pill">Chống chỉ định</a>
                         </div>
@@ -1743,6 +1745,75 @@
                         <div class="guide-alert">
                             <strong>Lưu ý:</strong> Diện Chẩn không phải là châm cứu Trung Quốc. Phương pháp này không dùng kim, không dùng thuốc, không bắt mạch, và dựa trên hệ phản chiếu đa hệ khác với phản xạ học cổ điển.</div>
                     </div>
+                    <div id="guide-nerve" class="guide-card">
+                        <div class="guide-section-title">🧬 Đồ hình phản chiếu và 12 cặp dây thần kinh sọ não</div>
+                        <p class="guide-note">Theo giáo trình, 12 cặp dây thần kinh sọ não được phản ánh qua những đồ hình phản chiếu chuyên sâu, giúp liên kết các tổ hợp huyệt với các đường dẫn truyền thần kinh trong cơ thể.</p>
+                        <div class="guide-technique-card">
+                            <strong>Bảng 12 cặp thần kinh sọ não theo thứ tự</strong>
+                            <table class="w-full text-slate-600 border border-slate-300 rounded-xl overflow-hidden">
+                                <thead class="bg-slate-100 text-left text-sm uppercase">
+                                    <tr>
+                                        <th class="px-3 py-2 border-b border-slate-300">Huyệt</th>
+                                        <th class="px-3 py-2 border-b border-slate-300">Tương ứng</th>
+                                        <th class="px-3 py-2 border-b border-slate-300">Dây thần kinh sọ não</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">197</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây I/1I Khứu giác (olfactory nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">34</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây II Thị giác (optic nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">184</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây III Vận nhãn chung (oculomotor nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">491</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây IV Cơ Chéo to (trochlear nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">61</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây V Phản ba (sinh ba) (trigeminal nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">45</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây VI Vận nhãn ngoài (abducens nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">5</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây VII Mặt (facial nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">74</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây VIII Thính giác (acoustic nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">64</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây IX Thiệt hầu (glossopharyngeal nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">113</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây X Phế vị (vagus nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">511-156</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây XI Gai sống (accessory nerve)</td></tr>
+                                    <tr class="border-b border-slate-200"><td class="px-3 py-2">7</td><td class="px-3 py-2">–</td><td class="px-3 py-2">Dây XII Hạ thiệt (hypoglossal nerve)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="guide-technique-card">
+                            <strong>Hình đồ hình phản chiếu 12 dây thần kinh</strong>
+                            <div class="mt-4 rounded-3xl overflow-hidden border border-slate-200 bg-slate-50">
+                                <img src="12 dây thần kinh.JPG" alt="Đồ hình phản chiếu 12 dây thần kinh" class="w-full h-auto block" />
+                            </div>
+                            <p class="mt-3 text-slate-500 text-sm">Ảnh minh họa biểu diễn vị trí huyệt phản chiếu cho 12 cặp dây thần kinh sọ não.</p>
+                        </div>
+                        <div class="guide-technique-card">
+                            <strong>Ghi chú huyệt tương ứng</strong>
+                            <ul class="text-slate-600 space-y-1">
+                                <li>• Huyệt 197 cho dây I (khứu giác): ưu tiên vùng mũi, trán giữa và đồ hình mũi để kích thích cảm giác mùi.</li>
+                                <li>• Huyệt 34 cho dây II (thị giác): dùng huyệt quanh mắt, gờ mày và trán để hỗ trợ thị lực.</li>
+                                <li>• Huyệt 184 cho dây III (vận nhãn chung): tác động quanh mắt, gờ mày và trán giữa để điều chỉnh vận động nhãn cầu và mở mi mắt.</li>
+                                <li>• Huyệt 491 cho dây IV (cơ chéo to): tập trung vùng thái dương, gờ mày và góc trong mắt để cân bằng cơ chéo và giảm đau sau mắt.</li>
+                                <li>• Huyệt 61 cho dây V (phản ba): tương ứng huyệt mặt, hàm, cằm, gờ mũi và quai hàm để xử lý đau mặt, răng và cảm giác mặt.</li>
+                                <li>• Huyệt 45 cho dây VI (vận nhãn ngoài): sử dụng huyệt ngoài mắt, gờ mày ngoài và thái dương để điều chỉnh liệt cơ mắt ngoài.</li>
+                                <li>• Huyệt 5 cho dây VII (mặt): tác động huyệt quanh môi, gờ má và thái dương để điều chỉnh cơ mặt và biểu cảm.</li>
+                                <li>• Huyệt 74 cho dây VIII (thính giác): hướng tới huyệt quanh tai, sau tai và đồ hình phản chiếu tai để giảm ù tai và chóng mặt.</li>
+                                <li>• Huyệt 64 cho dây IX (thiệt hầu): ưu tiên vùng họng, góc hàm, cổ trước và đồ hình ngực trên để hỗ trợ nuốt và họng.</li>
+                                <li>• Huyệt 113 cho dây X (phế vị): dùng huyệt cổ, sau tai và đồ hình ngực bụng trên để điều hòa tim mạch, tiêu hóa và phản xạ thực quản.</li>
+                                <li>• Huyệt 511-156 cho dây XI (gai sống): tập trung huyệt vai, gáy, sau cổ và đồ hình phản chiếu vai để cải thiện tông cơ cổ-vai.</li>
+                                <li>• Huyệt 7 cho dây XII (hạ thiệt): chọn huyệt cằm, hàm và cổ để hỗ trợ vận động lưỡi, nuốt và giọng nói.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-technique-card">
+                            <strong>Ý nghĩa</strong>
+                            <p>Đồ hình phản chiếu không chỉ mô tả cơ quan và huyệt, mà còn phản ánh các cặp dây thần kinh tương ứng để tập trung điều chỉnh dẫn truyền thần kinh và cân bằng hệ thống.</p>
+                        </div>
+                        <div class="guide-technique-card">
+                            <strong>Cách ứng dụng</strong>
+                            <ul class="text-slate-600 space-y-1">
+                                <li>• Dùng đồ hình phản chiếu để xác định cặp dây thần kinh có liên quan khi bệnh nhân bị tê bì, co giật, yếu cơ hoặc rối loạn cảm giác.</li>
+                                <li>• Thực hiện lăn, hơ, ấn, cào trên vùng phản chiếu tương ứng với cặp dây thần kinh bị ảnh hưởng.</li>
+                                <li>• Kết hợp sinh huyệt và đồ hình phản chiếu thần kinh để điều chỉnh chính xác hơn so với chỉ dùng huyệt đơn lẻ.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-alert">
+                            <strong>Ghi chú:</strong> Đồ hình phản chiếu của 12 cặp dây thần kinh là phần mở rộng chuyên sâu. Khi chưa chắc chắn, hãy ưu tiên xác định sinh huyệt và đồ hình trước, rồi mới tinh chỉnh bằng kỹ thuật dây thần kinh.
+                        </div>
+                    </div>
                     <div id="guide-basic-groups" class="guide-card">
                         <div class="guide-section-title">🧩 8 bộ huyệt căn bản</div>
                         <p class="guide-note">Trong Diện Chẩn, 8 bộ huyệt căn bản là những tổ hợp chính giúp xử lý các thể bệnh khác nhau theo nguyên lý bổ, tả, điều hòa và giải độc.</p>
@@ -1763,6 +1834,33 @@
                         <p class="guide-note">Luôn ưu tiên làm bên trái khuôn mặt trước, bên phải sau để thuận theo chiều vận hành khí cơ thể. Ví dụ: huyệt 50 (Gan – chỉ bên phải), huyệt 37 (Tỳ – chỉ bên trái).</p>
                         <div class="guide-alert">
                             <strong>Lưu ý:</strong> Trái – phải được tính từ góc nhìn của người bệnh (tay trái / tay phải của bệnh nhân). Khi người thao tác đứng đối mặt, bên trái bệnh nhân sẽ nằm về phía tay phải của người thao tác — nhưng vẫn gọi là "bên trái" theo quy ước.
+                        </div>
+                    </div>
+                    <div id="guide-action-principles" class="guide-card">
+                        <div class="guide-section-title">🧠 Nguyên tắc tác động</div>
+                        <p class="guide-note">Trang 128-129 của giáo trình nhấn mạnh 5 nguyên tắc căn bản và 5 phương pháp chữa rõ ràng để Diện Chẩn vận hành hiệu quả.</p>
+                        <div class="guide-technique-card">
+                            <strong>5 nguyên tắc căn bản</strong>
+                            <ul class="text-slate-600 space-y-1">
+                                <li>• Nắm vững lý thuyết: phản chiếu, cục bộ-lân cận, giao thoa, đồng bộ-thống điểm, bất thống điểm, và sinh khắc.</li>
+                                <li>• Nắm vững đồ hình: hiểu 28 đồ hình và cách chúng phản chiếu toàn bộ cơ thể.</li>
+                                <li>• Dò sinh huyệt: tìm đúng huyệt nhạy cảm, dễ xuất hiện cảm giác đau, nóng, cứng hoặc xì hơi.</li>
+                                <li>• Thật linh hoạt: thay đổi sinh huyệt hoặc đồ hình theo từng bệnh nhân.</li>
+                                <li>• Luôn sáng tạo: kết hợp thuyết, đồ hình, sinh huyệt và phương pháp điều trị linh hoạt.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-technique-card">
+                            <strong>5 phương pháp chữa</strong>
+                            <ul class="text-slate-600 space-y-1">
+                                <li>• Đồng Ứng / Đồng Hình: dùng những bộ phận đồng thanh, đồng hình, đồng âm để chữa. Ví dụ: chữa sống lưng có thể dùng sống mũi, sống tay, sống chân, sống đầu.</li>
+                                <li>• Đối Xứng: dùng sự đối xứng của cơ quan để chữa trị. Ví dụ: đau tay trái thì hơ/lăn tay phải; đau chân trái thì hơ/lăn chân phải; đau tay trái cũng có thể hơ/lăn chân trái theo trục ngang. Đau phải thì chữa trái; đau trong thì chữa ngoài; đau trên thì chữa dưới hoặc ngược lại.</li>
+                                <li>• Đồ Hình Phản Chiếu: chữa theo các đồ hình phản chiếu đã xác định, tức là dùng bộ phận có cùng đồ hình để xử lý bệnh.</li>
+                                <li>• Phác Hình Đặc Trị: sử dụng các bộ "Định Huyệt với Đồ Hình" đã tích lũy từ kinh nghiệm lâm sàng. Ví dụ: bộ "Tiêu Bướu" gồm các huyệt 41, 143, 127, 19, 37, 38.</li>
+                                <li>• Khai Thông Huyệt Đạo: giải thông bế tắc ngay tại chỗ, theo nguyên lý "ĐAU ĐÂU LĂN, HƠ ĐÓ". Ví dụ: đau chân thì lăn và hơ ngay chân; đau tay thì lăn hoặc hơ ngay tay.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-alert">
+                            <strong>Ghi nhớ:</strong> đau chỗ nào là khí không thông chỗ đó. Tác động tại chỗ hoặc vùng phản chiếu tương ứng sẽ giúp khai thông nhanh hơn.
                         </div>
                     </div>
                     <div id="guide-proof" class="guide-card">
@@ -1831,12 +1929,66 @@
                                 </ul>
                             </div>
                             <div class="guide-technique-card">
-                                <strong>6. Kỹ thuật Gõ nhẹ (Điểm huyệt)</strong>
+                                <strong>6. Kỹ thuật Chọn huyệt và xử lý sinh huyệt</strong>
+                                <p>Dò tìm sinh huyệt bằng que dò để xác định huyệt nhạy cảm nhất: đau, bỏng, cứng, nóng, hoặc xì hơi.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Xác định điểm phản chiếu chính xác, giúp điều khiển liệu pháp đi đúng hướng.</li>
+                                    <li>• Áp dụng: Huyệt sinh huyệt trong phác đồ, đặc biệt cho bệnh cấp tính và các thể bệnh phức tạp.</li>
+                                    <li>• Lưu ý: Sinh huyệt thường nằm ở những điểm có cảm giác nhạy, nên thực hiện dò nhẹ nhàng trước khi xử lý mạnh.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>7. Nguyên tắc Điều khiển Liệu pháp</strong>
+                                <p>Điều Khiển Liệu pháp là phương pháp phòng và trị bệnh bằng nhiều hình thức trên vùng mặt: châm, chích, lể, hơnóng, chườm, xoa, day, dán cao, bấm ấn, vuốt, bôi dầu, xung điện.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Mỗi huyệt trên mặt vừa là trạm thu-phát thông tin, vừa là nơi điều chỉnh thông tin sinh học của cơ thể.</li>
+                                    <li>• Mặt là vùng điều khiển, vì nó chứa các huyệt liên kết với toàn thân nên tác động đúng huyệt sẽ giúp cơ thể tự điều chỉnh.</li>
+                                    <li>• Áp dụng: ưu tiên tổ hợp huyệt theo đồ hình phản chiếu, kết hợp nhiều kỹ thuật trên cùng huyệt khi cần để dễ dàng điều hòa cơ thể.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>8. Kỹ thuật Gõ nhẹ (Điểm huyệt)</strong>
                                 <p>Dùng đầu que dò gõ nhẹ lên huyệt theo nhịp đều, khoảng 1–2 lần/giây.</p>
                                 <ul class="text-slate-600 space-y-1">
                                     <li>• Tác dụng: Khai thông, dẫn khí, kích hoạt huyệt nhẹ nhàng.</li>
                                     <li>• Áp dụng: Vùng trán, huyệt nhỏ, người lớn tuổi hoặc nhạy cảm.</li>
                                     <li>• Lưu ý: Chỉ dùng lực cổ tay, không dùng lực cánh tay.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>9. Kỹ thuật Lăn</strong>
+                                <p>Dùng cây lăn với góc khoảng 45 độ, lăn trên da theo hướng da, tới lui nhiều lần.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Thông bế tắc, kích thích tuần hoàn, làm ấm và kích hoạt huyệt.</li>
+                                    <li>• Áp dụng: Dùng cây lăn nhỏ cho mặt, trung bình cho cổ/gáy/tay/chân, lớn cho lưng và thân mình.</li>
+                                    <li>• Lưu ý: Lăn nhiều lần trên vùng nhạy cảm đến khi cảm giác bệnh giảm, tăng lực dần đều.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>10. Kỹ thuật Cào</strong>
+                                <p>Cầm cán cào chắc tay, đưa răng cào thẳng góc với da, cào dọc hoặc ngang tùy thuận tay.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Kích thích mạnh, phá vỡ tính bế tắc và tạo phản ứng điều chỉnh.</li>
+                                    <li>• Áp dụng: Vùng phản chiếu lưng, đầu, tay, chân hoặc nơi có cục u, bầm.</li>
+                                    <li>• Lưu ý: Lực đều, chú ý vùng nhạy cảm, không cào quá sâu để tránh bầm tím.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>11. Kỹ thuật Hơ nóng</strong>
+                                <p>Dùng điếu ngải cứu hoặc đầu nguồn nhiệt để hơ vùng huyệt cách da khoảng 1 cm.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Tạo nhiệt, tăng khí huyết, khu nóng, hỗ trợ điều chỉnh các huyệt đông.</li>
+                                    <li>• Áp dụng: Dùng cho đau, phong tê, các vùng lạnh hoặc cần tăng nhiệt tại huyệt.</li>
+                                    <li>• Lưu ý: Khi thấy hút nóng hoặc nóng buốt là đúng; nếu quá nóng thì giãn ra, làm vài lần 3 lần rồi nghỉ.</li>
+                                </ul>
+                            </div>
+                            <div class="guide-technique-card">
+                                <strong>12. Kỹ thuật Chườm lạnh</strong>
+                                <p>Chườm đá hoặc nước đá lên vùng nóng, viêm, sốt hoặc khi cần hạ nhiệt cục bộ.</p>
+                                <ul class="text-slate-600 space-y-1">
+                                    <li>• Tác dụng: Hạ nhiệt, giảm viêm, chống sưng, hỗ trợ điều hòa khi phản chiếu nóng.</li>
+                                    <li>• Áp dụng: Cảm nóng, sốt, viêm hoặc phần da bị nóng rát sau khi day/hơ.</li>
+                                    <li>• Lưu ý: Chườm nhẹ, luân phiên nếu cần, kết hợp với ấn/hơ/lăn cho các phác đồ điều trị.</li>
                                 </ul>
                             </div>
                         </div>
