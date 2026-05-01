@@ -3345,6 +3345,23 @@
       }
     }
   },
+  "dienchan/data/bo-bo-am-huyet": {
+    "public_id": "dienchan/data/bo-bo-am-huyet",
+    "original_filename": "bo-bo-am-huyet",
+    "secure_url": "data/bo-bo-am-huyet.png",
+    "folder": "dienchan/data",
+    "tags": [
+      "bo",
+      "bo",
+      "am",
+      "huyet"
+    ],
+    "context": {
+      "custom": {
+        "note": "bo bo am huyet"
+      }
+    }
+  },
   "dienchan/data/Bo-Dieu-Hoa-Lam-Am": {
     "public_id": "dienchan/data/Bo-Dieu-Hoa-Lam-Am",
     "original_filename": "Bo-Dieu-Hoa-Lam-Am",
@@ -3375,6 +3392,23 @@
     "context": {
       "custom": {
         "note": "Bo Giang"
+      }
+    }
+  },
+  "dienchan/data/bo-tan-mau-bam": {
+    "public_id": "dienchan/data/bo-tan-mau-bam",
+    "original_filename": "bo-tan-mau-bam",
+    "secure_url": "data/bo-tan-mau-bam.png",
+    "folder": "dienchan/data",
+    "tags": [
+      "bo",
+      "tan",
+      "mau",
+      "bam"
+    ],
+    "context": {
+      "custom": {
+        "note": "bo tan mau bam"
       }
     }
   },
@@ -3424,6 +3458,280 @@
       }
     }
   },
+  "dienchan/data/Bàn chân trên lưng và Nội tạng trên lưng": {
+    "public_id": "dienchan/data/Bàn chân trên lưng và Nội tạng trên lưng",
+    "original_filename": "Bàn chân trên lưng và Nội tạng trên lưng",
+    "secure_url": "data/Bàn chân trên lưng và Nội tạng trên lưng.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "b",
+      "n",
+      "ch",
+      "n",
+      "tr",
+      "n",
+      "l",
+      "ng",
+      "v",
+      "n",
+      "i",
+      "t",
+      "ng",
+      "tr",
+      "n",
+      "l",
+      "ng"
+    ],
+    "context": {
+      "custom": {
+        "note": "Bàn chân trên lưng và Nội tạng trên lưng"
+      }
+    }
+  },
+  "dienchan/data/Bàn chân trên mặt và Ngoại vi cơ thể trên bàn chân": {
+    "public_id": "dienchan/data/Bàn chân trên mặt và Ngoại vi cơ thể trên bàn chân",
+    "original_filename": "Bàn chân trên mặt và Ngoại vi cơ thể trên bàn chân",
+    "secure_url": "data/Bàn chân trên mặt và Ngoại vi cơ thể trên bàn chân.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "b",
+      "n",
+      "ch",
+      "n",
+      "tr",
+      "n",
+      "m",
+      "t",
+      "v",
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "b",
+      "n",
+      "ch",
+      "n"
+    ],
+    "context": {
+      "custom": {
+        "note": "Bàn chân trên mặt và Ngoại vi cơ thể trên bàn chân"
+      }
+    }
+  },
+  "dienchan/data/Bàn chân trên mặt và Nội tạng trên bàn chân": {
+    "public_id": "dienchan/data/Bàn chân trên mặt và Nội tạng trên bàn chân",
+    "original_filename": "Bàn chân trên mặt và Nội tạng trên bàn chân",
+    "secure_url": "data/Bàn chân trên mặt và Nội tạng trên bàn chân.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "b",
+      "n",
+      "ch",
+      "n",
+      "tr",
+      "n",
+      "m",
+      "t",
+      "v",
+      "n",
+      "i",
+      "t",
+      "ng",
+      "tr",
+      "n",
+      "b",
+      "n",
+      "ch",
+      "n"
+    ],
+    "context": {
+      "custom": {
+        "note": "Bàn chân trên mặt và Nội tạng trên bàn chân"
+      }
+    }
+  },
+  "dienchan/data/Bàn chân và ngoại vi cơ thể trên lưng": {
+    "public_id": "dienchan/data/Bàn chân và ngoại vi cơ thể trên lưng",
+    "original_filename": "Bàn chân và ngoại vi cơ thể trên lưng",
+    "secure_url": "data/Bàn chân và ngoại vi cơ thể trên lưng.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "b",
+      "n",
+      "ch",
+      "n",
+      "v",
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "l",
+      "ng"
+    ],
+    "context": {
+      "custom": {
+        "note": "Bàn chân và ngoại vi cơ thể trên lưng"
+      }
+    }
+  },
+  "dienchan/data/Bàn tay mở trên mặt và Ngoại vi cơ thể trên bàn tay": {
+    "public_id": "dienchan/data/Bàn tay mở trên mặt và Ngoại vi cơ thể trên bàn tay",
+    "original_filename": "Bàn tay mở trên mặt và Ngoại vi cơ thể trên bàn tay",
+    "secure_url": "data/Bàn tay mở trên mặt và Ngoại vi cơ thể trên bàn tay.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "b",
+      "n",
+      "tay",
+      "m",
+      "tr",
+      "n",
+      "m",
+      "t",
+      "v",
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "b",
+      "n",
+      "tay"
+    ],
+    "context": {
+      "custom": {
+        "note": "Bàn tay mở trên mặt và Ngoại vi cơ thể trên bàn tay"
+      }
+    }
+  },
+  "dienchan/data/Bàn tay nắm trên mặt và Ngoại vi cơ thể trên bàn tay": {
+    "public_id": "dienchan/data/Bàn tay nắm trên mặt và Ngoại vi cơ thể trên bàn tay",
+    "original_filename": "Bàn tay nắm trên mặt và Ngoại vi cơ thể trên bàn tay",
+    "secure_url": "data/Bàn tay nắm trên mặt và Ngoại vi cơ thể trên bàn tay.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "b",
+      "n",
+      "tay",
+      "n",
+      "m",
+      "tr",
+      "n",
+      "m",
+      "t",
+      "v",
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "b",
+      "n",
+      "tay"
+    ],
+    "context": {
+      "custom": {
+        "note": "Bàn tay nắm trên mặt và Ngoại vi cơ thể trên bàn tay"
+      }
+    }
+  },
+  "dienchan/data/Bàn tay nắm trên mặt và Nội tạng trên bàn tay": {
+    "public_id": "dienchan/data/Bàn tay nắm trên mặt và Nội tạng trên bàn tay",
+    "original_filename": "Bàn tay nắm trên mặt và Nội tạng trên bàn tay",
+    "secure_url": "data/Bàn tay nắm trên mặt và Nội tạng trên bàn tay.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "b",
+      "n",
+      "tay",
+      "n",
+      "m",
+      "tr",
+      "n",
+      "m",
+      "t",
+      "v",
+      "n",
+      "i",
+      "t",
+      "ng",
+      "tr",
+      "n",
+      "b",
+      "n",
+      "tay"
+    ],
+    "context": {
+      "custom": {
+        "note": "Bàn tay nắm trên mặt và Nội tạng trên bàn tay"
+      }
+    }
+  },
+  "dienchan/data/Bàn tay nắm và ngoại vi cơ thể trên lưng": {
+    "public_id": "dienchan/data/Bàn tay nắm và ngoại vi cơ thể trên lưng",
+    "original_filename": "Bàn tay nắm và ngoại vi cơ thể trên lưng",
+    "secure_url": "data/Bàn tay nắm và ngoại vi cơ thể trên lưng.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "b",
+      "n",
+      "tay",
+      "n",
+      "m",
+      "v",
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "l",
+      "ng"
+    ],
+    "context": {
+      "custom": {
+        "note": "Bàn tay nắm và ngoại vi cơ thể trên lưng"
+      }
+    }
+  },
+  "dienchan/data/Bàn tay nắm và nội tạng trên lưng": {
+    "public_id": "dienchan/data/Bàn tay nắm và nội tạng trên lưng",
+    "original_filename": "Bàn tay nắm và nội tạng trên lưng",
+    "secure_url": "data/Bàn tay nắm và nội tạng trên lưng.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "b",
+      "n",
+      "tay",
+      "n",
+      "m",
+      "v",
+      "n",
+      "i",
+      "t",
+      "ng",
+      "tr",
+      "n",
+      "l",
+      "ng"
+    ],
+    "context": {
+      "custom": {
+        "note": "Bàn tay nắm và nội tạng trên lưng"
+      }
+    }
+  },
   "dienchan/data/Cap-Cuu-Ngat-Xiu-Trung-Gio": {
     "public_id": "dienchan/data/Cap-Cuu-Ngat-Xiu-Trung-Gio",
     "original_filename": "Cap-Cuu-Ngat-Xiu-Trung-Gio",
@@ -3440,22 +3748,6 @@
     "context": {
       "custom": {
         "note": "Cap Cuu Ngat Xiu Trung Gio"
-      }
-    }
-  },
-  "dienchan/data/Chong-Nghen-Nghet": {
-    "public_id": "dienchan/data/Chong-Nghen-Nghet",
-    "original_filename": "Chong-Nghen-Nghet",
-    "secure_url": "data/Chong-Nghen-Nghet.png",
-    "folder": "dienchan/data",
-    "tags": [
-      "chong",
-      "nghen",
-      "nghet"
-    ],
-    "context": {
-      "custom": {
-        "note": "Chong Nghen Nghet"
       }
     }
   },
@@ -3480,21 +3772,100 @@
       }
     }
   },
-  "dienchan/data/Giam-Mo-Hoi-Tiet-Dich": {
-    "public_id": "dienchan/data/Giam-Mo-Hoi-Tiet-Dich",
-    "original_filename": "Giam-Mo-Hoi-Tiet-Dich",
-    "secure_url": "data/Giam-Mo-Hoi-Tiet-Dich.png",
+  "dienchan/data/Chong-Nghen-Nghet": {
+    "public_id": "dienchan/data/Chong-Nghen-Nghet",
+    "original_filename": "Chong-Nghen-Nghet",
+    "secure_url": "data/Chong-Nghen-Nghet.png",
     "folder": "dienchan/data",
     "tags": [
-      "giam",
-      "mo",
-      "hoi",
-      "tiet",
-      "dich"
+      "chong",
+      "nghen",
+      "nghet"
     ],
     "context": {
       "custom": {
-        "note": "Giam Mo Hoi Tiet Dich"
+        "note": "Chong Nghen Nghet"
+      }
+    }
+  },
+  "dienchan/data/Cơ quan sinh dục trên mặt": {
+    "public_id": "dienchan/data/Cơ quan sinh dục trên mặt",
+    "original_filename": "Cơ quan sinh dục trên mặt",
+    "secure_url": "data/Cơ quan sinh dục trên mặt.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "c",
+      "quan",
+      "sinh",
+      "d",
+      "c",
+      "tr",
+      "n",
+      "m",
+      "t"
+    ],
+    "context": {
+      "custom": {
+        "note": "Cơ quan sinh dục trên mặt"
+      }
+    }
+  },
+  "dienchan/data/Cơ thể trên ngực bụng": {
+    "public_id": "dienchan/data/Cơ thể trên ngực bụng",
+    "original_filename": "Cơ thể trên ngực bụng",
+    "secure_url": "data/Cơ thể trên ngực bụng.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "c",
+      "th",
+      "tr",
+      "n",
+      "ng",
+      "c",
+      "b",
+      "ng"
+    ],
+    "context": {
+      "custom": {
+        "note": "Cơ thể trên ngực bụng"
+      }
+    }
+  },
+  "dienchan/data/Cột sống trên trán": {
+    "public_id": "dienchan/data/Cột sống trên trán",
+    "original_filename": "Cột sống trên trán",
+    "secure_url": "data/Cột sống trên trán.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "c",
+      "t",
+      "s",
+      "ng",
+      "tr",
+      "n",
+      "tr",
+      "n"
+    ],
+    "context": {
+      "custom": {
+        "note": "Cột sống trên trán"
+      }
+    }
+  },
+  "dienchan/data/dinh-huyet-full-1": {
+    "public_id": "dienchan/data/dinh-huyet-full-1",
+    "original_filename": "dinh-huyet-full-1",
+    "secure_url": "data/dinh-huyet-full-1.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "dinh",
+      "huyet",
+      "full",
+      "1"
+    ],
+    "context": {
+      "custom": {
+        "note": "dinh huyet full 1"
       }
     }
   },
@@ -3521,6 +3892,24 @@
       }
     }
   },
+  "dienchan/data/Giam-Mo-Hoi-Tiet-Dich": {
+    "public_id": "dienchan/data/Giam-Mo-Hoi-Tiet-Dich",
+    "original_filename": "Giam-Mo-Hoi-Tiet-Dich",
+    "secure_url": "data/Giam-Mo-Hoi-Tiet-Dich.png",
+    "folder": "dienchan/data",
+    "tags": [
+      "giam",
+      "mo",
+      "hoi",
+      "tiet",
+      "dich"
+    ],
+    "context": {
+      "custom": {
+        "note": "Giam Mo Hoi Tiet Dich"
+      }
+    }
+  },
   "dienchan/data/Giam-Tiet-Dich": {
     "public_id": "dienchan/data/Giam-Tiet-Dich",
     "original_filename": "Giam-Tiet-Dich",
@@ -3534,6 +3923,85 @@
     "context": {
       "custom": {
         "note": "Giam Tiet Dich"
+      }
+    }
+  },
+  "dienchan/data/ha-huyet-ap": {
+    "public_id": "dienchan/data/ha-huyet-ap",
+    "original_filename": "ha-huyet-ap",
+    "secure_url": "data/ha-huyet-ap.png",
+    "folder": "dienchan/data",
+    "tags": [
+      "ha",
+      "huyet",
+      "ap"
+    ],
+    "context": {
+      "custom": {
+        "note": "ha huyet ap"
+      }
+    }
+  },
+  "dienchan/data/Hai bắp chân trên mặt": {
+    "public_id": "dienchan/data/Hai bắp chân trên mặt",
+    "original_filename": "Hai bắp chân trên mặt",
+    "secure_url": "data/Hai bắp chân trên mặt.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "hai",
+      "b",
+      "p",
+      "ch",
+      "n",
+      "tr",
+      "n",
+      "m",
+      "t"
+    ],
+    "context": {
+      "custom": {
+        "note": "Hai bắp chân trên mặt"
+      }
+    }
+  },
+  "dienchan/data/Hai chân duỗi thằng_dang ra": {
+    "public_id": "dienchan/data/Hai chân duỗi thằng_dang ra",
+    "original_filename": "Hai chân duỗi thằng_dang ra",
+    "secure_url": "data/Hai chân duỗi thằng_dang ra.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "hai",
+      "ch",
+      "n",
+      "du",
+      "i",
+      "th",
+      "ng",
+      "dang",
+      "ra"
+    ],
+    "context": {
+      "custom": {
+        "note": "Hai chân duỗi thằng dang ra"
+      }
+    }
+  },
+  "dienchan/data/Hai chân ngang mày": {
+    "public_id": "dienchan/data/Hai chân ngang mày",
+    "original_filename": "Hai chân ngang mày",
+    "secure_url": "data/Hai chân ngang mày.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "hai",
+      "ch",
+      "n",
+      "ngang",
+      "m",
+      "y"
+    ],
+    "context": {
+      "custom": {
+        "note": "Hai chân ngang mày"
       }
     }
   },
@@ -3552,6 +4020,218 @@
     "context": {
       "custom": {
         "note": "Hay Quen Kem Tri Nho"
+      }
+    }
+  },
+  "dienchan/data/Loa tai trên mặt và Ngoại vi cơ thể trên loa tai": {
+    "public_id": "dienchan/data/Loa tai trên mặt và Ngoại vi cơ thể trên loa tai",
+    "original_filename": "Loa tai trên mặt và Ngoại vi cơ thể trên loa tai",
+    "secure_url": "data/Loa tai trên mặt và Ngoại vi cơ thể trên loa tai.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "loa",
+      "tai",
+      "tr",
+      "n",
+      "m",
+      "t",
+      "v",
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "loa",
+      "tai"
+    ],
+    "context": {
+      "custom": {
+        "note": "Loa tai trên mặt và Ngoại vi cơ thể trên loa tai"
+      }
+    }
+  },
+  "dienchan/data/Loa tai trên mặt và Nội tạng trên loa tai": {
+    "public_id": "dienchan/data/Loa tai trên mặt và Nội tạng trên loa tai",
+    "original_filename": "Loa tai trên mặt và Nội tạng trên loa tai",
+    "secure_url": "data/Loa tai trên mặt và Nội tạng trên loa tai.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "loa",
+      "tai",
+      "tr",
+      "n",
+      "m",
+      "t",
+      "v",
+      "n",
+      "i",
+      "t",
+      "ng",
+      "tr",
+      "n",
+      "loa",
+      "tai"
+    ],
+    "context": {
+      "custom": {
+        "note": "Loa tai trên mặt và Nội tạng trên loa tai"
+      }
+    }
+  },
+  "dienchan/data/Ngoại vi cơ thể trên da đầu": {
+    "public_id": "dienchan/data/Ngoại vi cơ thể trên da đầu",
+    "original_filename": "Ngoại vi cơ thể trên da đầu",
+    "secure_url": "data/Ngoại vi cơ thể trên da đầu.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "da",
+      "u"
+    ],
+    "context": {
+      "custom": {
+        "note": "Ngoại vi cơ thể trên da đầu"
+      }
+    }
+  },
+  "dienchan/data/Ngoại vi cơ thể trên mặt": {
+    "public_id": "dienchan/data/Ngoại vi cơ thể trên mặt",
+    "original_filename": "Ngoại vi cơ thể trên mặt",
+    "secure_url": "data/Ngoại vi cơ thể trên mặt.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "m",
+      "t"
+    ],
+    "context": {
+      "custom": {
+        "note": "Ngoại vi cơ thể trên mặt"
+      }
+    }
+  },
+  "dienchan/data/Ngoại vi cơ thể trên mặt_nhìn nghiêng": {
+    "public_id": "dienchan/data/Ngoại vi cơ thể trên mặt_nhìn nghiêng",
+    "original_filename": "Ngoại vi cơ thể trên mặt_nhìn nghiêng",
+    "secure_url": "data/Ngoại vi cơ thể trên mặt_nhìn nghiêng.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "m",
+      "t",
+      "nh",
+      "n",
+      "nghi",
+      "ng"
+    ],
+    "context": {
+      "custom": {
+        "note": "Ngoại vi cơ thể trên mặt nhìn nghiêng"
+      }
+    }
+  },
+  "dienchan/data/Ngoại vi cơ thể trên trán và tai": {
+    "public_id": "dienchan/data/Ngoại vi cơ thể trên trán và tai",
+    "original_filename": "Ngoại vi cơ thể trên trán và tai",
+    "secure_url": "data/Ngoại vi cơ thể trên trán và tai.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "ngo",
+      "i",
+      "vi",
+      "c",
+      "th",
+      "tr",
+      "n",
+      "tr",
+      "n",
+      "v",
+      "tai"
+    ],
+    "context": {
+      "custom": {
+        "note": "Ngoại vi cơ thể trên trán và tai"
+      }
+    }
+  },
+  "dienchan/data/Nội tạng trên mặt": {
+    "public_id": "dienchan/data/Nội tạng trên mặt",
+    "original_filename": "Nội tạng trên mặt",
+    "secure_url": "data/Nội tạng trên mặt.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "n",
+      "i",
+      "t",
+      "ng",
+      "tr",
+      "n",
+      "m",
+      "t"
+    ],
+    "context": {
+      "custom": {
+        "note": "Nội tạng trên mặt"
+      }
+    }
+  },
+  "dienchan/data/Nội tạng trên trán": {
+    "public_id": "dienchan/data/Nội tạng trên trán",
+    "original_filename": "Nội tạng trên trán",
+    "secure_url": "data/Nội tạng trên trán.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "n",
+      "i",
+      "t",
+      "ng",
+      "tr",
+      "n",
+      "tr",
+      "n"
+    ],
+    "context": {
+      "custom": {
+        "note": "Nội tạng trên trán"
+      }
+    }
+  },
+  "dienchan/data/Phổi trên mặt": {
+    "public_id": "dienchan/data/Phổi trên mặt",
+    "original_filename": "Phổi trên mặt",
+    "secure_url": "data/Phổi trên mặt.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "ph",
+      "i",
+      "tr",
+      "n",
+      "m",
+      "t"
+    ],
+    "context": {
+      "custom": {
+        "note": "Phổi trên mặt"
       }
     }
   },
@@ -3587,6 +4267,42 @@
       }
     }
   },
+  "dienchan/data/Thai-doc": {
+    "public_id": "dienchan/data/Thai-doc",
+    "original_filename": "Thai-doc",
+    "secure_url": "data/Thai-doc.png",
+    "folder": "dienchan/data",
+    "tags": [
+      "thai",
+      "doc"
+    ],
+    "context": {
+      "custom": {
+        "note": "Thai doc"
+      }
+    }
+  },
+  "dienchan/data/Thái cực đồ trên mặt": {
+    "public_id": "dienchan/data/Thái cực đồ trên mặt",
+    "original_filename": "Thái cực đồ trên mặt",
+    "secure_url": "data/Thái cực đồ trên mặt.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "th",
+      "i",
+      "c",
+      "c",
+      "tr",
+      "n",
+      "m",
+      "t"
+    ],
+    "context": {
+      "custom": {
+        "note": "Thái cực đồ trên mặt"
+      }
+    }
+  },
   "dienchan/data/Tieu-Buou-Tieu-Khoi-U": {
     "public_id": "dienchan/data/Tieu-Buou-Tieu-Khoi-U",
     "original_filename": "Tieu-Buou-Tieu-Khoi-U",
@@ -3602,107 +4318,6 @@
     "context": {
       "custom": {
         "note": "Tieu Buou Tieu Khoi U"
-      }
-    }
-  },
-  "dienchan/data/Tieu-Hoi-Thong-Khi": {
-    "public_id": "dienchan/data/Tieu-Hoi-Thong-Khi",
-    "original_filename": "Tieu-Hoi-Thong-Khi",
-    "secure_url": "data/Tieu-Hoi-Thong-Khi.png",
-    "folder": "dienchan/data",
-    "tags": [
-      "tieu",
-      "hoi",
-      "thong",
-      "khi"
-    ],
-    "context": {
-      "custom": {
-        "note": "Tieu Hoi Thong Khi"
-      }
-    }
-  },
-  "dienchan/data/Tuc-Nguc-Kho-Tho": {
-    "public_id": "dienchan/data/Tuc-Nguc-Kho-Tho",
-    "original_filename": "Tuc-Nguc-Kho-Tho",
-    "secure_url": "data/Tuc-Nguc-Kho-Tho.png",
-    "folder": "dienchan/data",
-    "tags": [
-      "tuc",
-      "nguc",
-      "kho",
-      "tho"
-    ],
-    "context": {
-      "custom": {
-        "note": "Tuc Nguc Kho Tho"
-      }
-    }
-  },
-  "dienchan/data/bo-bo-am-huyet": {
-    "public_id": "dienchan/data/bo-bo-am-huyet",
-    "original_filename": "bo-bo-am-huyet",
-    "secure_url": "data/bo-bo-am-huyet.png",
-    "folder": "dienchan/data",
-    "tags": [
-      "bo",
-      "bo",
-      "am",
-      "huyet"
-    ],
-    "context": {
-      "custom": {
-        "note": "bo bo am huyet"
-      }
-    }
-  },
-  "dienchan/data/bo-tan-mau-bam": {
-    "public_id": "dienchan/data/bo-tan-mau-bam",
-    "original_filename": "bo-tan-mau-bam",
-    "secure_url": "data/bo-tan-mau-bam.png",
-    "folder": "dienchan/data",
-    "tags": [
-      "bo",
-      "tan",
-      "mau",
-      "bam"
-    ],
-    "context": {
-      "custom": {
-        "note": "bo tan mau bam"
-      }
-    }
-  },
-  "dienchan/data/dinh-huyet-full-1": {
-    "public_id": "dienchan/data/dinh-huyet-full-1",
-    "original_filename": "dinh-huyet-full-1",
-    "secure_url": "data/dinh-huyet-full-1.jpg",
-    "folder": "dienchan/data",
-    "tags": [
-      "dinh",
-      "huyet",
-      "full",
-      "1"
-    ],
-    "context": {
-      "custom": {
-        "note": "dinh huyet full 1"
-      }
-    }
-  },
-  "dienchan/data/ha-huyet-ap": {
-    "public_id": "dienchan/data/ha-huyet-ap",
-    "original_filename": "ha-huyet-ap",
-    "secure_url": "data/ha-huyet-ap.png",
-    "folder": "dienchan/data",
-    "tags": [
-      "ha",
-      "huyet",
-      "ap"
-    ],
-    "context": {
-      "custom": {
-        "note": "ha huyet ap"
       }
     }
   },
@@ -3723,6 +4338,23 @@
     "context": {
       "custom": {
         "note": "tieu dom long dom tieu long dom"
+      }
+    }
+  },
+  "dienchan/data/Tieu-Hoi-Thong-Khi": {
+    "public_id": "dienchan/data/Tieu-Hoi-Thong-Khi",
+    "original_filename": "Tieu-Hoi-Thong-Khi",
+    "secure_url": "data/Tieu-Hoi-Thong-Khi.png",
+    "folder": "dienchan/data",
+    "tags": [
+      "tieu",
+      "hoi",
+      "thong",
+      "khi"
+    ],
+    "context": {
+      "custom": {
+        "note": "Tieu Hoi Thong Khi"
       }
     }
   },
@@ -3758,6 +4390,44 @@
     "context": {
       "custom": {
         "note": "tieu viem tieu doc"
+      }
+    }
+  },
+  "dienchan/data/Tim và não trên mặt": {
+    "public_id": "dienchan/data/Tim và não trên mặt",
+    "original_filename": "Tim và não trên mặt",
+    "secure_url": "data/Tim và não trên mặt.jpg",
+    "folder": "dienchan/data",
+    "tags": [
+      "tim",
+      "v",
+      "n",
+      "o",
+      "tr",
+      "n",
+      "m",
+      "t"
+    ],
+    "context": {
+      "custom": {
+        "note": "Tim và não trên mặt"
+      }
+    }
+  },
+  "dienchan/data/Tuc-Nguc-Kho-Tho": {
+    "public_id": "dienchan/data/Tuc-Nguc-Kho-Tho",
+    "original_filename": "Tuc-Nguc-Kho-Tho",
+    "secure_url": "data/Tuc-Nguc-Kho-Tho.png",
+    "folder": "dienchan/data",
+    "tags": [
+      "tuc",
+      "nguc",
+      "kho",
+      "tho"
+    ],
+    "context": {
+      "custom": {
+        "note": "Tuc Nguc Kho Tho"
       }
     }
   }
