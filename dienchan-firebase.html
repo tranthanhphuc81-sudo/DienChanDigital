@@ -1647,12 +1647,7 @@
                                     <button type="button" onclick='event.stopPropagation(); startEdit("mirrors", "${String(item.id || '').replace(/"/g, '&quot;')}")' class="inline-flex min-w-[8rem] items-center justify-center rounded-full bg-sky-200 text-slate-800 px-4 py-2 text-sm hover:bg-sky-300">✏️ Chỉnh sửa</button>
                                 </div>
                             </div>
-                            <div class="grid gap-3 sm:grid-cols-[120px_1fr] items-start">
-                                <div class="w-full h-32 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center">
-                                    ${getMirrorImageUrl(item) ? `<img src="${getMirrorImageUrl(item)}" alt="${item.title || ''}" class="w-full h-full object-cover" />` : `<span class="text-slate-400 text-sm">Chọn để xem ảnh</span>`}
-                                </div>
-                                <div class="flex flex-wrap gap-1">${(item.tags || []).map(tag => `<span class="tag tag-primary">${tag}</span>`).join('')}</div>
-                            </div>
+                            <div class="flex flex-wrap gap-1">${(item.tags || []).map(tag => `<span class="tag tag-primary">${tag}</span>`).join('')}</div>
                         </article>
                         <div class="mobile-detail-slot hidden" data-detail-slot-type="mirrors" data-detail-slot-id="${String(item.id || '').replace(/"/g, '&quot;')}"></div>
                     `).join('')}</div>
