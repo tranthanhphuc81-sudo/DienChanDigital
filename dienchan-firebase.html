@@ -1947,8 +1947,8 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                                 <textarea id="edit-manual" class="w-full p-3 border rounded-xl" rows="3">${item.manual || ''}</textarea>
                             </div>
                             <div class="flex flex-wrap gap-3">
-                                <button onclick="saveHuyetEdits()" class="px-4 py-3 rounded-xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
-                                <button onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
+                                <button type="button" onclick="saveHuyetEdits()" class="px-4 py-3 rounded-xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
+                                <button type="button" onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
                             </div>
                         </div>
                     ` : `
@@ -1976,8 +1976,8 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                                 <input id="edit-keywords" class="w-full p-3 border rounded-xl" value="${(item.keywords || []).join(' ')}" />
                             </div>
                             <div class="flex flex-wrap gap-3">
-                                <button onclick="saveProtocolEdits()" class="px-4 py-3 rounded-xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
-                                <button onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
+                                <button type="button" onclick="saveProtocolEdits()" class="px-4 py-3 rounded-xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
+                                <button type="button" onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
                             </div>
                         </div>
                     ` : `
@@ -2013,8 +2013,8 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                                 <textarea id="edit-notes" class="w-full p-3 border rounded-xl" rows="3">${item.notes || ''}</textarea>
                             </div>
                             <div class="flex flex-wrap gap-3">
-                                <button onclick="saveMedicalRecordEdits()" class="px-4 py-3 rounded-xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
-                                <button onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
+                                <button type="button" onclick="saveMedicalRecordEdits()" class="px-4 py-3 rounded-xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
+                                <button type="button" onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
                             </div>
                         </div>
                     ` : `
@@ -2045,8 +2045,8 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                                 <textarea id="edit-notes" class="w-full p-3 border rounded-xl" rows="3">${item.notes || item.note || ''}</textarea>
                             </div>
                             <div class="flex flex-wrap gap-3">
-                                <button onclick="saveGroupEdits()" class="px-4 py-3 rounded-xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
-                                <button onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
+                                <button type="button" onclick="saveGroupEdits()" class="px-4 py-3 rounded-xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
+                                <button type="button" onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
                             </div>
                         </div>
                     ` : `
