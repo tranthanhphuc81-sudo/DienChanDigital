@@ -1703,12 +1703,30 @@
             return `#${id} ${name}`;
         }
 
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatTextForDisplay(value) {
+            return escapeHtml(value)
+                .replace(/\/\/+/g, '<br>')
+                .replace(/\n/g, '<br>');
+        }
+
         function renderDetail(item, type) {
             const detail = document.getElementById('detail-panel');
             if (!detail) return;
             const mobileHtml = item ? getDetailHtml(item, type) : getEmptyDetailHtml();
             detail.classList.remove('hidden');
             detail.innerHTML = mobileHtml;
+            if (typeof detail.scrollIntoView === 'function') {
+                detail.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+            }
             renderMobileDetailSlot(item, type, mobileHtml);
         }
 
@@ -2218,9 +2236,9 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                             </div>
                         </div>
                     ` : `
-                        <div class="detail-row"><span>Vị trí</span><span>${item.location || 'Không có'}</span></div>
-                        <div class="detail-row"><span>Tác dụng</span><span>${item.functions || 'Không có'}</span></div>
-                        <div class="detail-row"><span>Thực hiện</span><span>${item.manual || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Vị trí</span><span>${item.location ? formatTextForDisplay(item.location) : 'Không có'}</span></div>
+                        <div class="detail-row"><span>Tác dụng</span><span>${item.functions ? formatTextForDisplay(item.functions) : 'Không có'}</span></div>
+                        <div class="detail-row"><span>Thực hiện</span><span>${item.manual ? formatTextForDisplay(item.manual) : 'Không có'}</span></div>
                     `;
             } else if (type === 'protocols') {
                 bodyHtml = editingType === 'protocols' ? `
@@ -2248,7 +2266,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                         </div>
                     ` : `
                         <div class="detail-row"><span>Phác đồ</span><span>${item.title || item.name || 'Không có'}</span></div>
-                        <div class="detail-row"><span>Mô tả</span><span>${item.description || item.note || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Mô tả</span><span>${item.description || item.note ? formatTextForDisplay(item.description || item.note) : 'Không có'}</span></div>
                         <div class="detail-row"><span>Huyệt</span><span>${(item.acupointIds || []).join(', ') || 'Không có'}</span></div>
                     `;
             } else if (type === 'records') {
@@ -2285,10 +2303,10 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                         </div>
                     ` : `
                         <div class="detail-row"><span>Số điện thoại</span><span>${item.patientPhone ? renderPhoneLink(item.patientPhone, 'Không có') : 'Không có'}</span></div>
-                        <div class="detail-row"><span>Triệu chứng</span><span>${item.symptoms || 'Không có'}</span></div>
-                        <div class="detail-row"><span>Chẩn đoán</span><span>${item.diagnosis || 'Không có'}</span></div>
-                        <div class="detail-row"><span>Phác đồ</span><span>${item.protocol || 'Không có'}</span></div>
-                        <div class="detail-row"><span>Ghi chú</span><span>${item.notes || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Triệu chứng</span><span>${item.symptoms ? formatTextForDisplay(item.symptoms) : 'Không có'}</span></div>
+                        <div class="detail-row"><span>Chẩn đoán</span><span>${item.diagnosis ? formatTextForDisplay(item.diagnosis) : 'Không có'}</span></div>
+                        <div class="detail-row"><span>Phác đồ</span><span>${item.protocol ? formatTextForDisplay(item.protocol) : 'Không có'}</span></div>
+                        <div class="detail-row"><span>Ghi chú</span><span>${item.notes ? formatTextForDisplay(item.notes) : 'Không có'}</span></div>
                         <div class="detail-row"><span>Ngày lưu</span><span>${formatDatetime(item.savedAt || item.updatedAt || item.createdAt, true)}</span></div>
                     `;
             } else if (type === 'groups') {
@@ -2317,7 +2335,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                         </div>
                     ` : `
                         <div class="detail-row"><span>Bộ huyệt</span><span>${item.title || item.name || 'Không có'}</span></div>
-                        <div class="detail-row"><span>Mô tả</span><span>${item.description || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Mô tả</span><span>${item.description ? formatTextForDisplay(item.description) : 'Không có'}</span></div>
                         <div class="detail-row"><span>Huyệt</span><span>${(item.acupointIds || []).join(', ') || 'Không có'}</span></div>
                     `;
             }
@@ -2361,7 +2379,10 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             if (!slot) return;
             slot.innerHTML = html;
             slot.classList.remove('hidden');
-        }        function selectItem(type, id) {
+            slot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function selectItem(type, id) {
             let item;
             if (type === 'huyet') item = huyetItems.find(i => String(i.id) === String(id));
             if (type === 'protocols') item = protocolItems.find(i => String(i.id) === String(id) || String(i.name) === String(id));
@@ -3370,7 +3391,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                                 <span class="huyet-result-label">#${item.id}</span>
                                 <div>
                                     <p class="huyet-result-title">${item.name && String(item.name).trim() !== String(item.id).trim() ? item.name : ''}</p>
-                                    <p class="text-sm text-slate-500 mt-1">${item.location || ''}</p>
+                                    <p class="text-sm text-slate-500 mt-1">${item.location ? formatTextForDisplay(item.location) : ''}</p>
                                 </div>
                             </div>
                             <div class="huyet-result-actions">
@@ -3383,9 +3404,9 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                             ${getSetImageUrl(item) ? `<img src="${getSetImageUrl(item)}" alt="Huyệt ${item.id}" class="image-zoomable" onclick="event.stopPropagation(); openImageLightbox(this.src)" onerror="tryNextHuyetImage(this)" data-huyet-image-candidates='${JSON.stringify(getHuyetImageCandidates(item)).replace(/'/g, '&#39;')}' />` : '<span class="text-sm text-slate-400">Ảnh huyệt</span>'}
                         </div>
                         <div class="huyet-result-body">
-                            <div class="huyet-detail-row"><span>Vị trí</span><span>${item.location || 'Không có'}</span></div>
-                            <div class="huyet-detail-row"><span>Tác dụng</span><span>${item.functions || 'Không có'}</span></div>
-                            <div class="huyet-detail-row"><span>Thực hiện</span><span>${item.manual || 'Không có'}</span></div>
+                            <div class="huyet-detail-row"><span>Vị trí</span><span>${item.location ? formatTextForDisplay(item.location) : 'Không có'}</span></div>
+                            <div class="huyet-detail-row"><span>Tác dụng</span><span>${item.functions ? formatTextForDisplay(item.functions) : 'Không có'}</span></div>
+                            <div class="huyet-detail-row"><span>Thực hiện</span><span>${item.manual ? formatTextForDisplay(item.manual) : 'Không có'}</span></div>
                         </div>
                     </article>
                     <div class="mobile-detail-slot hidden" data-detail-slot-type="huyet" data-detail-slot-id="${item.id}"></div>
