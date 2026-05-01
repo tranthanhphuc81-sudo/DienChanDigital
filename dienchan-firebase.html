@@ -1894,8 +1894,10 @@
             const mobileHtml = item ? getDetailHtml(item, type) : getEmptyDetailHtml();
             detail.classList.remove('hidden');
             detail.innerHTML = mobileHtml;
-            if (typeof detail.scrollIntoView === 'function') {
-                detail.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+            if (item) {
+                const rect = detail.getBoundingClientRect();
+                const scrollTop = window.scrollY + rect.top - 16;
+                window.scrollTo({ top: scrollTop, behavior: 'smooth' });
             }
             renderMobileDetailSlot(item, type, mobileHtml);
         }
