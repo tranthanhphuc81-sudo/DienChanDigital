@@ -1515,8 +1515,8 @@
                     const note = String(custom.note || custom.caption || custom.alt || custom.description || '').trim();
                     const name = String(meta.original_filename || meta.public_id || key).trim();
                     const imageUrl = typeof DCcloudinary !== 'undefined'
-                        ? DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' })
-                        : '';
+                        ? (meta.secure_url || DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' }))
+                        : (meta.secure_url || '');
                     return {
                         key,
                         publicId,
@@ -2235,46 +2235,55 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             container.innerHTML = `
                 <div class="space-y-6">
                     <div class="guide-card">
-                        <div class="guide-section-title">🧭 Hướng dẫn sử dụng dự án</div>
-                        <p class="guide-note">Phần này hướng dẫn bạn cách dùng các tab, quản lý hồ sơ, tìm kiếm phác đồ và phân quyền Firebase/LocalStorage.</p>
+                        <div class="guide-section-title">🧭 Hướng dẫn sử dụng</div>
+                        <p class="guide-note">Hướng dẫn nhanh thao tác với app: chọn tab, tìm kiếm, quản lý dữ liệu, đồng bộ Firebase và tải ảnh Cloudinary.</p>
                     </div>
                     <div class="guide-card">
-                        <div class="guide-section-title">📌 Dùng các tab</div>
+                        <div class="guide-section-title">📌 Các tab chính</div>
                         <ul class="text-slate-700 space-y-2">
-                            <li><strong>Hướng dẫn sử dụng:</strong> đọc nhanh cách thao tác với từng chức năng trong app.</li>
-                            <li><strong>Kỹ thuật Diện Chẩn:</strong> xem nguyên tắc, kỹ thuật thao tác, dụng cụ và lưu ý an toàn.</li>
-                            <li><strong>Tra cứu Huyệt:</strong> tìm huyệt theo số, tên và triệu chứng.</li>
-                            <li><strong>Phác đồ Mẫu:</strong> xem, tìm và chọn phác đồ điều trị sẵn có.</li>
-                            <li><strong>Bộ huyệt:</strong> xem nhóm huyệt, chỉnh sửa và liên kết các huyệt với hồ sơ.</li>
-                            <li><strong>Hồ sơ bệnh trạng:</strong> tạo, tìm kiếm, chỉnh sửa và xóa hồ sơ bệnh án.</li>
+                            <li><strong>Hướng dẫn sử dụng:</strong> tab này giúp bạn hiểu cách dùng app và các quy tắc quyền truy cập.</li>
+                            <li><strong>Kỹ thuật Diện Chẩn:</strong> xem nguyên tắc, kỹ thuật thao tác, đồ hình và lưu ý an toàn.</li>
+                            <li><strong>Tra cứu Huyệt:</strong> tìm huyệt theo số, tên, vị trí hoặc triệu chứng.</li>
+                            <li><strong>Phác đồ Mẫu:</strong> xem, tìm kiếm và chọn phác đồ điều trị có sẵn.</li>
+                            <li><strong>Bộ huyệt:</strong> quản lý nhóm huyệt và liên kết huyệt vào hồ sơ.</li>
+                            <li><strong>Hồ sơ bệnh trạng:</strong> tạo, sửa, tìm kiếm và xóa hồ sơ bệnh án.</li>
+                            <li><strong>Đồ hình phản chiếu:</strong> xem ảnh Cloudinary đã đồng bộ, tìm kiếm và chọn hình để phóng to.</li>
                         </ul>
                     </div>
                     <div class="guide-card">
-                        <div class="guide-section-title">🔍 Cách dùng tab Hồ sơ bệnh trạng</div>
+                        <div class="guide-section-title">🔎 Tìm kiếm và lọc</div>
                         <ul class="text-slate-700 space-y-2">
-                            <li>Gõ triệu chứng, tên bệnh nhân hoặc phác đồ vào ô tìm kiếm để lọc hồ sơ.</li>
-                            <li>Nhập triệu chứng vào ô “Bệnh trạng / triệu chứng” để hệ thống gợi ý phác đồ và bộ huyệt phù hợp.</li>
-                            <li>Bấm “Thêm” ở phần gợi ý để gắn phác đồ hoặc bộ huyệt vào mục liên kết.</li>
-                            <li>Phác đồ liên kết sẽ hiển thị trong khung “Liên kết” cạnh phải trên desktop.</li>
-                            <li>Để xóa hồ sơ, dùng nút đỏ “Xóa” trên thẻ hoặc trong khung chi tiết.</li>
+                            <li>Nhập từ khóa vào ô tìm kiếm trên cùng để lọc Huyệt, Phác đồ, Bộ huyệt, Hồ sơ hoặc Đồ hình.</li>
+                            <li>Tìm kiếm theo số huyệt, tên huyệt, triệu chứng, tên bệnh nhân hoặc tiêu đề phác đồ.</li>
+                            <li>Trong tab Đồ hình, tìm kiếm theo tên ảnh, tag hoặc chú thích để nhanh chóng xác định đồ hình cần dùng.</li>
                         </ul>
                     </div>
                     <div class="guide-card">
-                        <div class="guide-section-title">🔐 Phân quyền và lưu trữ</div>
+                        <div class="guide-section-title">🛠️ Cách sử dụng các tính năng chính</div>
                         <ul class="text-slate-700 space-y-2">
-                            <li><strong>Admin:</strong> tài khoản admin được phép ghi Firestore và upload ảnh Cloudinary.</li>
-                            <li><strong>Người dùng thường:</strong> chỉ đọc dữ liệu Firebase; thay đổi sẽ lưu cục bộ trên trình duyệt.</li>
-                            <li>Nếu bạn không đăng nhập hoặc không phải admin, mọi sửa đổi chỉ tồn tại trong <code>localStorage</code>.</li>
-                            <li>Để đồng bộ dữ liệu lên Firebase, hãy đăng nhập bằng tài khoản admin.</li>
+                            <li>Trong tab Hồ sơ bệnh trạng, mở chi tiết để điều chỉnh triệu chứng, phác đồ và bộ huyệt liên quan.</li>
+                            <li>Trong tab Phác đồ Mẫu, bấm vào phác đồ để xem các huyệt liên quan và mô tả thực hiện.</li>
+                            <li>Trong tab Bộ huyệt, chỉnh sửa nhóm huyệt hoặc liên kết bộ huyệt thủ công vào hồ sơ.</li>
+                            <li>Trong tab Đồ hình phản chiếu, chạm vào tên hình để bật ảnh xem trước lớn mà không cần nút phóng to.</li>
+                            <li>Trong tab Quản lý, admin có thể upload ảnh Cloudinary, đồng bộ metadata và import/export dữ liệu.</li>
+                        </ul>
+                    </div>
+                    <div class="guide-card">
+                        <div class="guide-section-title">🔐 Phân quyền và đồng bộ</div>
+                        <ul class="text-slate-700 space-y-2">
+                            <li><strong>Admin:</strong> có quyền ghi Firestore và upload ảnh Cloudinary.</li>
+                            <li><strong>Người dùng thường:</strong> chỉ đọc dữ liệu Firebase; thay đổi sẽ lưu tạm trong <code>localStorage</code>.</li>
+                            <li>Đăng nhập bằng tài khoản admin để đồng bộ thay đổi lên Firebase và Cloudinary.</li>
+                            <li>Để trang GitHub Pages tự động hiển thị đồ hình, app sẽ tải metadata Cloudinary từ file tĩnh nếu có.</li>
                         </ul>
                     </div>
                     <div class="guide-card">
                         <div class="guide-section-title">⚠️ Lưu ý quan trọng</div>
                         <ul class="text-slate-700 space-y-2">
-                            <li>LocalStorage không đồng bộ qua trình duyệt hoặc thiết bị khác.</li>
-                            <li>Không dùng tài khoản thường nếu bạn cần dữ liệu chung cho nhiều người.</li>
-                            <li>Chỉ admin mới có quyền thay đổi dữ liệu chung trên Firebase.</li>
-                            <li>Nếu cần sao lưu dữ liệu cục bộ, hãy export hoặc dùng admin để migrate.</li>
+                            <li>LocalStorage chỉ lưu trên trình duyệt hiện tại, không đồng bộ qua thiết bị khác.</li>
+                            <li>Nếu dùng tài khoản thường, các thay đổi không tự động chia sẻ với người khác.</li>
+                            <li>Luôn dùng admin khi cần cập nhật dữ liệu chung hoặc tải ảnh mới lên Cloudinary.</li>
+                            <li>Backup dữ liệu thường xuyên bằng tính năng export nếu bạn cần giữ lại nội dung cục bộ.</li>
                         </ul>
                     </div>
                 </div>
