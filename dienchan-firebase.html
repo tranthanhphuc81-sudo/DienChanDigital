@@ -1601,7 +1601,6 @@
                 ? entries.filter(item => searchMatches(`${item.title || item.publicId || ''} ${Array.isArray(item.tags) ? item.tags.join(' ') : ''} ${item.note || ''}`, search))
                 : entries;
             const total = entries.length;
-            const selected = selectedItem && selectedType === 'mirrors' ? selectedItem : null;
             container.innerHTML = `
                 <div class="space-y-4">
                     <div class="card p-6 text-slate-600">
@@ -1635,44 +1634,28 @@
                             </form>
                         </div>
                     </div>
-                    <div class="space-y-4">
-                        ${filtered.length ? filtered.map(item => {
-                            const imageUrl = getMirrorImageUrl(item);
-                            const isEditing = selected && selected.id === item.id && editingType === 'mirrors';
-                            return `
-                                <div class="card p-5 border border-slate-200 rounded-3xl bg-white">
-                                    ${isEditing ? `
-                                        <div class="space-y-4">
-                                            <input id="edit-mirror-title" type="text" placeholder="Tên đồ hình" class="w-full p-3 border rounded-xl" value="${selected.title || ''}" />
-                                            <input id="edit-mirror-tags" type="text" placeholder="Keywords" class="w-full p-3 border rounded-xl" value="${(selected.tags || []).join(' ')}" />
-                                            <textarea id="edit-mirror-note" rows="3" placeholder="Ghi chú" class="w-full p-3 border rounded-xl">${selected.note || ''}</textarea>
-                                            <div class="flex flex-wrap gap-3">
-                                                <button type="button" onclick="saveMirrorEdits()" class="px-4 py-3 rounded-2xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
-                                                <button type="button" onclick="editingType = null; selectedItem = null; renderCurrentView();" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Hủy</button>
-                                            </div>
-                                        </div>
-                                    ` : `
-                                        <div class="grid gap-4 lg:grid-cols-[1fr_1.4fr] items-start">
-                                            <div class="space-y-3">
-                                                <div>
-                                                    <div class="text-lg font-semibold text-slate-900">${item.title || ''}</div>
-                                                </div>
-                                                <div class="text-sm text-slate-500">${item.note || 'Không có ghi chú'}</div>
-                                                <div class="flex flex-wrap gap-2">${(item.tags || []).length ? (item.tags || []).map(tag => `<span class="tag tag-primary">${tag}</span>`).join('') : '<span class="text-sm text-slate-500">Không có keyword</span>'}</div>
-                                                <div class="flex flex-wrap gap-2">
-                                                    <button type="button" onclick="startEdit('mirrors', '${String(item.id).replace(/'/g, "\\'")}')" class="px-4 py-2 rounded-2xl bg-sky-200 text-slate-800 hover:bg-sky-300 text-sm">✏️ Chỉnh sửa</button>
-                                                    ${isFirebaseAdmin() ? `<button type="button" onclick="deleteAppItem('mirrors', '${String(item.id).replace(/'/g, "\\'")}')" class="px-4 py-2 rounded-2xl bg-red-100 text-red-700 hover:bg-red-200 text-sm">🗑️ Xóa</button>` : ''}
-                                                </div>
-                                            </div>
-                                            <div class="rounded-3xl overflow-hidden border border-slate-200 bg-slate-50 min-h-[12rem]">
-                                                ${imageUrl ? `<img src="${imageUrl}" alt="${item.title || ''}" class="w-full h-full object-cover cursor-zoom-in" onclick="openImageLightbox('${String(imageUrl).replace(/'/g, "\\'")}')" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Chưa có ảnh</div>`}
-                                            </div>
-                                        </div>
-                                    `}
+                    <div class="grid gap-4 lg:grid-cols-2">${filtered.map(item => `
+                        <article id="list-card-mirrors-${String(item.id || '').replace(/[^a-zA-Z0-9_-]/g, '-')}" data-item-type="mirrors" data-item-id="${String(item.id || '').replace(/"/g, '&quot;')}" onclick="selectItem('mirrors', '${String(item.id || '').replace(/'/g, "\\'")}')" class="card p-4 cursor-pointer hover:border-slate-300">
+                            <div class="flex flex-wrap gap-4 items-start justify-between mb-4">
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="text-lg font-semibold break-words">${item.title || ''}</h3>
+                                    ${item.note ? `<p class="text-sm text-slate-500 mt-1 break-words">${item.note}</p>` : ''}
                                 </div>
-                            `;
-                        }).join('') : `<div class="card p-5 text-slate-600">Không tìm thấy mirror phù hợp.</div>`}
-                    </div>
+                                <div class="flex flex-col gap-2 items-end flex-none">
+                                    <span class="tag tag-primary">Đồ hình</span>
+                                    ${isFirebaseAdmin() ? `<button type="button" onclick='event.stopPropagation(); deleteAppItem("mirrors", "${String(item.id || '').replace(/"/g, '&quot;')}")' class="inline-flex min-w-[8rem] items-center justify-center rounded-full bg-red-100 text-red-700 px-4 py-2 text-sm hover:bg-red-200">🗑️ Xóa</button>` : ''}
+                                    <button type="button" onclick='event.stopPropagation(); startEdit("mirrors", "${String(item.id || '').replace(/"/g, '&quot;')}")' class="inline-flex min-w-[8rem] items-center justify-center rounded-full bg-sky-200 text-slate-800 px-4 py-2 text-sm hover:bg-sky-300">✏️ Chỉnh sửa</button>
+                                </div>
+                            </div>
+                            <div class="grid gap-3 sm:grid-cols-[120px_1fr] items-start">
+                                <div class="w-full h-32 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center">
+                                    ${getMirrorImageUrl(item) ? `<img src="${getMirrorImageUrl(item)}" alt="${item.title || ''}" class="w-full h-full object-cover" />` : `<span class="text-slate-400 text-sm">Chọn để xem ảnh</span>`}
+                                </div>
+                                <div class="flex flex-wrap gap-1">${(item.tags || []).map(tag => `<span class="tag tag-primary">${tag}</span>`).join('')}</div>
+                            </div>
+                        </article>
+                        <div class="mobile-detail-slot hidden" data-detail-slot-type="mirrors" data-detail-slot-id="${String(item.id || '').replace(/"/g, '&quot;')}"></div>
+                    `).join('')}</div>
                 </div>
             `;
         }
@@ -1752,7 +1735,7 @@
             } else {
                 setStatus('Đã lưu thay đổi đồ hình cục bộ. Đăng nhập admin để đồng bộ Firebase.');
             }
-            renderCurrentView();
+            renderDetail(updated, 'mirrors');
         }
 
         function selectMirrorShape(publicId) {
@@ -2510,6 +2493,33 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                         <div class="detail-row"><span>Ghi chú</span><span>${item.notes ? formatTextForDisplay(item.notes) : 'Không có'}</span></div>
                         <div class="detail-row"><span>Ngày lưu</span><span>${formatDatetime(item.savedAt || item.updatedAt || item.createdAt, true)}</span></div>
                     `;
+            } else if (type === 'mirrors') {
+                const mirrorImageUrl = getMirrorImageUrl(item);
+                bodyHtml = editingType === 'mirrors' ? `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Tên đồ hình</label>
+                                <input id="edit-mirror-title" class="w-full p-3 border rounded-xl" value="${item.title || ''}" />
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Keywords</label>
+                                <input id="edit-mirror-tags" class="w-full p-3 border rounded-xl" value="${(item.tags || []).join(' ')}" />
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Ghi chú</label>
+                                <textarea id="edit-mirror-note" class="w-full p-3 border rounded-xl" rows="3">${item.note || ''}</textarea>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" onclick="saveMirrorEdits()" class="px-4 py-3 rounded-xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
+                                <button type="button" onclick="cancelEdit()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700">Hủy</button>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="detail-row"><span>Tên</span><span>${item.title || 'Không có'}</span></div>
+                        <div class="detail-row"><span>Ghi chú</span><span>${item.note ? formatTextForDisplay(item.note) : 'Không có'}</span></div>
+                        <div class="detail-row"><span>Keywords</span><span>${(item.tags || []).length ? item.tags.join(', ') : 'Không có'}</span></div>
+                        ${mirrorImageUrl ? `<img src="${mirrorImageUrl}" alt="${item.title || ''}" class="w-full rounded-xl image-zoomable mt-2" onclick="openImageLightbox(this.src)" />` : ''}
+                    `;
             } else if (type === 'groups') {
                 bodyHtml = editingType === 'groups' ? `
                         <div class="space-y-4">
@@ -2589,7 +2599,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             if (type === 'protocols') item = protocolItems.find(i => String(i.id) === String(id) || String(i.name) === String(id));
             if (type === 'records') item = recordItems.find(i => String(i.id) === String(id) || String(i.patientName) === String(id));
             if (type === 'groups') item = groupItems.find(i => String(i.id) === String(id) || String(i.title) === String(id));
-            if (type === 'mirrors') item = mirrorItems.find(i => String(i.id) === String(id) || String(i.title) === String(id));
+            if (type === 'mirrors') item = getMirrorItems().find(i => String(i.id) === String(id) || String(i.title) === String(id));
             selectedItem = item || null;
             selectedType = type;
             editingType = null;
@@ -2607,7 +2617,6 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             selectedItem = item;
             selectedType = type;
             editingType = type;
-            if (type === 'mirrors') { renderCurrentView(); return; }
             renderDetail(item, type);
         }
 
@@ -3123,7 +3132,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
             const canWriteRemote = firebaseUser && isFirebaseAdmin();
             try {
-                if (canWriteRemote && ['acupoints', 'treatmentPlans', 'acupointGroups', 'medicalRecords'].includes(collection)) {
+                if (canWriteRemote && ['acupoints', 'treatmentPlans', 'acupointGroups', 'medicalRecords', 'mirrors'].includes(collection)) {
                     await DCFirebase.deleteDocument(collection, id);
                     setStatus('Đã xóa mục khỏi Firebase.');
                 } else {
