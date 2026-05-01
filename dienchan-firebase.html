@@ -1397,6 +1397,9 @@
                                     </div>
                                 </div>
                             ` : ''}
+                            <button type="button" onclick="document.getElementById('cloudinary-metadata-file-input').click()" class="w-full px-4 py-3 rounded-xl bg-amber-600 text-white mt-3">Import Cloudinary metadata</button>
+                            <button type="button" onclick="exportCloudinaryMetadata()" class="w-full px-4 py-3 rounded-xl bg-emerald-500 text-white mt-3">Export Cloudinary metadata</button>
+                            <input id="cloudinary-metadata-file-input" type="file" accept=".json" class="hidden" onchange="importCloudinaryMetadata(event)" />
                             <button onclick="toggleMirrorUploadPanel()" class="w-full px-4 py-3 rounded-xl bg-fuchsia-600 text-white mt-3">Upload đồ hình phản chiếu</button>
                             ${mirrorUploadOpen ? `
                                 <div class="mt-4 p-4 bg-slate-50 rounded-3xl border border-slate-200">
@@ -3305,6 +3308,56 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                 if (event.target) {
                     event.target.value = '';
                 }
+            }
+        }
+
+        function getCloudinaryMetadataStore() {
+            try {
+                return JSON.parse(localStorage.getItem('dc_cloudinary_images') || '{}');
+            } catch {
+                return {};
+            }
+        }
+
+        function saveCloudinaryMetadataStore(store) {
+            localStorage.setItem('dc_cloudinary_images', JSON.stringify(store));
+        }
+
+        function exportCloudinaryMetadata() {
+            const store = getCloudinaryMetadataStore();
+            const keys = Object.keys(store);
+            if (!keys.length) {
+                setStatus('Không có metadata Cloudinary để xuất.', true);
+                return;
+            }
+            downloadJson('cloudinary-metadata.json', store);
+            setStatus('Đã xuất metadata Cloudinary thành file JSON.');
+        }
+
+        async function importCloudinaryMetadata(event) {
+            const file = event.target?.files?.[0];
+            if (!file) {
+                setStatus('Chưa chọn file metadata.', true);
+                return;
+            }
+            try {
+                const text = await file.text();
+                const payload = JSON.parse(text);
+                if (!payload || typeof payload !== 'object') {
+                    throw new Error('File metadata không hợp lệ.');
+                }
+                const current = getCloudinaryMetadataStore();
+                const merged = { ...current, ...payload };
+                saveCloudinaryMetadataStore(merged);
+                setStatus(`Đã import metadata Cloudinary (${Object.keys(payload).length} mục).`);
+                if (currentView === 'mirror') {
+                    selectedMirrorShapePublicId = null;
+                    renderCurrentView();
+                }
+            } catch (err) {
+                setStatus(`Import metadata thất bại: ${err.message || err}`, true);
+            } finally {
+                if (event.target) event.target.value = '';
             }
         }
 
