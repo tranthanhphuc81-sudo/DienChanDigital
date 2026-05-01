@@ -1538,7 +1538,7 @@
                         raw: meta
                     };
                 })
-                .filter(item => item.publicId.startsWith('dienchan/mirror/') || item.folder === 'dienchan/mirror');
+                .filter(item => item.publicId.startsWith('dienchan/data/') || item.folder === 'dienchan/data' || item.publicId.startsWith('dienchan/mirror/') || item.folder === 'dienchan/mirror');
         }
 
         function renderMirrorShapesView(container, search) {
