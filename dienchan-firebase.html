@@ -919,7 +919,7 @@
         let newMirrorFormOpen = false;
         let newMirrorTitle = '';
         let newMirrorPublicId = '';
-        let newMirrorFolder = 'dienchan/mirror';
+        let newMirrorFolder = 'dienchan/mirrors';
         let newMirrorNote = '';
         let newMirrorTags = '';
 
@@ -1553,11 +1553,12 @@
         }
 
         function mapCloudinaryEntryToMirrorItem(entry) {
+            const publicId = entry.publicId || entry.public_id || String(entry.key || '');
             return {
-                id: entry.publicId || entry.public_id || String(entry.key || ''),
-                title: entry.name || entry.publicId || entry.public_id || String(entry.key || ''),
-                publicId: entry.publicId || entry.public_id || String(entry.key || ''),
-                folder: entry.folder || '',
+                id: publicId,
+                title: entry.name || publicId,
+                publicId,
+                folder: entry.folder || (typeof publicId === 'string' && publicId.includes('/') ? publicId.replace(/\/[^/]+$/, '') : ''),
                 note: entry.note || '',
                 tags: Array.isArray(entry.tags) ? entry.tags : typeof entry.tags === 'string' ? entry.tags.split(/[,\s]+/).filter(Boolean) : [],
                 secureUrl: entry.raw && entry.raw.secure_url ? String(entry.raw.secure_url) : ''
@@ -1568,7 +1569,10 @@
             const known = new Map();
             const local = Array.isArray(mirrorItems) ? mirrorItems : [];
             for (const item of local) {
-                if (item && item.id) {
+                if (!item || !item.id) continue;
+                const folder = String(item.folder || '').trim();
+                const publicId = String(item.publicId || item.public_id || item.id || '');
+                if (folder === 'dienchan/mirrors' || publicId.startsWith('dienchan/mirrors/')) {
                     known.set(String(item.id), item);
                 }
             }
