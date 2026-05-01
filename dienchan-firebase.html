@@ -641,18 +641,23 @@
             background: rgba(255, 255, 255, 0.95);
             border-top: 1px solid rgba(148, 163, 184, 0.18);
             backdrop-filter: blur(18px);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        #bottom-nav > .flex {
             display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
+            align-items: stretch;
+            flex-wrap: nowrap;
         }
         #bottom-nav .nav-btn {
             width: auto;
-            min-width: 4.5rem;
-            flex: 1 1 12%;
+            min-width: 5rem;
+            flex: 0 0 auto;
             text-align: center;
-            padding: 0.9rem 0;
+            padding: 0.85rem 0.75rem;
             color: #64748b;
             font-weight: 600;
+            white-space: nowrap;
         }
         #bottom-nav .nav-btn.active {
             color: #2563eb;
