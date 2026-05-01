@@ -1514,16 +1514,18 @@
                     const custom = typeof context.custom === 'object' && context.custom ? context.custom : {};
                     const note = String(custom.note || custom.caption || custom.alt || custom.description || '').trim();
                     const name = String(meta.original_filename || meta.public_id || key).trim();
-                    let imageUrl = '';
+                    let localUrl = '';
                     if (meta.secure_url) {
                         try {
-                            imageUrl = new URL(String(meta.secure_url), window.location.href).href;
+                            localUrl = new URL(String(meta.secure_url), window.location.href).href;
                         } catch {
-                            imageUrl = String(meta.secure_url);
+                            localUrl = String(meta.secure_url);
                         }
-                    } else if (typeof DCcloudinary !== 'undefined') {
-                        imageUrl = DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' });
                     }
+                    const remoteUrl = (typeof DCcloudinary !== 'undefined' && publicId)
+                        ? DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' })
+                        : '';
+                    const imageUrl = remoteUrl || localUrl;
                     return {
                         key,
                         publicId,
@@ -1531,6 +1533,7 @@
                         tags,
                         note,
                         imageUrl,
+                        fallbackImageUrl: remoteUrl ? localUrl : '',
                         folder: meta.folder || (typeof meta.public_id === 'string' && meta.public_id.includes('/') ? meta.public_id.replace(/\/[^/]+$/, '') : ''),
                         raw: meta
                     };
@@ -1582,7 +1585,7 @@
                                                     <p class="text-sm text-slate-500">Key: ${selected.publicId}</p>
                                                 </div>
                                                 <div class="rounded-3xl overflow-hidden border border-slate-200 bg-white min-h-[12rem]">
-                                                    ${selected.imageUrl ? `<img src="${selected.imageUrl}" alt="${selected.name || selected.publicId}" class="w-full h-full object-cover cursor-zoom-in" onclick="openImageLightbox('${String(selected.imageUrl).replace(/'/g, "\\'")}')" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Không có ảnh xem trước</div>`}
+                                                    ${selected.imageUrl ? `<img src="${selected.imageUrl}" alt="${selected.name || selected.publicId}" class="w-full h-full object-cover cursor-zoom-in"${selected.fallbackImageUrl ? ` onerror="if(!this.dataset.fallback){this.dataset.fallback='1'; this.src='${String(selected.fallbackImageUrl).replace(/'/g, "\\'")}' }"` : ''} onclick="openImageLightbox('${String(selected.imageUrl).replace(/'/g, "\\'")}')" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Không có ảnh xem trước</div>`}
                                                 </div>
                                                 <div>
                                                     <div class="text-sm font-semibold text-slate-700">Ghi chú</div>
@@ -1641,7 +1644,7 @@
                                         <p class="text-sm text-slate-500">Key: ${selected.publicId}</p>
                                     </div>
                                     <div class="rounded-3xl overflow-hidden border border-slate-200 bg-slate-100 min-h-[16rem]">
-                                        ${selected.imageUrl ? `<img src="${selected.imageUrl}" alt="${selected.name || selected.publicId}" class="w-full h-full object-cover cursor-zoom-in" onclick="openImageLightbox('${String(selected.imageUrl).replace(/'/g, "\\'")}')" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Không có ảnh xem trước</div>`}
+                                        ${selected.imageUrl ? `<img src="${selected.imageUrl}" alt="${selected.name || selected.publicId}" class="w-full h-full object-cover cursor-zoom-in"${selected.fallbackImageUrl ? ` onerror="if(!this.dataset.fallback){this.dataset.fallback='1'; this.src='${String(selected.fallbackImageUrl).replace(/'/g, "\\'")}' }"` : ''} onclick="openImageLightbox('${String(selected.imageUrl).replace(/'/g, "\\'")}')" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Không có ảnh xem trước</div>`}
                                     </div>
                                     <div class="space-y-2">
                                         <div class="text-sm font-semibold text-slate-700">Ghi chú</div>
