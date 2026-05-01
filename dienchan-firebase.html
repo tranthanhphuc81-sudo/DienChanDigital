@@ -918,8 +918,7 @@
         let mirrorItems = [];
         let newMirrorFormOpen = false;
         let newMirrorTitle = '';
-        let newMirrorPublicId = '';
-        let newMirrorFolder = 'dienchan/mirrors';
+        let newMirrorImageFile = null;
         let newMirrorNote = '';
         let newMirrorTags = '';
 
@@ -1557,8 +1556,7 @@
             return {
                 id: publicId,
                 title: entry.name || publicId,
-                publicId,
-                folder: entry.folder || (typeof publicId === 'string' && publicId.includes('/') ? publicId.replace(/\/[^/]+$/, '') : ''),
+                imageIds: publicId ? [publicId] : [],
                 note: entry.note || '',
                 tags: Array.isArray(entry.tags) ? entry.tags : typeof entry.tags === 'string' ? entry.tags.split(/[,\s]+/).filter(Boolean) : [],
                 secureUrl: entry.raw && entry.raw.secure_url ? String(entry.raw.secure_url) : ''
@@ -1570,15 +1568,12 @@
             const local = Array.isArray(mirrorItems) ? mirrorItems : [];
             for (const item of local) {
                 if (!item || !item.id) continue;
-                const folder = String(item.folder || '').trim();
-                const publicId = String(item.publicId || item.public_id || item.id || '');
-                if (folder === 'dienchan/mirrors' || publicId.startsWith('dienchan/mirrors/')) {
-                    known.set(String(item.id), item);
-                }
+                known.set(String(item.id), item);
             }
+            // Tự động hiện ảnh đã có sẵn trên Cloudinary dienchan/mirrors
             const cloudinaryEntries = getCloudinaryImageEntries();
             for (const entry of cloudinaryEntries) {
-                const key = String(entry.publicId || entry.public_id || entry.key || '');
+                const key = String(entry.publicId || entry.key || '');
                 if (!key) continue;
                 if (!known.has(key)) {
                     known.set(key, mapCloudinaryEntryToMirrorItem(entry));
@@ -1589,18 +1584,11 @@
 
         function getMirrorImageUrl(item) {
             if (!item) return '';
-            const publicId = item.publicId || item.public_id || item.imageKey || item.id;
-            const secureUrl = item.secureUrl || item.secure_url || '';
-            if (typeof DCcloudinary !== 'undefined' && publicId) {
-                return DCcloudinary.getImageUrlForKey(publicId, { width: 600, quality: 'auto', format: 'auto' });
+            const imageIds = Array.isArray(item.imageIds) ? item.imageIds : (item.imageIds ? [item.imageIds] : []);
+            if (imageIds.length && typeof DCcloudinary !== 'undefined') {
+                return DCcloudinary.getImageUrlForKey(imageIds[0], { width: 600, quality: 'auto', format: 'auto' });
             }
-            if (secureUrl) {
-                try {
-                    return new URL(String(secureUrl), window.location.href).href;
-                } catch {
-                    return String(secureUrl);
-                }
-            }
+            if (item.secureUrl) return item.secureUrl;
             return '';
         }
 
@@ -1616,14 +1604,14 @@
                 <div class="space-y-4">
                     <div class="card p-6 text-slate-600">
                         <h2 class="text-lg font-semibold">Đồ hình phản chiếu</h2>
-                        <p class="mt-2 text-sm">Quản lý danh sách ảnh mirror giống như bộ huyệt: tạo mục mới, sửa tên/public_id, xóa hoặc tìm nhanh.</p>
-                        <p class="mt-3 text-sm text-slate-500">Tổng số mục mirror đang có: <strong>${total}</strong></p>
+                        <p class="mt-2 text-sm">Quản lý danh sách đồ hình giống như bộ huyệt: tạo mục mới, tải ảnh lên, sửa tên/ghi chú, xóa hoặc tìm nhanh.</p>
+                        <p class="mt-3 text-sm text-slate-500">Tổng số đồ hình đang có: <strong>${total}</strong></p>
                     </div>
                     <div class="card p-5 bg-white border border-slate-200 rounded-3xl">
                         <div class="flex items-center justify-between gap-4">
                             <div>
-                                <h3 class="text-lg font-semibold">Thêm / sửa mirror</h3>
-                                <p class="text-sm text-slate-500">Thêm public_id của ảnh Cloudinary hoặc chỉnh sửa các mục mirror như bộ huyệt.</p>
+                                <h3 class="text-lg font-semibold">Thêm đồ hình mới</h3>
+                                <p class="text-sm text-slate-500">Đặt tên, tải ảnh lên và thêm ghi chú cho đồ hình.</p>
                             </div>
                             <button type="button" onclick="newMirrorFormOpen = !newMirrorFormOpen; renderCurrentView();" class="px-4 py-2 rounded-2xl bg-sky-200 text-slate-800 text-sm hover:bg-sky-300">
                                 ${newMirrorFormOpen ? 'Ẩn biểu mẫu' : 'Mở biểu mẫu'}
@@ -1631,19 +1619,15 @@
                         </div>
                         <div class="mt-4 ${newMirrorFormOpen ? '' : 'hidden'}">
                             <form id="new-mirror-form" class="space-y-4" onsubmit="event.preventDefault(); saveNewMirror();">
-                                <div class="grid gap-4 sm:grid-cols-2">
-                                    <input id="new-mirror-title" type="text" placeholder="Tên mirror" class="w-full p-3 border rounded-xl" value="${newMirrorTitle}" oninput="newMirrorTitle = this.value" />
-                                    <input id="new-mirror-publicId" type="text" placeholder="Cloudinary public_id" class="w-full p-3 border rounded-xl" value="${newMirrorPublicId}" oninput="newMirrorPublicId = this.value" />
-                                </div>
-                                <div class="grid gap-4 sm:grid-cols-2">
-                                    <input id="new-mirror-folder" type="text" placeholder="Folder (ví dụ: dienchan/mirrors)" class="w-full p-3 border rounded-xl" value="${newMirrorFolder}" oninput="newMirrorFolder = this.value" />
-                                    <input id="new-mirror-tags" type="text" placeholder="Keywords (cách nhau dấu cách)" class="w-full p-3 border rounded-xl" value="${newMirrorTags}" oninput="newMirrorTags = this.value" />
-                                </div>
+                                <input id="new-mirror-title" type="text" placeholder="Tên đồ hình" class="w-full p-3 border rounded-xl" value="${newMirrorTitle}" oninput="newMirrorTitle = this.value" />
+                                <input id="new-mirror-tags" type="text" placeholder="Keywords (cách nhau dấu cách)" class="w-full p-3 border rounded-xl" value="${newMirrorTags}" oninput="newMirrorTags = this.value" />
                                 <div>
-                                    <textarea id="new-mirror-note" rows="3" placeholder="Ghi chú" class="w-full p-3 border rounded-xl" oninput="newMirrorNote = this.value">${newMirrorNote}</textarea>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Ảnh minh họa</label>
+                                    <input id="new-mirror-image" type="file" accept="image/*" class="w-full" onchange="newMirrorImageFile = this.files && this.files[0] ? this.files[0] : null" />
                                 </div>
+                                <textarea id="new-mirror-note" rows="3" placeholder="Ghi chú" class="w-full p-3 border rounded-xl" oninput="newMirrorNote = this.value">${newMirrorNote}</textarea>
                                 <div class="flex flex-wrap gap-3">
-                                    <button type="button" onclick="saveNewMirror()" class="px-4 py-3 rounded-2xl bg-sky-200 text-slate-800 hover:bg-sky-300">Lưu mirror</button>
+                                    <button type="button" onclick="saveNewMirror()" class="px-4 py-3 rounded-2xl bg-sky-200 text-slate-800 hover:bg-sky-300">Lưu đồ hình</button>
                                     <button type="button" onclick="resetNewMirrorForm()" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Xóa form</button>
                                 </div>
                             </form>
@@ -1657,11 +1641,9 @@
                                 <div class="card p-5 border border-slate-200 rounded-3xl bg-white">
                                     ${isEditing ? `
                                         <div class="space-y-4">
-                                            <input id="edit-mirror-title" type="text" class="w-full p-3 border rounded-xl" value="${selected.title || ''}" />
-                                            <input id="edit-mirror-publicId" type="text" class="w-full p-3 border rounded-xl" value="${selected.publicId || ''}" />
-                                            <input id="edit-mirror-folder" type="text" class="w-full p-3 border rounded-xl" value="${selected.folder || ''}" />
-                                            <input id="edit-mirror-tags" type="text" class="w-full p-3 border rounded-xl" value="${(selected.tags || []).join(' ')}" />
-                                            <textarea id="edit-mirror-note" rows="3" class="w-full p-3 border rounded-xl">${selected.note || ''}</textarea>
+                                            <input id="edit-mirror-title" type="text" placeholder="Tên đồ hình" class="w-full p-3 border rounded-xl" value="${selected.title || ''}" />
+                                            <input id="edit-mirror-tags" type="text" placeholder="Keywords" class="w-full p-3 border rounded-xl" value="${(selected.tags || []).join(' ')}" />
+                                            <textarea id="edit-mirror-note" rows="3" placeholder="Ghi chú" class="w-full p-3 border rounded-xl">${selected.note || ''}</textarea>
                                             <div class="flex flex-wrap gap-3">
                                                 <button type="button" onclick="saveMirrorEdits()" class="px-4 py-3 rounded-2xl bg-emerald-200 text-slate-800 hover:bg-emerald-300">Lưu thay đổi</button>
                                                 <button type="button" onclick="editingType = null; selectedItem = null; renderCurrentView();" class="px-4 py-3 rounded-2xl bg-slate-100 text-slate-700">Hủy</button>
@@ -1671,19 +1653,17 @@
                                         <div class="grid gap-4 lg:grid-cols-[1fr_1.4fr] items-start">
                                             <div class="space-y-3">
                                                 <div>
-                                                    <div class="text-lg font-semibold text-slate-900">${item.title || item.publicId}</div>
-                                                    <div class="text-xs text-slate-500 break-words">${item.publicId}</div>
-                                                    <div class="text-xs text-slate-500">${item.folder || 'dienchan/mirrors'}</div>
+                                                    <div class="text-lg font-semibold text-slate-900">${item.title || ''}</div>
                                                 </div>
                                                 <div class="text-sm text-slate-500">${item.note || 'Không có ghi chú'}</div>
                                                 <div class="flex flex-wrap gap-2">${(item.tags || []).length ? (item.tags || []).map(tag => `<span class="tag tag-primary">${tag}</span>`).join('') : '<span class="text-sm text-slate-500">Không có keyword</span>'}</div>
                                                 <div class="flex flex-wrap gap-2">
                                                     <button type="button" onclick="selectItem('mirrors', '${String(item.id).replace(/'/g, "\\'")}'); editingType = 'mirrors'; renderCurrentView();" class="px-4 py-2 rounded-2xl bg-sky-200 text-slate-800 hover:bg-sky-300 text-sm">✏️ Chỉnh sửa</button>
-                                                    <button type="button" onclick="deleteAppItem('mirrors', '${String(item.id).replace(/'/g, "\\'")}')" class="px-4 py-2 rounded-2xl bg-red-100 text-red-700 hover:bg-red-200 text-sm">🗑️ Xóa</button>
+                                                    ${isFirebaseAdmin() ? `<button type="button" onclick="deleteAppItem('mirrors', '${String(item.id).replace(/'/g, "\\'")}')" class="px-4 py-2 rounded-2xl bg-red-100 text-red-700 hover:bg-red-200 text-sm">🗑️ Xóa</button>` : ''}
                                                 </div>
                                             </div>
                                             <div class="rounded-3xl overflow-hidden border border-slate-200 bg-slate-50 min-h-[12rem]">
-                                                ${imageUrl ? `<img src="${imageUrl}" alt="${item.title || item.publicId}" class="w-full h-full object-cover cursor-zoom-in" onclick="openImageLightbox('${String(imageUrl).replace(/'/g, "\\'")}')" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Không có ảnh xem trước</div>`}
+                                                ${imageUrl ? `<img src="${imageUrl}" alt="${item.title || ''}" class="w-full h-full object-cover cursor-zoom-in" onclick="openImageLightbox('${String(imageUrl).replace(/'/g, "\\'")}')" />` : `<div class="flex h-full items-center justify-center p-6 text-sm text-slate-500">Chưa có ảnh</div>`}
                                             </div>
                                         </div>
                                     `}
@@ -1697,52 +1677,41 @@
 
         async function saveNewMirror() {
             const title = String(newMirrorTitle || '').trim();
-            const publicId = String(newMirrorPublicId || '').trim();
-            const folder = String(newMirrorFolder || '').trim();
             const note = String(newMirrorNote || '').trim();
-            const tags = String(newMirrorTags || '').split(/[	\n\s,;]+/).filter(Boolean);
-            if (!title || !publicId) {
-                setStatus('Nhập tên mirror và public_id.', true);
+            const tags = String(newMirrorTags || '').split(/[\t\n\s,;]+/).filter(Boolean);
+            if (!title) {
+                setStatus('Nhập tên đồ hình.', true);
                 return;
             }
-            const item = {
-                id: `mirror-${Date.now()}`,
-                title,
-                publicId,
-                folder,
-                note,
-                tags,
-                secureUrl: ''
-            };
-            mirrorItems.unshift(item);
-            saveLocalCollection('mirrors', mirrorItems);
-            if (typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser() && isFirebaseAdmin()) {
-                try {
-                    await DCFirebase.saveDocument('mirrors', item.id, {
-                        title: item.title,
-                        publicId: item.publicId,
-                        folder: item.folder,
-                        note: item.note,
-                        tags: item.tags,
-                        secureUrl: item.secureUrl,
-                        createdBy: DCFirebase.getFirebaseUser().uid
-                    });
-                    setStatus('Đã thêm mirror mới và đồng bộ Firebase.');
-                } catch (err) {
-                    console.warn('saveNewMirror Firebase failed', err);
-                    setStatus('Đã thêm mirror mới cục bộ. Đồng bộ Firebase thất bại.', true);
+            const firebaseUser = typeof DCFirebase !== 'undefined' && DCFirebase.getFirebaseUser();
+            const canWriteRemote = firebaseUser && isFirebaseAdmin();
+            try {
+                let imageIds = [];
+                if (newMirrorImageFile) {
+                    imageIds = await uploadFormImage(newMirrorImageFile, 'dienchan/mirrors');
                 }
-            } else {
-                setStatus('Đã thêm mirror mới cục bộ. Đăng nhập admin để đồng bộ Firebase.');
+                const newItem = { title, note, tags, imageIds };
+                if (canWriteRemote) {
+                    const saved = await DCFirebase.saveDocument('mirrors', `mirror-${Date.now()}`, {
+                        ...newItem,
+                        createdBy: firebaseUser.uid
+                    });
+                    mirrorItems.unshift({ id: saved.id || `mirror-${Date.now()}`, ...newItem });
+                    setStatus('Đã lưu đồ hình mới vào Firebase.');
+                } else {
+                    mirrorItems.unshift({ id: `local-${Date.now()}`, ...newItem });
+                    saveLocalCollection('mirrors', mirrorItems);
+                    setStatus('Lưu đồ hình cục bộ. Chỉ admin mới có thể đồng bộ Firebase.');
+                }
+                resetNewMirrorForm();
+            } catch (err) {
+                setStatus(`Lưu đồ hình thất bại: ${err.message || err}`, true);
             }
-            resetNewMirrorForm();
-            renderCurrentView();
         }
 
         function resetNewMirrorForm() {
             newMirrorTitle = '';
-            newMirrorPublicId = '';
-            newMirrorFolder = 'dienchan/mirrors';
+            newMirrorImageFile = null;
             newMirrorNote = '';
             newMirrorTags = '';
             newMirrorFormOpen = false;
@@ -1752,11 +1721,9 @@
         async function saveMirrorEdits() {
             if (!selectedItem || editingType !== 'mirrors') return;
             const title = document.getElementById('edit-mirror-title')?.value.trim() || selectedItem.title;
-            const publicId = document.getElementById('edit-mirror-publicId')?.value.trim() || selectedItem.publicId;
-            const folder = document.getElementById('edit-mirror-folder')?.value.trim() || selectedItem.folder;
             const note = document.getElementById('edit-mirror-note')?.value.trim() || selectedItem.note;
-            const tags = String(document.getElementById('edit-mirror-tags')?.value || '').split(/[	\n\s,;]+/).filter(Boolean);
-            const updated = { ...selectedItem, title, publicId, folder, note, tags };
+            const tags = String(document.getElementById('edit-mirror-tags')?.value || '').split(/[\t\n\s,;]+/).filter(Boolean);
+            const updated = { ...selectedItem, title, note, tags };
             const index = mirrorItems.findIndex(i => String(i.id) === String(selectedItem.id));
             if (index !== -1) {
                 mirrorItems[index] = updated;
@@ -1770,20 +1737,18 @@
                 try {
                     await DCFirebase.saveDocument('mirrors', updated.id, {
                         title: updated.title,
-                        publicId: updated.publicId,
-                        folder: updated.folder,
                         note: updated.note,
                         tags: updated.tags,
-                        secureUrl: updated.secureUrl,
+                        imageIds: updated.imageIds || [],
                         createdBy: DCFirebase.getFirebaseUser().uid
                     });
-                    setStatus('Đã lưu thay đổi mirror và đồng bộ Firebase.');
+                    setStatus('Đã lưu thay đổi đồ hình và đồng bộ Firebase.');
                 } catch (err) {
                     console.warn('saveMirrorEdits Firebase failed', err);
-                    setStatus('Đã lưu mirror cục bộ. Đồng bộ Firebase thất bại.', true);
+                    setStatus('Đã lưu đồ hình cục bộ. Đồng bộ Firebase thất bại.', true);
                 }
             } else {
-                setStatus('Đã lưu thay đổi mirror cục bộ. Đăng nhập admin để đồng bộ Firebase.');
+                setStatus('Đã lưu thay đổi đồ hình cục bộ. Đăng nhập admin để đồng bộ Firebase.');
             }
             renderCurrentView();
         }
