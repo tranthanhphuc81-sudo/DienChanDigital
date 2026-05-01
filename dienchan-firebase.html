@@ -899,11 +899,13 @@
         let newGroupNotes = '';
         let newGroupImageFile = null;
         let newGroupFormOpen = false;
+        const CLOUDINARY_METADATA_URL = 'cloudinary-metadata.json';
         let mirrorUploadFiles = [];
         let mirrorUploadTags = '';
         let mirrorUploadNotes = '';
         let mirrorUploadOpen = false;
         let mirrorUploadStatus = '';
+        let cloudinaryMetadataLoaded = false;
         let selectedMirrorShapePublicId = null;
         let selectedItem = null;
         let selectedType = null;
@@ -3323,6 +3325,30 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             localStorage.setItem('dc_cloudinary_images', JSON.stringify(store));
         }
 
+        async function loadCloudinaryMetadataFromStaticFile() {
+            if (cloudinaryMetadataLoaded) return;
+            const existing = getCloudinaryMetadataStore();
+            if (Object.keys(existing).length) {
+                cloudinaryMetadataLoaded = true;
+                return;
+            }
+            if (!CLOUDINARY_METADATA_URL) return;
+            try {
+                const response = await fetch(CLOUDINARY_METADATA_URL);
+                if (!response.ok) {
+                    return;
+                }
+                const payload = await response.json();
+                if (!payload || typeof payload !== 'object') return;
+                const merged = { ...existing, ...payload };
+                saveCloudinaryMetadataStore(merged);
+                cloudinaryMetadataLoaded = true;
+                setStatus('Đã tải metadata Cloudinary từ file tĩnh.');
+            } catch (err) {
+                console.warn('loadCloudinaryMetadataFromStaticFile failed', err);
+            }
+        }
+
         function exportCloudinaryMetadata() {
             const store = getCloudinaryMetadataStore();
             const keys = Object.keys(store);
@@ -4113,6 +4139,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                 await loadFirebaseUserProfiles();
             }
             loadLocalCachedData();
+            await loadCloudinaryMetadataFromStaticFile();
             if (!huyetItems.length && !protocolItems.length && !groupItems.length) {
                 await loadFallbackEmbeddedData();
             }
