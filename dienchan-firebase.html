@@ -1549,7 +1549,7 @@
                         raw: meta
                     };
                 })
-                .filter(item => item.publicId.startsWith('dienchan/data/') || item.folder === 'dienchan/data' || item.publicId.startsWith('dienchan/mirror/') || item.folder === 'dienchan/mirror');
+                .filter(item => item.publicId.startsWith('dienchan/mirrors/') || item.folder === 'dienchan/mirrors');
         }
 
         function mapCloudinaryEntryToMirrorItem(entry) {
@@ -1636,7 +1636,7 @@
                                     <input id="new-mirror-publicId" type="text" placeholder="Cloudinary public_id" class="w-full p-3 border rounded-xl" value="${newMirrorPublicId}" oninput="newMirrorPublicId = this.value" />
                                 </div>
                                 <div class="grid gap-4 sm:grid-cols-2">
-                                    <input id="new-mirror-folder" type="text" placeholder="Folder (ví dụ: dienchan/mirror)" class="w-full p-3 border rounded-xl" value="${newMirrorFolder}" oninput="newMirrorFolder = this.value" />
+                                    <input id="new-mirror-folder" type="text" placeholder="Folder (ví dụ: dienchan/mirrors)" class="w-full p-3 border rounded-xl" value="${newMirrorFolder}" oninput="newMirrorFolder = this.value" />
                                     <input id="new-mirror-tags" type="text" placeholder="Keywords (cách nhau dấu cách)" class="w-full p-3 border rounded-xl" value="${newMirrorTags}" oninput="newMirrorTags = this.value" />
                                 </div>
                                 <div>
@@ -1673,7 +1673,7 @@
                                                 <div>
                                                     <div class="text-lg font-semibold text-slate-900">${item.title || item.publicId}</div>
                                                     <div class="text-xs text-slate-500 break-words">${item.publicId}</div>
-                                                    <div class="text-xs text-slate-500">${item.folder || 'dienchan/mirror'}</div>
+                                                    <div class="text-xs text-slate-500">${item.folder || 'dienchan/mirrors'}</div>
                                                 </div>
                                                 <div class="text-sm text-slate-500">${item.note || 'Không có ghi chú'}</div>
                                                 <div class="flex flex-wrap gap-2">${(item.tags || []).length ? (item.tags || []).map(tag => `<span class="tag tag-primary">${tag}</span>`).join('') : '<span class="text-sm text-slate-500">Không có keyword</span>'}</div>
@@ -1742,7 +1742,7 @@
         function resetNewMirrorForm() {
             newMirrorTitle = '';
             newMirrorPublicId = '';
-            newMirrorFolder = 'dienchan/mirror';
+            newMirrorFolder = 'dienchan/mirrors';
             newMirrorNote = '';
             newMirrorTags = '';
             newMirrorFormOpen = false;
