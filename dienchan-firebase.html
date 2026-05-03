@@ -2449,6 +2449,8 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                         <div class="detail-row"><span>Phác đồ</span><span>${item.title || item.name || 'Không có'}</span></div>
                         <div class="detail-row"><span>Mô tả</span><span>${item.description || item.note ? formatTextForDisplay(item.description || item.note) : 'Không có'}</span></div>
                         <div class="detail-row"><span>Huyệt</span><span>${(item.acupointIds || []).join(', ') || 'Không có'}</span></div>
+                        ${(item.acupointIds || []).some(code => /^[+\-]|[+\-]$/.test(String(code))) ? '<p class="text-xs mt-1 italic" style="color:#ef4444">* Ký hiệu − (trước hoặc sau số huyệt): bên <strong>trái</strong> mặt; + (trước hoặc sau): bên <strong>phải</strong> mặt; không có ký hiệu: <strong>cả hai bên</strong> mặt người bệnh.</p>' : ''}
+                        ${(item.acupointIds || []).length > 0 ? `<button type="button" class="mt-2 px-3 py-2 rounded-xl bg-teal-100 text-teal-800 text-sm font-semibold hover:bg-teal-200 transition" data-acu-ids='${JSON.stringify(item.acupointIds||[]).replace(/'/g,"&#39;")}' onclick="openMapModalFromEl(this,'${(item.title||item.name||'').replace(/'/g,"\\'")}')" >🗺️ Xem bản đồ huyệt</button>` : ''}
                     `;
             } else if (type === 'records') {
                 bodyHtml = editingType === 'records' ? `
@@ -2545,6 +2547,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                         <div class="detail-row"><span>Bộ huyệt</span><span>${item.title || item.name || 'Không có'}</span></div>
                         <div class="detail-row"><span>Mô tả</span><span>${item.description ? formatTextForDisplay(item.description) : 'Không có'}</span></div>
                         <div class="detail-row"><span>Huyệt</span><span>${(item.acupointIds || []).join(', ') || 'Không có'}</span></div>
+                        ${(item.acupointIds || []).length > 0 ? `<button type="button" class="mt-2 px-3 py-2 rounded-xl bg-teal-100 text-teal-800 text-sm font-semibold hover:bg-teal-200 transition" data-acu-ids='${JSON.stringify(item.acupointIds||[]).replace(/'/g,"&#39;")}' onclick="openMapModalFromEl(this,'${(item.title||item.name||'').replace(/'/g,"\\'")}')" >🗺️ Xem bản đồ huyệt</button>` : ''}
                     `;
             }
             return `
@@ -3559,7 +3562,9 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             const normalized = makeSearchHay(search);
             if (!normalized) return [];
             const tokens = normalized.split(/[\s,;|]+/).filter(Boolean);
-            const ids = tokens.filter(t => /^\d+$/.test(t));
+            const ids = tokens
+                .filter(t => /^[+\-]?\d+[+\-]?$/.test(t))
+                .map(t => String(parseInt(t.replace(/^[+\-]|[+\-]$/g, ''), 10)));
             if (ids.length) {
                 const seen = new Set();
                 const results = [];
@@ -3771,6 +3776,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                                 <div class="flex flex-wrap gap-2">
                                     ${(item.acupointIds || []).map(code => `<span class="tag tag-primary">#${code}</span>`).join('')}
                                 </div>
+                                ${(item.acupointIds || []).some(code => /^[+\-]|[+\-]$/.test(String(code))) ? '<p class="text-xs mt-1 italic" style="color:#ef4444">* Ký hiệu − (trước hoặc sau số huyệt): bên <strong>trái</strong> mặt; + (trước hoặc sau): bên <strong>phải</strong> mặt; không có ký hiệu: <strong>cả hai bên</strong> mặt người bệnh.</p>' : ''}
                             </div>
                             <div class="flex flex-col gap-2 items-end">
                                 <div class="flex flex-col gap-2 items-end">
@@ -4439,5 +4445,601 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             loadCloudinaryMetadataFromStaticFile().finally(() => showSection('manage'));
         });
     </script>
+
+    <!-- ============================================================
+         BẢN ĐỒ HUYỆT MODAL – tọa độ huyệt + giao diện popup
+    ============================================================ -->
+    <script>
+    const HUYET_COORDS = {
+      "0":  { coords: [{ x: 79.5, y: 60.4 }, { x: 6.6, y: 60.3 }, { x: 37.2, y: 60.3 }] },
+      "1":  { coords: [{ x: 21.9, y: 60.7 }, { x: 52.8, y: 60.6 }] },
+      "3":  { coords: [{ x: 14.9, y: 62.0 }, { x: 29.0, y: 62.0 }] },
+      "4":  { coords: [{ x: 57.1, y: 61.0 }] },
+      "5":  { coords: [{ x: 18.2, y: 65.6 }, { x: 25.6, y: 65.7 }, { x: 56.1, y: 65.9 }] },
+      "6":  { coords: [{ x: 14.9, y: 80.8 }, { x: 29.0, y: 81.1 }] },
+      "7":  { coords: [{ x: 20.3, y: 72.2 }, { x: 23.6, y: 72.1 }] },
+      "8":  { coords: [{ x: 21.9, y: 49.7 }] },
+      "9":  { coords: [{ x: 67.1, y: 77.9 }] },
+      "10": { coords: [{ x: 72.5, y: 68.4 }] },
+      "11": { coords: [{ x: 17.3, y: 90.1 }, { x: 26.4, y: 90.2 }] },
+      "12": { coords: [{ x: 20.3, y: 49.7 }, { x: 23.6, y: 49.7 }] },
+      "13": { coords: [{ x: 14.8, y: 59.6 }, { x: 29.0, y: 59.4 }] },
+      "14": { coords: [{ x: 7.1, y: 68.1 }, { x: 36.7, y: 68.2 }, { x: 79.4, y: 69.1 }] },
+      "15": { coords: [{ x: 89.9, y: 94.1 }] },
+      "16": { coords: [{ x: 79.3, y: 49.6 }] },
+      "17": { coords: [{ x: 16.4, y: 72.1 }, { x: 27.3, y: 72.0 }] },
+      "18": { coords: [{ x: 19.1, y: 49.7 }, { x: 24.7, y: 49.6 }] },
+      "19": { coords: [{ x: 21.9, y: 69.5 }, { x: 54.4, y: 68.8 }] },
+      "20": { coords: [{ x: 21.1, y: 49.8 }, { x: 22.7, y: 49.7 }] },
+      "21": { coords: [{ x: 20.3, y: 59.2 }, { x: 23.6, y: 59.1 }] },
+      "22": { coords: [{ x: 21.8, y: 87.4 }, { x: 55.9, y: 88.0 }] },
+      "23": { coords: [{ x: 21.8, y: 64.7 }, { x: 51.4, y: 64.4 }] },
+      "24": { coords: [{ x: 10.7, y: 49.8 }, { x: 33.2, y: 49.6 }, { x: 63.8, y: 49.6 }] },
+      "26": { coords: [{ x: 21.9, y: 44.7 }] },
+      "27": { coords: [{ x: 9.6, y: 78.1 }, { x: 34.3, y: 78.1 }, { x: 64.5, y: 77.8 }] },
+      "28": { coords: [{ x: 67.2, y: 68.5 }] },
+      "29": { coords: [{ x: 15.9, y: 78.2 }, { x: 27.8, y: 78.1 }, { x: 60.0, y: 77.9 }] },
+      "30": { coords: [{ x: 66.2, y: 64.7 }] },
+      "31": { coords: [{ x: 14.9, y: 56.8 }, { x: 29.0, y: 56.8 }] },
+      "32": { coords: [{ x: 14.9, y: 65.9 }] },
+      "33": { coords: [{ x: 18.6, y: 40.8 }, { x: 25.1, y: 41.0 }] },
+      "34": { coords: [{ x: 18.7, y: 42.8 }, { x: 25.1, y: 42.7 }] },
+      "35": { coords: [{ x: 20.3, y: 71.2 }, { x: 23.6, y: 71.1 }] },
+      "36": { coords: [{ x: 15.1, y: 70.5 }, { x: 28.5, y: 70.5 }] },
+      "37": { coords: [{ x: 29.0, y: 65.8 }] },
+      "38": { coords: [{ x: 14.9, y: 72.1 }, { x: 28.9, y: 72.1 }] },
+      "39": { coords: [{ x: 28.2, y: 68.9 }] },
+      "40": { coords: [{ x: 30.5, y: 65.8 }] },
+      "41": { coords: [{ x: 13.3, y: 68.8 }] },
+      "43": { coords: [{ x: 21.9, y: 62.0 }] },
+      "45": { coords: [{ x: 20.3, y: 61.8 }, { x: 23.6, y: 61.7 }] },
+      "46": { coords: [{ x: 18.8, y: 51.0 }, { x: 25.1, y: 50.9 }] },
+      "47": { coords: [{ x: 16.5, y: 65.8 }] },
+      "48": { coords: [{ x: 17.2, y: 68.9 }] },
+      "49": { coords: [{ x: 15.5, y: 68.9 }] },
+      "50": { coords: [{ x: 14.8, y: 68.8 }] },
+      "51": { coords: [{ x: 18.2, y: 90.2 }, { x: 25.5, y: 90.3 }] },
+      "52": { coords: [{ x: 17.4, y: 61.9 }] },
+      "53": { coords: [{ x: 21.9, y: 75.7 }] },
+      "54": { coords: [{ x: 87.5, y: 85.4 }] },
+      "55": { coords: [{ x: 87.0, y: 87.7 }] },
+      "56": { coords: [{ x: 87.0, y: 90.8 }] },
+      "57": { coords: [{ x: 80.8, y: 54.1 }] },
+      "58": { coords: [{ x: 26.3, y: 62.0 }] },
+      "59": { coords: [{ x: 9.6, y: 54.7 }, { x: 34.3, y: 54.7 }] },
+      "60": { coords: [{ x: 67.2, y: 55.1 }] },
+      "61": { coords: [{ x: 18.3, y: 61.7 }, { x: 25.6, y: 62.0 }] },
+      "62": { coords: [{ x: 67.2, y: 83.9 }] },
+      "63": { coords: [{ x: 21.8, y: 72.1 }] },
+      "64": { coords: [{ x: 18.3, y: 69.0 }, { x: 25.6, y: 68.9 }, { x: 57.9, y: 68.3 }] },
+      "65": { coords: [{ x: 19.1, y: 44.7 }, { x: 24.6, y: 44.6 }] },
+      "68": { coords: [{ x: 68.4, y: 56.3 }] },
+      "69": { coords: [{ x: 67.2, y: 57.4 }] },
+      "70": { coords: [{ x: 29.0, y: 68.9 }] },
+      "71": { coords: [{ x: 17.5, y: 64.2 }, { x: 26.1, y: 64.4 }, { x: 58.5, y: 64.3 }] },
+      "72": { coords: [{ x: 64.5, y: 68.6 }] },
+      "73": { coords: [{ x: 14.9, y: 54.8 }, { x: 29.0, y: 54.9 }] },
+      "74": { coords: [{ x: 17.4, y: 65.9 }, { x: 26.4, y: 65.8 }] },
+      "75": { coords: [{ x: 17.6, y: 67.4 }, { x: 26.2, y: 67.2 }] },
+      "79": { coords: [{ x: 79.3, y: 64.0 }] },
+      "80": { coords: [{ x: 21.1, y: 90.2 }, { x: 22.6, y: 90.3 }] },
+      "85": { coords: [{ x: 16.5, y: 82.1 }, { x: 27.3, y: 81.9 }] },
+      "87": { coords: [{ x: 21.8, y: 90.3 }] },
+      "88": { coords: [{ x: 74.6, y: 55.2 }] },
+      "89": { coords: [{ x: 16.5, y: 83.9 }, { x: 27.3, y: 83.8 }] },
+      "91": { coords: [{ x: 19.1, y: 65.8 }, { x: 24.6, y: 65.8 }] },
+      "94": { coords: [{ x: 76.8, y: 77.9 }] },
+      "95": { coords: [{ x: 77.6, y: 75.6 }] },
+      "96": { coords: [{ x: 72.5, y: 78.0 }] },
+      "97": { coords: [{ x: 16.9, y: 41.5 }, { x: 26.8, y: 41.5 }] },
+      "98": { coords: [{ x: 12.4, y: 40.6 }, { x: 31.3, y: 40.6 }] },
+      "99": { coords: [{ x: 14.5, y: 40.7 }, { x: 29.5, y: 40.7 }] },
+      "100": { coords: [{ x: 8.6, y: 46.7 }, { x: 35.4, y: 46.7 }, { x: 65.9, y: 46.4 }] },
+      "101": { coords: [{ x: 20.3, y: 90.2 }, { x: 23.6, y: 90.3 }] },
+      "102": { coords: [{ x: 13.5, y: 40.5 }, { x: 30.7, y: 40.5 }] },
+      "103": { coords: [{ x: 22.0, y: 33.7 }] },
+      "104": { coords: [{ x: 14.9, y: 83.8 }, { x: 28.9, y: 83.8 }] },
+      "105": { coords: [{ x: 13.3, y: 83.9 }, { x: 30.5, y: 83.8 }] },
+      "106": { coords: [{ x: 21.9, y: 39.3 }] },
+      "107": { coords: [{ x: 20.3, y: 39.2 }] },
+      "108": { coords: [{ x: 21.9, y: 42.7 }] },
+      "109": { coords: [{ x: 21.9, y: 46.9 }] },
+      "113": { coords: [{ x: 18.2, y: 72.1 }, { x: 25.5, y: 72.1 }] },
+      "120": { coords: [{ x: 27.3, y: 65.8 }, { x: 59.8, y: 65.9 }] },
+      "121": { coords: [{ x: 26.5, y: 68.9 }] },
+      "123": { coords: [{ x: 11.7, y: 33.5 }, { x: 32.3, y: 33.7 }] },
+      "124": { coords: [{ x: 13.4, y: 33.6 }, { x: 30.6, y: 33.6 }] },
+      "125": { coords: [{ x: 15.0, y: 35.1 }, { x: 29.0, y: 35.2 }] },
+      "126": { coords: [{ x: 22.0, y: 22.7 }] },
+      "127": { coords: [{ x: 21.8, y: 83.8 }] },
+      "128": { coords: [{ x: 14.9, y: 36.5 }, { x: 29.0, y: 36.5 }] },
+      "129": { coords: [{ x: 9.6, y: 43.5 }, { x: 34.3, y: 43.3 }] },
+      "130": { coords: [{ x: 67.2, y: 49.7 }, { x: 8.0, y: 49.7 }, { x: 35.9, y: 49.7 }] },
+      "131": { coords: [{ x: 64.6, y: 49.7 }, { x: 9.6, y: 49.7 }, { x: 34.3, y: 49.7 }] },
+      "132": { coords: [{ x: 11.6, y: 65.8 }, { x: 32.2, y: 65.9 }] },
+      "138": { coords: [{ x: 79.3, y: 57.3 }] },
+      "139": { coords: [{ x: 82.4, y: 39.0 }] },
+      "143": { coords: [{ x: 38.4, y: 84.1 }] },
+      "145": { coords: [{ x: 17.8, y: 63.1 }, { x: 25.9, y: 63.2 }] },
+      "156": { coords: [{ x: 18.2, y: 85.7 }, { x: 25.6, y: 85.6 }] },
+      "157": { coords: [{ x: 18.2, y: 87.5 }, { x: 25.6, y: 87.4 }] },
+      "159": { coords: [{ x: 16.4, y: 87.4 }, { x: 27.3, y: 87.4 }] },
+      "162": { coords: [{ x: 64.5, y: 83.9 }] },
+      "163": { coords: [{ x: 21.8, y: 74.0 }] },
+      "170": { coords: [{ x: 79.5, y: 59.0 }] },
+      "171": { coords: [{ x: 17.0, y: 64.2 }] },
+      "173": { coords: [{ x: 21.8, y: 65.8 }, { x: 51.2, y: 66.0 }] },
+      "174": { coords: [{ x: 20.3, y: 64.6 }, { x: 23.6, y: 64.6 }] },
+      "175": { coords: [{ x: 20.3, y: 33.6 }, { x: 23.6, y: 33.7 }] },
+      "177": { coords: [{ x: 70.0, y: 41.9 }] },
+      "178": { coords: [{ x: 20.3, y: 65.8 }, { x: 23.6, y: 65.8 }] },
+      "179": { coords: [{ x: 18.7, y: 45.5 }, { x: 25.1, y: 45.4 }] },
+      "180": { coords: [{ x: 67.3, y: 44.6 }] },
+      "183": { coords: [{ x: 68.9, y: 44.6 }] },
+      "184": { coords: [{ x: 20.3, y: 55.9 }, { x: 23.5, y: 55.9 }] },
+      "188": { coords: [{ x: 19.7, y: 46.9 }, { x: 24.1, y: 46.7 }] },
+      "189": { coords: [{ x: 21.9, y: 54.7 }, { x: 55.5, y: 55.1 }] },
+      "191": { coords: [{ x: 35.3, y: 33.7 }, { x: 69.4, y: 33.4 }] },
+      "195": { coords: [{ x: 36.4, y: 39.2 }, { x: 69.9, y: 38.9 }] },
+      "196": { coords: [{ x: 20.7, y: 48.1 }, { x: 23.1, y: 48.3 }] },
+      "197": { coords: [{ x: 19.2, y: 33.6 }, { x: 24.7, y: 33.8 }] },
+      "199": { coords: [{ x: 18.8, y: 33.7 }, { x: 25.1, y: 33.7 }] },
+      "200": { coords: [{ x: 90.2, y: 77.7 }] },
+      "201": { coords: [{ x: 89.0, y: 79.4 }] },
+      "202": { coords: [{ x: 88.5, y: 82.4 }] },
+      "203": { coords: [{ x: 88.3, y: 93.6 }] },
+      "204": { coords: [{ x: 89.7, y: 96.2 }] },
+      "209": { coords: [{ x: 18.3, y: 52.7 }, { x: 25.6, y: 52.8 }] },
+      "210": { coords: [{ x: 18.3, y: 25.6 }, { x: 25.6, y: 25.7 }] },
+      "215": { coords: [{ x: 8.8, y: 39.3 }, { x: 34.9, y: 39.3 }, { x: 66.5, y: 39.1 }] },
+      "216": { coords: [{ x: 13.4, y: 43.1 }, { x: 30.6, y: 43.1 }] },
+      "217": { coords: [{ x: 9.6, y: 45.4 }, { x: 34.3, y: 45.4 }] },
+      "218": { coords: [{ x: 11.5, y: 43.8 }, { x: 32.2, y: 44.0 }] },
+      "219": { coords: [{ x: 18.3, y: 22.7 }, { x: 25.7, y: 22.7 }] },
+      "220": { coords: [{ x: 16.1, y: 79.6 }, { x: 27.6, y: 79.7 }] },
+      "222": { coords: [{ x: 14.8, y: 78.2 }, { x: 29.0, y: 78.2 }, { x: 61.3, y: 78.0 }] },
+      "226": { coords: [{ x: 17.4, y: 80.1 }, { x: 26.5, y: 79.9 }] },
+      "227": { coords: [{ x: 20.3, y: 82.5 }, { x: 23.6, y: 82.5 }] },
+      "228": { coords: [{ x: 17.4, y: 76.8 }, { x: 26.4, y: 76.8 }] },
+      "229": { coords: [{ x: 13.3, y: 78.1 }, { x: 30.6, y: 78.2 }, { x: 62.1, y: 78.0 }] },
+      "233": { coords: [{ x: 14.0, y: 65.7 }] },
+      "235": { coords: [{ x: 21.8, y: 85.0 }] },
+      "236": { coords: [{ x: 21.9, y: 82.5 }] },
+      "240": { coords: [{ x: 20.3, y: 44.6 }, { x: 23.6, y: 44.6 }] },
+      "243": { coords: [{ x: 16.5, y: 62.0 }, { x: 27.4, y: 62.0 }] },
+      "245": { coords: [{ x: 74.2, y: 73.8 }] },
+      "247": { coords: [{ x: 21.9, y: 71.2 }] },
+      "253": { coords: [{ x: 37.9, y: 84.2 }, { x: 39.0, y: 84.2 }] },
+      "254": { coords: [{ x: 20.6, y: 92.4 }, { x: 23.2, y: 92.3 }] },
+      "255": { coords: [{ x: 19.6, y: 92.3 }, { x: 24.3, y: 92.3 }] },
+      "256": { coords: [{ x: 17.0, y: 91.2 }, { x: 26.9, y: 90.9 }] },
+      "257": { coords: [{ x: 16.1, y: 90.2 }, { x: 27.7, y: 90.3 }] },
+      "265": { coords: [{ x: 74.7, y: 68.6 }] },
+      "267": { coords: [{ x: 14.9, y: 43.7 }, { x: 29.0, y: 43.7 }] },
+      "268": { coords: [{ x: 16.5, y: 44.1 }, { x: 27.4, y: 44.1 }] },
+      "269": { coords: [{ x: 13.4, y: 62.1 }, { x: 30.6, y: 61.9 }] },
+      "270": { coords: [{ x: 11.5, y: 78.2 }, { x: 32.1, y: 78.2 }] },
+      "274": { coords: [{ x: 78.3, y: 63.9 }] },
+      "275": { coords: [{ x: 76.8, y: 68.6 }] },
+      "276": { coords: [{ x: 11.5, y: 62.0 }, { x: 32.2, y: 62.0 }, { x: 63.1, y: 61.5 }] },
+      "277": { coords: [{ x: 78.2, y: 71.2 }] },
+      "278": { coords: [{ x: 34.4, y: 22.7 }] },
+      "279": { coords: [{ x: 9.6, y: 62.0 }, { x: 34.4, y: 62.0 }, { x: 64.6, y: 61.6 }] },
+      "280": { coords: [{ x: 84.9, y: 72.0 }] },
+      "281": { coords: [{ x: 76.8, y: 57.2 }] },
+      "282": { coords: [{ x: 76.8, y: 63.9 }] },
+      "284": { coords: [{ x: 76.8, y: 60.6 }] },
+      "285": { coords: [{ x: 21.9, y: 59.1 }] },
+      "286": { coords: [{ x: 20.8, y: 84.3 }, { x: 22.9, y: 84.4 }] },
+      "287": { coords: [{ x: 20.3, y: 69.2 }, { x: 23.6, y: 69.3 }] },
+      "288": { coords: [{ x: 75.7, y: 71.0 }] },
+      "290": { coords: [{ x: 20.3, y: 60.7 }, { x: 23.6, y: 60.7 }] },
+      "292": { coords: [{ x: 14.9, y: 88.8 }, { x: 28.9, y: 88.7 }] },
+      "293": { coords: [{ x: 14.1, y: 87.4 }, { x: 29.7, y: 87.5 }] },
+      "297": { coords: [{ x: 78.1, y: 68.4 }] },
+      "300": { coords: [{ x: 16.5, y: 28.1 }, { x: 27.4, y: 28.1 }] },
+      "301": { coords: [{ x: 14.9, y: 28.1 }, { x: 29.0, y: 28.0 }] },
+      "302": { coords: [{ x: 13.3, y: 28.1 }, { x: 30.6, y: 28.1 }] },
+      "303": { coords: [{ x: 11.7, y: 28.0 }, { x: 32.3, y: 28.1 }] },
+      "305": { coords: [{ x: 14.4, y: 75.0 }, { x: 29.3, y: 75.0 }] },
+      "308": { coords: [{ x: 80.0, y: 72.0 }] },
+      "310": { coords: [{ x: 19.1, y: 39.3 }, { x: 24.8, y: 39.3 }] },
+      "312": { coords: [{ x: 21.9, y: 45.6 }] },
+      "319": { coords: [{ x: 8.8, y: 42.8 }, { x: 35.0, y: 42.3 }, { x: 66.6, y: 41.8 }] },
+      "324": { coords: [{ x: 11.6, y: 41.1 }, { x: 32.3, y: 41.0 }] },
+      "329": { coords: [{ x: 22.0, y: 24.2 }] },
+      "330": { coords: [{ x: 19.2, y: 52.7 }, { x: 24.7, y: 52.8 }] },
+      "332": { coords: [{ x: 18.3, y: 39.2 }, { x: 25.6, y: 39.3 }] },
+      "333": { coords: [{ x: 13.4, y: 36.3 }, { x: 30.6, y: 36.5 }] },
+      "338": { coords: [{ x: 67.1, y: 64.7 }] },
+      "340": { coords: [{ x: 20.4, y: 28.1 }, { x: 23.7, y: 28.0 }] },
+      "341": { coords: [{ x: 19.2, y: 28.1 }, { x: 24.7, y: 28.1 }] },
+      "342": { coords: [{ x: 21.9, y: 28.1 }] },
+      "343": { coords: [{ x: 67.2, y: 86.8 }] },
+      "344": { coords: [{ x: 66.1, y: 88.1 }] },
+      "345": { coords: [{ x: 65.3, y: 88.3 }] },
+      "346": { coords: [{ x: 63.0, y: 88.5 }] },
+      "347": { coords: [{ x: 20.3, y: 84.5 }, { x: 23.6, y: 84.5 }] },
+      "348": { coords: [{ x: 21.9, y: 25.4 }] },
+      "353": { coords: [{ x: 13.3, y: 54.8 }, { x: 30.6, y: 54.8 }] },
+      "354": { coords: [{ x: 16.5, y: 54.8 }, { x: 27.3, y: 54.8 }] },
+      "355": { coords: [{ x: 18.3, y: 53.8 }, { x: 25.6, y: 54.0 }] },
+      "356": { coords: [{ x: 13.3, y: 65.8 }] },
+      "357": { coords: [{ x: 17.4, y: 54.8 }, { x: 26.4, y: 54.6 }] },
+      "358": { coords: [{ x: 11.6, y: 54.6 }, { x: 32.2, y: 54.6 }, { x: 63.1, y: 55.1 }] },
+      "360": { coords: [{ x: 16.5, y: 39.3 }, { x: 27.4, y: 39.3 }] },
+      "364": { coords: [{ x: 16.5, y: 36.4 }, { x: 27.4, y: 36.3 }] },
+      "365": { coords: [{ x: 21.9, y: 92.3 }] },
+      "370": { coords: [{ x: 26.7, y: 64.2 }, { x: 59.3, y: 64.3 }] },
+      "377": { coords: [{ x: 19.2, y: 22.7 }, { x: 24.7, y: 22.6 }] },
+      "379": { coords: [{ x: 20.3, y: 22.7 }, { x: 23.7, y: 22.7 }] },
+      "399": { coords: [{ x: 18.3, y: 28.1 }, { x: 25.6, y: 28.1 }] },
+      "401": { coords: [{ x: 22.0, y: 26.8 }] },
+      "405": { coords: [{ x: 19.1, y: 36.5 }, { x: 24.7, y: 36.4 }] },
+      "421": { coords: [{ x: 18.3, y: 33.7 }, { x: 25.6, y: 33.7 }] },
+      "422": { coords: [{ x: 16.5, y: 33.7 }, { x: 27.4, y: 33.7 }] },
+      "423": { coords: [{ x: 15.0, y: 33.7 }, { x: 29.0, y: 33.7 }] },
+      "428": { coords: [{ x: 11.7, y: 39.4 }, { x: 32.2, y: 39.2 }] },
+      "432": { coords: [{ x: 15.8, y: 57.4 }, { x: 28.1, y: 57.4 }] },
+      "437": { coords: [{ x: 30.5, y: 69.0 }] },
+      "458": { coords: [{ x: 13.4, y: 37.9 }, { x: 30.6, y: 37.9 }] },
+      "459": { coords: [{ x: 69.4, y: 52.0 }] },
+      "460": { coords: [{ x: 69.6, y: 49.6 }] },
+      "461": { coords: [{ x: 11.5, y: 82.5 }, { x: 32.1, y: 82.6 }] },
+      "467": { coords: [{ x: 17.0, y: 59.7 }, { x: 26.7, y: 59.9 }] },
+      "477": { coords: [{ x: 19.7, y: 43.3 }, { x: 24.1, y: 43.3 }] },
+      "481": { coords: [{ x: 29.6, y: 63.5 }] },
+      "491": { coords: [{ x: 18.2, y: 58.3 }, { x: 25.6, y: 58.2 }] },
+      "505": { coords: [{ x: 19.1, y: 53.9 }, { x: 24.6, y: 53.9 }] }
+    };
+
+    function openMapModal(acupointIds, title) {
+        const overlay = document.getElementById('map-modal-overlay');
+        if (!overlay) return;
+        const titleEl  = document.getElementById('map-modal-title');
+        const imgWrap  = document.getElementById('map-modal-img-wrap');
+        const chipsEl  = document.getElementById('map-modal-chips');
+
+        titleEl.textContent = '🗺️ ' + (title || 'Bản đồ huyệt');
+
+        // Reset zoom trước khi mở
+        mmapScale = 1; mmapTx = 0; mmapTy = 0;
+
+        // Xóa dots/labels/chips cũ
+        imgWrap.querySelectorAll('.mmap-dot, .mmap-label').forEach(el => el.remove());
+        chipsEl.innerHTML = '';
+
+        // Chuẩn hóa – bỏ ký hiệu +/- (trái/phải) để lấy số huyệt
+        const rawIds  = (acupointIds || []).map(id => String(id).replace(/^[+\-]|[+\-]$/g, '').trim()).filter(Boolean);
+        const unique  = [...new Set(rawIds)];
+
+        let dotCount = 0;
+        unique.forEach(pid => {
+            const info    = HUYET_COORDS[pid];
+            const hasCoord = info && (info.coords || []).length > 0;
+
+            if (hasCoord) {
+                info.coords.forEach((c, ci) => {
+                    const dot = document.createElement('div');
+                    dot.className = 'mmap-dot';
+                    dot.dataset.pid = pid;
+                    dot.style.left = c.x + '%';
+                    dot.style.top  = c.y + '%';
+                    imgWrap.appendChild(dot);
+                    dotCount++;
+                    if (ci === 0) {
+                        const lbl = document.createElement('div');
+                        lbl.className = 'mmap-label';
+                        lbl.dataset.pid = pid;
+                        lbl.style.top  = c.y + '%';
+                        lbl.style.left = c.x + '%';
+                        lbl.style.transform = c.x < 52
+                            ? 'translate(6px,-50%)'
+                            : 'translate(calc(-100% - 6px),-50%)';
+                        lbl.textContent = pid;
+                        imgWrap.appendChild(lbl);
+                    }
+                });
+            }
+
+            const chip = document.createElement('span');
+            chip.className = 'mmap-chip' + (hasCoord ? '' : ' mmap-chip-no-coord');
+            chip.dataset.pid = pid;
+            chip.title     = hasCoord
+                ? `Huyệt ${pid} – ${info.coords.length} vị trí`
+                : `Huyệt ${pid} – chưa có tọa độ`;
+            chip.textContent = 'H.' + pid;
+            chip.style.cursor = 'pointer';
+            chip.addEventListener('click', function() {
+                if (hasCoord) highlightMapDot(pid);
+            });
+            chipsEl.appendChild(chip);
+        });
+
+        document.getElementById('map-modal-dot-count').textContent =
+            unique.length + ' huyệt · ' + dotCount + ' vị trí';
+
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        initMapModalZoom();
+        // Tính kích thước sau khi overlay đã hiện (có layout thật)
+        requestAnimationFrame(function() {
+            updateMapModalImageSize();
+            mmapApply();
+        });
+    }
+
+    function openMapModalFromEl(el, title) {
+        try { openMapModal(JSON.parse(el.dataset.acuIds || '[]'), title); } catch (e) {}
+    }
+
+    let mmapHighlightedPid = null;
+    function highlightMapDot(pid) {
+        mmapHighlightedPid = mmapHighlightedPid === pid ? null : pid;
+        document.querySelectorAll('.mmap-dot').forEach(dot => {
+            dot.classList.toggle('mmap-dot-active', dot.dataset.pid === pid && mmapHighlightedPid === pid);
+        });
+    }
+
+    function closeMapModal() {
+        const overlay = document.getElementById('map-modal-overlay');
+        if (overlay) overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function updateMapModalImageSize() {
+        const clip = document.getElementById('map-modal-zoom-clip');
+        const wrap = document.getElementById('map-modal-img-wrap');
+        if (!clip || !wrap) return;
+        const img = wrap.querySelector('img');
+        if (!img || !img.naturalWidth || !img.naturalHeight) return;
+
+        const cw = clip.clientWidth;
+        const ch = clip.clientHeight;
+        const ratio = img.naturalWidth / img.naturalHeight;
+        let width = cw;
+        let height = cw / ratio;
+        if (height > ch) {
+            height = ch;
+            width = ch * ratio;
+        }
+
+        wrap.style.width = width + 'px';
+        wrap.style.height = height + 'px';
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeMapModal();
+    });
+
+    /* ============================================================
+       ZOOM / PAN cho modal bản đồ
+    ============================================================ */
+    const MMAP_MIN = 1, MMAP_MAX = 5;
+    let mmapScale = 1, mmapTx = 0, mmapTy = 0;
+    let mmapDragging = false, mmapDragStartX = 0, mmapDragStartY = 0;
+    let mmapDragBaseTx = 0, mmapDragBaseTy = 0;
+    let mmapClickStartX = 0, mmapClickStartY = 0;
+    let mmapPinchDist0 = 0, mmapPinchScale0 = 1;
+    let mmapZoomInitDone = false;
+
+    function mmapApply() {
+        const wrap = document.getElementById('map-modal-img-wrap');
+        if (!wrap) return;
+        wrap.style.transform = `translate(${mmapTx}px,${mmapTy}px) scale(${mmapScale})`;
+        const clip = document.getElementById('map-modal-zoom-clip');
+        if (clip) clip.style.cursor = mmapScale > 1.01 ? (mmapDragging ? 'grabbing' : 'grab') : 'zoom-in';
+    }
+
+    function mmapClamp() {
+        const clip = document.getElementById('map-modal-zoom-clip');
+        if (!clip) return;
+        const maxX = clip.offsetWidth  * (mmapScale - 1) / 2;
+        const maxY = clip.offsetHeight * (mmapScale - 1) / 2;
+        mmapTx = Math.max(-maxX, Math.min(maxX, mmapTx));
+        mmapTy = Math.max(-maxY, Math.min(maxY, mmapTy));
+    }
+
+    function mmapResetZoom() {
+        mmapScale = 1; mmapTx = 0; mmapTy = 0;
+        mmapApply();
+    }
+
+    function mmapZoomAt(factor, cx, cy) {
+        /* cx,cy = tọa độ pixel trong clip div tính từ góc trái trên */
+        const clip = document.getElementById('map-modal-zoom-clip');
+        if (!clip) return;
+        const cw = clip.offsetWidth, ch = clip.offsetHeight;
+        const prev = mmapScale;
+        mmapScale = Math.min(MMAP_MAX, Math.max(MMAP_MIN, mmapScale * factor));
+        if (mmapScale === prev) return;
+        // Giữ điểm (cx,cy) đứng yên khi zoom
+        const px = cx - cw / 2, py = cy - ch / 2;
+        const contentX = (px - mmapTx) / prev;
+        const contentY = (py - mmapTy) / prev;
+        mmapTx = px - contentX * mmapScale;
+        mmapTy = py - contentY * mmapScale;
+        mmapClamp();
+        mmapApply();
+    }
+
+    function mmapZoomCenter(factor) {
+        const clip = document.getElementById('map-modal-zoom-clip');
+        if (!clip) return;
+        mmapZoomAt(factor, clip.offsetWidth / 2, clip.offsetHeight / 2);
+    }
+
+    function mmapGetPinchDist(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function initMapModalZoom() {
+        if (mmapZoomInitDone) return;
+        mmapZoomInitDone = true;
+        const clip = document.getElementById('map-modal-zoom-clip');
+        if (!clip) return;
+
+        window.addEventListener('resize', function() {
+            if (document.getElementById('map-modal-overlay')?.classList.contains('open')) {
+                updateMapModalImageSize();
+                mmapApply();
+            }
+        });
+
+        // Scroll wheel
+        clip.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const rect = clip.getBoundingClientRect();
+            mmapZoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - rect.left, e.clientY - rect.top);
+        }, { passive: false });
+
+        // Mouse drag + click-zoom
+        clip.addEventListener('mousedown', function(e) {
+            mmapClickStartX = e.clientX; mmapClickStartY = e.clientY;
+            if (mmapScale > 1.01) {
+                mmapDragging = true;
+                mmapDragStartX = e.clientX; mmapDragStartY = e.clientY;
+                mmapDragBaseTx = mmapTx; mmapDragBaseTy = mmapTy;
+                clip.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!mmapDragging) return;
+            mmapTx = mmapDragBaseTx + (e.clientX - mmapDragStartX);
+            mmapTy = mmapDragBaseTy + (e.clientY - mmapDragStartY);
+            mmapClamp(); mmapApply();
+        });
+        document.addEventListener('mouseup', function() {
+            if (mmapDragging) { mmapDragging = false; mmapApply(); }
+        });
+        clip.addEventListener('click', function(e) {
+            const dx = e.clientX - mmapClickStartX, dy = e.clientY - mmapClickStartY;
+            if (Math.sqrt(dx*dx + dy*dy) > 6) return; // kéo, không phải click
+            const rect = clip.getBoundingClientRect();
+            const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+            if (mmapScale > 1.5) { mmapResetZoom(); }
+            else { mmapZoomAt(2 / mmapScale, cx, cy); }
+        });
+
+        // Touch: pinch + pan
+        clip.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                mmapPinchDist0  = mmapGetPinchDist(e.touches);
+                mmapPinchScale0 = mmapScale;
+                e.preventDefault();
+            } else if (e.touches.length === 1 && mmapScale > 1.01) {
+                mmapDragging = true;
+                mmapDragStartX = e.touches[0].clientX; mmapDragStartY = e.touches[0].clientY;
+                mmapDragBaseTx = mmapTx; mmapDragBaseTy = mmapTy;
+                e.preventDefault();
+            }
+        }, { passive: false });
+        clip.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 2) {
+                const dist = mmapGetPinchDist(e.touches);
+                const rect = clip.getBoundingClientRect();
+                const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+                const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+                const newScale = Math.min(MMAP_MAX, Math.max(MMAP_MIN, mmapPinchScale0 * (dist / mmapPinchDist0)));
+                const factor = newScale / mmapScale;
+                const cw = clip.offsetWidth, ch = clip.offsetHeight;
+                const px = cx - cw / 2, py = cy - ch / 2;
+                const contentX = (px - mmapTx) / mmapScale;
+                const contentY = (py - mmapTy) / mmapScale;
+                mmapScale = newScale;
+                mmapTx = px - contentX * mmapScale;
+                mmapTy = py - contentY * mmapScale;
+                mmapClamp(); mmapApply();
+                e.preventDefault();
+            } else if (mmapDragging && e.touches.length === 1) {
+                mmapTx = mmapDragBaseTx + (e.touches[0].clientX - mmapDragStartX);
+                mmapTy = mmapDragBaseTy + (e.touches[0].clientY - mmapDragStartY);
+                mmapClamp(); mmapApply();
+                e.preventDefault();
+            }
+        }, { passive: false });
+        clip.addEventListener('touchend',   function(e) { if (e.touches.length < 1) mmapDragging = false; });
+        clip.addEventListener('touchcancel',function()  { mmapDragging = false; });
+    }
+    </script>
+
+    <!-- Modal bản đồ huyệt -->
+    <div id="map-modal-overlay" onclick="closeMapModal()" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.72);backdrop-filter:blur(4px);z-index:9000;align-items:stretch;justify-content:stretch;">
+        <div onclick="event.stopPropagation()" style="background:#f8fafc;width:100%;height:100%;display:flex;flex-direction:column;padding:.75rem;gap:.5rem;position:relative;">
+            <!-- Hàng tiêu đề + nút zoom + đóng -->
+            <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;flex-shrink:0;">
+                <div id="map-modal-title" style="font-size:1rem;font-weight:700;color:#0f172a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+                <div id="map-modal-dot-count" style="font-size:.75rem;color:#64748b;white-space:nowrap;"></div>
+                <button onclick="mmapZoomCenter(1.3)" title="Phóng to" style="background:#e0f2fe;border:none;border-radius:.5rem;width:2rem;height:2rem;cursor:pointer;font-size:1.1rem;font-weight:700;line-height:1;flex-shrink:0;">+</button>
+                <button onclick="mmapZoomCenter(1/1.3)" title="Thu nhỏ" style="background:#e0f2fe;border:none;border-radius:.5rem;width:2rem;height:2rem;cursor:pointer;font-size:1.1rem;font-weight:700;line-height:1;flex-shrink:0;">−</button>
+                <button onclick="mmapResetZoom()" title="Đặt lại zoom" style="background:#f1f5f9;border:none;border-radius:.5rem;width:2rem;height:2rem;cursor:pointer;font-size:.85rem;line-height:1;flex-shrink:0;">↺</button>
+                <span style="font-size:.7rem;color:#94a3b8;white-space:nowrap;">Cuộn / kéo / chụm</span>
+                <button onclick="closeMapModal()" style="background:#fecaca;border:none;border-radius:9999px;width:2.2rem;height:2.2rem;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#b91c1c;font-weight:700;" aria-label="Đóng">×</button>
+            </div>
+            <!-- Vùng ảnh bản đồ – chiếm toàn bộ không gian còn lại -->
+            <div id="map-modal-zoom-clip" style="position:relative;overflow:hidden;border-radius:.75rem;border:1px solid #e2e8f0;background:#d4e0e0;cursor:zoom-in;touch-action:none;user-select:none;flex:1;min-height:0;display:flex;justify-content:center;align-items:center;">
+                <div id="map-modal-img-wrap" style="position:relative;display:inline-block;width:auto;height:auto;transform-origin:50% 50%;will-change:transform;">
+                    <img src="huyet-map.jpg" alt="Bản đồ huyệt" style="display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;" draggable="false" />
+                </div>
+            </div>
+            <!-- Chips cuộn ngang ở đáy -->
+            <div id="map-modal-chips" style="display:flex;flex-wrap:nowrap;gap:.3rem;overflow-x:auto;flex-shrink:0;padding-bottom:.1rem;"></div>
+        </div>
+    </div>
+
+    <style>
+        #map-modal-overlay.open { display: flex !important; }
+        .mmap-dot {
+            position: absolute;
+            width: 10px; height: 10px;
+            background: radial-gradient(circle at 35% 35%, #ff6b6b, #e53e3e);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 0 6px 2px rgba(255,80,80,.7), 0 0 0 1px rgba(229,62,62,.4);
+            animation: mmap-pulse 1.8s ease-in-out infinite;
+            z-index: 2;
+        }
+        .mmap-label {
+            position: absolute;
+            font-size: 9px; font-weight: 700;
+            color: #fff;
+            background: rgba(20,80,200,.88);
+            border-radius: 3px;
+            padding: 1px 3px;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 3; line-height: 1.3;
+            text-shadow: 0 1px 2px rgba(0,0,0,.4);
+        }
+        @keyframes mmap-pulse {
+            0%   { box-shadow: 0 0 6px 2px rgba(255,80,80,.7), 0 0 0 0   rgba(229,62,62,.7); }
+            70%  { box-shadow: 0 0 6px 2px rgba(255,80,80,.7), 0 0 0 7px rgba(229,62,62,.0); }
+            100% { box-shadow: 0 0 6px 2px rgba(255,80,80,.7), 0 0 0 0   rgba(229,62,62,.0); }
+        }
+        .mmap-chip {
+            font-size: .72rem; font-weight: 700;
+            background: #1d4ed8; color: #fff;
+            border-radius: 5px; padding: .15rem .45rem;
+            cursor: pointer;
+            transition: transform .15s ease, background .2s ease;
+        }
+        .mmap-chip:hover {
+            transform: translateY(-1px);
+            background: #2563eb;
+        }
+        .mmap-chip-no-coord { background: #94a3b8; cursor: default; }
+        .mmap-dot-active {
+            width: 18px; height: 18px;
+            background: radial-gradient(circle at 35% 35%, #ffffff, #ff3838);
+            border-width: 2.5px;
+            box-shadow: 0 0 14px 4px rgba(255,80,80,.85);
+            z-index: 4;
+        }
+    </style>
 </body>
 </html>
