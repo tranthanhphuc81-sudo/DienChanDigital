@@ -4830,6 +4830,95 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
         document.body.style.overflow = '';
     }
 
+    function mmapRenderToCanvas(callback) {
+        /* Vẽ ảnh + dots lên Canvas để export */
+        const wrap = document.getElementById('map-modal-img-wrap');
+        if (!wrap) return;
+        const img  = wrap.querySelector('img');
+        if (!img || !img.naturalWidth) return;
+
+        const W = img.naturalWidth;
+        const H = img.naturalHeight;
+        const canvas = document.createElement('canvas');
+        canvas.width  = W;
+        canvas.height = H;
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(img, 0, 0, W, H);
+
+        // Vẽ dots
+        wrap.querySelectorAll('.mmap-dot').forEach(dot => {
+            const lx  = parseFloat(dot.style.left) / 100 * W;
+            const ly  = parseFloat(dot.style.top)  / 100 * H;
+            const isActive = dot.classList.contains('mmap-dot-active');
+            const r   = isActive ? 18 : 11;
+            const grd = ctx.createRadialGradient(lx - r*.3, ly - r*.3, r*.1, lx, ly, r);
+            grd.addColorStop(0, isActive ? '#ffffff' : '#93c5fd');
+            grd.addColorStop(1, '#1d4ed8');
+            ctx.beginPath();
+            ctx.arc(lx, ly, r, 0, Math.PI * 2);
+            ctx.fillStyle = grd;
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth   = isActive ? 3 : 2;
+            ctx.stroke();
+        });
+
+        // Vẽ labels
+        wrap.querySelectorAll('.mmap-label').forEach(lbl => {
+            const lx  = parseFloat(lbl.style.left) / 100 * W;
+            const ly  = parseFloat(lbl.style.top)  / 100 * H;
+            const txt = lbl.textContent || '';
+            ctx.font = 'bold 13px sans-serif';
+            const tw  = ctx.measureText(txt).width;
+            const px  = lx < W * .52 ? lx + 6 : lx - tw - 10;
+            const py  = ly - 6;
+            ctx.fillStyle = 'rgba(20,80,200,.88)';
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(px - 2, py - 12, tw + 8, 18, 3);
+            } else {
+                ctx.rect(px - 2, py - 12, tw + 8, 18);
+            }
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.fillText(txt, px + 2, py);
+        });
+
+        callback(canvas);
+    }
+
+    function mmapSaveImage() {
+        const title = (document.getElementById('map-modal-title')?.textContent || 'ban-do-huyet').replace(/[^\w\d\u00C0-\u1EF9\s]/g, '').trim();
+        mmapRenderToCanvas(function(canvas) {
+            const a = document.createElement('a');
+            a.href     = canvas.toDataURL('image/png');
+            a.download = title + '.png';
+            a.click();
+        });
+    }
+
+    function mmapPrint() {
+        const title = document.getElementById('map-modal-title')?.textContent || 'Bản đồ huyệt';
+        mmapRenderToCanvas(function(canvas) {
+            const dataUrl = canvas.toDataURL('image/png');
+            const w = window.open('', '_blank');
+            if (!w) { alert('Trình duyệt chặn popup. Hãy cho phép popup rồi thử lại.'); return; }
+            // Dùng DOM API thay vì document.write để tránh lỗi parser
+            const d = w.document;
+            const styleEl = d.createElement('style');
+            styleEl.textContent = '*{margin:0;padding:0}body{background:#fff;text-align:center}img{max-width:100%;height:auto;display:block;margin:auto}@media print{body{margin:0}}';
+            const titleEl = d.createElement('title');
+            titleEl.textContent = title;
+            const imgEl = d.createElement('img');
+            imgEl.src = dataUrl;
+            d.head.appendChild(titleEl);
+            d.head.appendChild(styleEl);
+            d.body.appendChild(imgEl);
+            setTimeout(function() { w.print(); }, 600);
+        });
+    }
+
     function updateMapModalImageSize() {
         const clip = document.getElementById('map-modal-zoom-clip');
         const wrap = document.getElementById('map-modal-img-wrap');
@@ -5020,6 +5109,8 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
                 <button onclick="mmapZoomCenter(1/1.3)" title="Thu nhỏ" style="background:#e0f2fe;border:none;border-radius:.5rem;width:2rem;height:2rem;cursor:pointer;font-size:1.1rem;font-weight:700;line-height:1;flex-shrink:0;">−</button>
                 <button onclick="mmapResetZoom()" title="Đặt lại zoom" style="background:#f1f5f9;border:none;border-radius:.5rem;width:2rem;height:2rem;cursor:pointer;font-size:.85rem;line-height:1;flex-shrink:0;">↺</button>
                 <span style="font-size:.7rem;color:#94a3b8;white-space:nowrap;">Cuộn / kéo / chụm</span>
+                <button onclick="mmapSaveImage()" title="Lưu ảnh" style="background:#d1fae5;border:none;border-radius:.5rem;padding:0 .6rem;height:2rem;cursor:pointer;font-size:.8rem;font-weight:700;color:#065f46;flex-shrink:0;">💾 Lưu</button>
+                <button onclick="mmapPrint()" title="In" style="background:#ede9fe;border:none;border-radius:.5rem;padding:0 .6rem;height:2rem;cursor:pointer;font-size:.8rem;font-weight:700;color:#4c1d95;flex-shrink:0;">🖨️ In</button>
                 <button onclick="closeMapModal()" style="background:#fecaca;border:none;border-radius:9999px;width:2.2rem;height:2.2rem;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#b91c1c;font-weight:700;" aria-label="Đóng">×</button>
             </div>
             <!-- Vùng ảnh bản đồ – chiếm toàn bộ không gian còn lại -->
@@ -5038,12 +5129,12 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
         .mmap-dot {
             position: absolute;
             width: 10px; height: 10px;
-            background: radial-gradient(circle at 35% 35%, #ff6b6b, #e53e3e);
+            background: radial-gradient(circle at 35% 35%, #93c5fd, #1d4ed8);
             border: 2px solid #fff;
             border-radius: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
-            box-shadow: 0 0 6px 2px rgba(255,80,80,.7), 0 0 0 1px rgba(229,62,62,.4);
+            box-shadow: 0 0 6px 2px rgba(29,78,216,.7), 0 0 0 1px rgba(29,78,216,.4);
             animation: mmap-pulse 1.8s ease-in-out infinite;
             z-index: 2;
         }
@@ -5060,9 +5151,9 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             text-shadow: 0 1px 2px rgba(0,0,0,.4);
         }
         @keyframes mmap-pulse {
-            0%   { box-shadow: 0 0 6px 2px rgba(255,80,80,.7), 0 0 0 0   rgba(229,62,62,.7); }
-            70%  { box-shadow: 0 0 6px 2px rgba(255,80,80,.7), 0 0 0 7px rgba(229,62,62,.0); }
-            100% { box-shadow: 0 0 6px 2px rgba(255,80,80,.7), 0 0 0 0   rgba(229,62,62,.0); }
+            0%   { box-shadow: 0 0 6px 2px rgba(29,78,216,.7), 0 0 0 0   rgba(29,78,216,.7); }
+            70%  { box-shadow: 0 0 6px 2px rgba(29,78,216,.7), 0 0 0 7px rgba(29,78,216,.0); }
+            100% { box-shadow: 0 0 6px 2px rgba(29,78,216,.7), 0 0 0 0   rgba(29,78,216,.0); }
         }
         .mmap-chip {
             font-size: .72rem; font-weight: 700;
@@ -5078,9 +5169,9 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
         .mmap-chip-no-coord { background: #94a3b8; cursor: default; }
         .mmap-dot-active {
             width: 18px; height: 18px;
-            background: radial-gradient(circle at 35% 35%, #ffffff, #ff3838);
+            background: radial-gradient(circle at 35% 35%, #ffffff, #1d4ed8);
             border-width: 2.5px;
-            box-shadow: 0 0 14px 4px rgba(255,80,80,.85);
+            box-shadow: 0 0 14px 4px rgba(29,78,216,.85);
             z-index: 4;
         }
     </style>
