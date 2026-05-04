@@ -4816,6 +4816,21 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
         document.addEventListener('DOMContentLoaded', updateFaceMapCount);
     }
 
+    let mmapDotSize = 10;
+    function mmapSetDotSize(v) {
+        mmapDotSize = Math.max(4, Math.min(28, parseInt(v) || 10));
+        const activeSize = Math.round(mmapDotSize * 1.8);
+        const overlay = document.getElementById('map-modal-overlay');
+        if (overlay) {
+            overlay.style.setProperty('--mmap-dot-size', mmapDotSize + 'px');
+            overlay.style.setProperty('--mmap-dot-active-size', activeSize + 'px');
+        }
+        const slider = document.getElementById('mmap-dot-size-slider');
+        if (slider) slider.value = mmapDotSize;
+        const valEl = document.getElementById('mmap-dot-size-val');
+        if (valEl) valEl.textContent = mmapDotSize;
+    }
+
     let mmapHighlightedPid = null;
     function highlightMapDot(pid) {
         mmapHighlightedPid = mmapHighlightedPid === pid ? null : pid;
@@ -4851,7 +4866,8 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             const lx  = parseFloat(dot.style.left) / 100 * W;
             const ly  = parseFloat(dot.style.top)  / 100 * H;
             const isActive = dot.classList.contains('mmap-dot-active');
-            const r   = isActive ? 18 : 11;
+            const baseR = mmapDotSize || 10;
+            const r   = isActive ? Math.round(baseR * 1.8) : baseR;
             const grd = ctx.createRadialGradient(lx - r*.3, ly - r*.3, r*.1, lx, ly, r);
             grd.addColorStop(0, isActive ? '#ffffff' : '#93c5fd');
             grd.addColorStop(1, '#1d4ed8');
@@ -5105,6 +5121,13 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
             <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;flex-shrink:0;">
                 <div id="map-modal-title" style="font-size:1rem;font-weight:700;color:#0f172a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
                 <div id="map-modal-dot-count" style="font-size:.75rem;color:#64748b;white-space:nowrap;"></div>
+                <label style="display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:#475569;white-space:nowrap;flex-shrink:0;" title="Kích thước chấm huyệt">
+                    <span style="font-size:.7rem;">⬤</span>
+                    <input id="mmap-dot-size-slider" type="range" min="4" max="28" value="10" step="1"
+                           style="width:70px;accent-color:#1d4ed8;cursor:pointer;"
+                           oninput="mmapSetDotSize(this.value)">
+                    <span id="mmap-dot-size-val" style="min-width:1.5rem;text-align:right;">10</span>
+                </label>
                 <button onclick="mmapZoomCenter(1.3)" title="Phóng to" style="background:#e0f2fe;border:none;border-radius:.5rem;width:2rem;height:2rem;cursor:pointer;font-size:1.1rem;font-weight:700;line-height:1;flex-shrink:0;">+</button>
                 <button onclick="mmapZoomCenter(1/1.3)" title="Thu nhỏ" style="background:#e0f2fe;border:none;border-radius:.5rem;width:2rem;height:2rem;cursor:pointer;font-size:1.1rem;font-weight:700;line-height:1;flex-shrink:0;">−</button>
                 <button onclick="mmapResetZoom()" title="Đặt lại zoom" style="background:#f1f5f9;border:none;border-radius:.5rem;width:2rem;height:2rem;cursor:pointer;font-size:.85rem;line-height:1;flex-shrink:0;">↺</button>
@@ -5128,7 +5151,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
         #map-modal-overlay.open { display: flex !important; }
         .mmap-dot {
             position: absolute;
-            width: 10px; height: 10px;
+            width: var(--mmap-dot-size, 10px); height: var(--mmap-dot-size, 10px);
             background: radial-gradient(circle at 35% 35%, #93c5fd, #1d4ed8);
             border: 2px solid #fff;
             border-radius: 50%;
@@ -5168,7 +5191,7 @@ PHẦN 7 - KẾT LUẬN TẠM THỜI
         }
         .mmap-chip-no-coord { background: #94a3b8; cursor: default; }
         .mmap-dot-active {
-            width: 18px; height: 18px;
+            width: var(--mmap-dot-active-size, 18px); height: var(--mmap-dot-active-size, 18px);
             background: radial-gradient(circle at 35% 35%, #ffffff, #1d4ed8);
             border-width: 2.5px;
             box-shadow: 0 0 14px 4px rgba(29,78,216,.85);
